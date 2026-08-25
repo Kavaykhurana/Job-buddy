@@ -5,15 +5,38 @@
 </p>
 
 <p align="center">
+  <a href="https://sih-connect-portal.onrender.com">
+    <img src="https://img.shields.io/badge/🚀_Live_Demo-sih--connect--portal.onrender.com-brightgreen?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Kavaykhurana/SIH-Connect/actions/workflows/ci.yml">
+    <img src="https://github.com/Kavaykhurana/SIH-Connect/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
+  </a>
+  <img src="https://img.shields.io/badge/Deployment-Render_Live-success?logo=render&logoColor=white" alt="Render Status" />
   <img src="https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=black" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5.6.3-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Vite-7.1.9-646CFF?logo=vite&logoColor=white" alt="Vite" />
   <img src="https://img.shields.io/badge/Express-REST_API-000000?logo=express&logoColor=white" alt="Express" />
   <img src="https://img.shields.io/badge/Spring_Boot-4.1.1-6DB33F?logo=springboot&logoColor=white" alt="Spring Boot" />
-  <img src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white" alt="Java 21" />
-  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL" />
   <img src="https://img.shields.io/badge/License-MIT-green" alt="License" />
 </p>
+
+---
+
+> 🌐 **Live Production URL**: [https://sih-connect-portal.onrender.com](https://sih-connect-portal.onrender.com)
+> 
+> Explore the live application with any of the pre-configured role workspaces below:
+
+### 🔑 Demo Accounts for Instant Review
+
+| Role Workspace | Email | Password | Primary Workflow |
+| :--- | :--- | :--- | :--- |
+| 🎓 **Student** | `anaya.sharma@example.edu` | `password12345` | Skill map, Quiz assessment, Job/Internship apply, 10-digit mobile profile & documents |
+| 🏢 **Recruiter** | `recruitment@quantum-systems.io` | `password12345` | Job/Internship publisher, Candidate scorecards, Skill requirement editor |
+| 🏛️ **Institution** | `dean.placements@apex-tech.edu` | `password12345` | Readiness baseline, Curriculum alignment review notes, Cohort analytics |
+| 🧑‍🏫 **Academician** | `prof.mehta@apex-tech.edu` | `password12345` | Faculty immersion, Industrial training & FDP enrollment, Mentorship circles |
 
 ---
 
@@ -32,6 +55,7 @@
   - [Prerequisites](#prerequisites)
   - [Installation & Local Execution](#installation--local-execution)
   - [Building for Production](#building-for-production)
+  - [Deploying to Render](#-deploying-to-render)
   - [Java Backend & Docker Deployment](#java-backend--docker-deployment)
 - [Data Models & Persistence](#-data-models--persistence)
 - [Security, Privacy & Input Validation](#-security-privacy--input-validation)
