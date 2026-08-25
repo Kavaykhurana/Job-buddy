@@ -128,32 +128,32 @@ SIH Connect is engineered as a **hybrid multi-tier application** supporting both
 
 ```mermaid
 graph TD
-    subgraph "Frontend Layer (React 18 + Vite)"
-        UI[Single Page App - Wouter Router]
-        State[Auth & API Context]
-        Client[Type-Safe API Client (client/src/lib/api.ts)]
+    subgraph Frontend ["Frontend Layer (React 18 + Vite)"]
+        UI["Single Page App - Wouter Router"]
+        State["Auth & API Context"]
+        Client["Type-Safe API Client (client/src/lib/api.ts)"]
         UI --> State
         State --> Client
     end
 
-    subgraph "Embedded Node.js / Express Backend"
-        ViteDev[Vite Dev Middleware (vite.config.ts)]
-        ProdServer[Node Express Server (server/index.ts)]
-        ApiRouter[REST API Router (server/api.ts)]
-        DataStore[(JSON Store: server/data_store.json)]
+    subgraph NodeBackend ["Embedded Node.js / Express Backend"]
+        ViteDev["Vite Dev Middleware (vite.config.ts)"]
+        ProdServer["Node Express Server (server/index.ts)"]
+        ApiRouter["REST API Router (server/api.ts)"]
+        DataStore[("JSON Store: server/data_store.json")]
         
-        Client -->|/api/v1/*| ViteDev
-        Client -->|/api/v1/*| ProdServer
+        Client -->|"/api/v1/*"| ViteDev
+        Client -->|"/api/v1/*"| ProdServer
         ViteDev --> ApiRouter
         ProdServer --> ApiRouter
         ApiRouter --> DataStore
     end
 
-    subgraph "Enterprise Spring Boot Backend (Optional)"
-        SpringAPI[Spring Boot 4.1.1 REST Controllers]
-        Security[Spring Security + JWT + BCrypt]
-        JPA[Spring Data JPA + Hibernate]
-        Postgres[(PostgreSQL 16 Database)]
+    subgraph JavaBackend ["Enterprise Spring Boot Backend (Optional)"]
+        SpringAPI["Spring Boot 4.1.1 REST Controllers"]
+        Security["Spring Security + JWT + BCrypt"]
+        JPA["Spring Data JPA + Hibernate"]
+        Postgres[("PostgreSQL 16 Database")]
         
         SpringAPI --> Security
         Security --> JPA
