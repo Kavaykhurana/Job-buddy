@@ -276,6 +276,22 @@ pnpm build
 pnpm start
 ```
 
+### 🚀 Deploying to Render
+
+You can deploy SIH Connect to [Render](https://render.com) with 1-click using the included [`render.yaml`](file:///Users/kavaykhurana/Downloads/sih-academia-industry-portal/render.yaml) blueprint:
+
+1. **Via Render Dashboard**:
+   - Go to [dashboard.render.com](https://dashboard.render.com) and click **New +** → **Blueprint** (or **Web Service**).
+   - Connect your GitHub repository `Kavaykhurana/SIH-Connect`.
+   - Render will auto-detect `render.yaml`.
+2. **Manual Web Service Configuration** (if not using Blueprint):
+   - **Environment**: `Node`
+   - **Build Command**: `corepack enable && pnpm install && pnpm build`
+   - **Start Command**: `node dist/index.js`
+   - **Environment Variables**:
+     - `NODE_ENV`: `production`
+     - `PORT`: `10000` (Render default)
+
 ### Java Backend & Docker Deployment
 
 To launch the enterprise Spring Boot backend with PostgreSQL via Docker:
