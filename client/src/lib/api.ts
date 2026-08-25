@@ -54,6 +54,7 @@ export interface Candidate {
 export interface UserProfile {
   displayName: string;
   email: string;
+  phone?: string;
   program: string;
   declaredSkills: string[];
   documents: { id: string; title: string; verified: boolean }[];

@@ -100,7 +100,48 @@ function professionalLinksFromStorage(): ProfessionalLinks { const defaults: Pro
 function ProfileOverview() {
   const [skillsInput, setSkillsInput] = useState(() => declaredSkillsFromStorage().join(", "));
   const [links, setLinks] = useState<ProfessionalLinks>(professionalLinksFromStorage);
+  const [phone, setPhone] = useState(() => {
+    try {
+      const stored = localStorage.getItem("sih-connect-profile-phone");
+      return stored ? stored.replace(/\D/g, "").slice(-10) : "9812345510";
+    } catch {
+      return "9812345510";
+    }
+  });
+  const [email, setEmail] = useState(() => {
+    try {
+      return localStorage.getItem("sih-connect-profile-email") || "anaya.sharma@example.edu";
+    } catch {
+      return "anaya.sharma@example.edu";
+    }
+  });
   const assessment = loadLatestAssessmentResult();
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const digitsOnly = raw.replace(/\D/g, "").slice(0, 10);
+    setPhone(digitsOnly);
+  };
+
+  const handleSaveContactDetails = async () => {
+    if (phone.length !== 10) {
+      toast.error("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    if (!email.includes("@")) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    try {
+      localStorage.setItem("sih-connect-profile-phone", phone);
+      localStorage.setItem("sih-connect-profile-email", email);
+      await api.profile.update({ phone: `+91 ${phone}`, email });
+      toast.success("Contact details updated and saved successfully!");
+    } catch {
+      toast.success("Contact details saved locally.");
+    }
+  };
+
   async function saveLinksAndSkills() {
     const skills = Array.from(new Set(skillsInput.split(",").map((skill) => skill.trim()).filter(Boolean)));
     localStorage.setItem("sih-connect-declared-skills", JSON.stringify(skills));
@@ -111,7 +152,7 @@ function ProfileOverview() {
     } catch {}
     toast.success("Professional links and declared skills saved to profile.");
   }
-  return <div className="profile-stack"><SectionCard><div className="completion-banner"><div><b>Profile 78% complete</b><ProgressBar value={78} /><p>Missing: Semester 4 academic record.</p></div><Link href="/profile/documents" className="primary-button">Complete profile</Link></div></SectionCard><div className="academic-grid"><StatCard label="CGPA" value="8.14" note="Current record" /><StatCard label="Backlogs" value="0" note="No active record" /><StatCard label="10th %" value="91.2" /><StatCard label="12th %" value="88.6" /></div><SectionCard title="Contact details"><div className="form-grid"><label>Phone number<input defaultValue="+91 98123 45510" /></label><label>Personal email<input defaultValue="anaya.sharma@example.edu" /></label></div><div className="section-actions"><button className="small-outline" onClick={() => toast.success("Contact details saved.")}>Save changes</button></div></SectionCard><SectionCard title="Links & skills" aside={<Link href="/skill-map/roles" className="action-link">See skill map <ArrowRight size={15} /></Link>}><form className="links-skills-form" onSubmit={(event) => { event.preventDefault(); void saveLinksAndSkills(); }}><p className="declared-skills-copy">Add professional evidence links and the skills you currently know. These inputs support a clearer profile review; declared skills remain part of your skill-map comparison.</p><div className="professional-links-grid">{professionalLinkFields.map((field) => <label key={field.key}>{field.label}<input type="url" value={links[field.key]} onChange={(event) => setLinks((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} /></label>)}</div><label className="top-skills-field">Top skills<textarea value={skillsInput} onChange={(event) => setSkillsInput(event.target.value)} placeholder="Python, Data analysis, Research writing, Communication" rows={4} /><small>Comma-separated, for example: Python, React, SQL.</small></label><div className="links-skills-actions"><span>Saved skills appear in your mapping evidence after you select Save.</span><button type="submit" className="small-outline">Save links & skills</button></div></form></SectionCard><SectionCard title="Assessment-calculated skills" aside={<Link href="/assessment" className="action-link">{assessment ? "Retake quiz" : "Take quiz"} <ArrowRight size={15} /></Link>}>{assessment ? <div className="assessment-profile-scores">{(["Technical", "Soft skills", "Other skills"] as const).map((category) => <article key={category}><span>{category}</span><b>{assessment.categoryScores[category]}%</b><small>{assessment.categoryScores[category] >= 80 ? "Strong answer signal" : assessment.categoryScores[category] >= 60 ? "Current answer signal" : "Targeted practice needed"}</small></article>)}<p>Calculated from your latest scored quiz. These signals are considered alongside declared and verified evidence.</p></div> : <div className="assessment-empty"><p>No knowledge quiz has been completed yet. Take the assessment to calculate technical, soft, and other skill signals from your answers.</p><Link href="/assessment/industry-readiness" className="small-outline">Start knowledge quiz <ArrowRight size={15} /></Link></div>}</SectionCard></div>;
+  return <div className="profile-stack"><SectionCard><div className="completion-banner"><div><b>Profile 78% complete</b><ProgressBar value={78} /><p>Missing: Semester 4 academic record.</p></div><Link href="/profile/documents" className="primary-button">Complete profile</Link></div></SectionCard><div className="academic-grid"><StatCard label="CGPA" value="8.14" note="Current record" /><StatCard label="Backlogs" value="0" note="No active record" /><StatCard label="10th %" value="91.2" /><StatCard label="12th %" value="88.6" /></div><SectionCard title="Contact details"><div className="form-grid"><label>Mobile number (10 digits)<div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><span style={{ padding: "0.5rem 0.75rem", background: "var(--surface-muted, #f1f3f5)", border: "1px solid var(--border-color, #e5e7eb)", borderRadius: "6px", fontSize: "0.9rem", color: "#555" }}>+91</span><input type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} value={phone} onChange={handlePhoneChange} placeholder="9812345510" style={{ flex: 1 }} /></div><small style={{ color: phone.length === 10 ? "#2b8a3e" : "#e03131", fontSize: "0.75rem", marginTop: "0.25rem", display: "block" }}>{phone.length}/10 digits {phone.length === 10 ? "✓" : "(must be exactly 10 digits)"}</small></label><label>Personal email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="anaya.sharma@example.edu" /></label></div><div className="section-actions"><button type="button" className="small-outline" onClick={() => void handleSaveContactDetails()}>Save changes</button></div></SectionCard><SectionCard title="Links & skills" aside={<Link href="/skill-map/roles" className="action-link">See skill map <ArrowRight size={15} /></Link>}><form className="links-skills-form" onSubmit={(event) => { event.preventDefault(); void saveLinksAndSkills(); }}><p className="declared-skills-copy">Add professional evidence links and the skills you currently know. These inputs support a clearer profile review; declared skills remain part of your skill-map comparison.</p><div className="professional-links-grid">{professionalLinkFields.map((field) => <label key={field.key}>{field.label}<input type="url" value={links[field.key]} onChange={(event) => setLinks((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} /></label>)}</div><label className="top-skills-field">Top skills<textarea value={skillsInput} onChange={(event) => setSkillsInput(event.target.value)} placeholder="Python, Data analysis, Research writing, Communication" rows={4} /><small>Comma-separated, for example: Python, React, SQL.</small></label><div className="links-skills-actions"><span>Saved skills appear in your mapping evidence after you select Save.</span><button type="submit" className="small-outline">Save links & skills</button></div></form></SectionCard><SectionCard title="Assessment-calculated skills" aside={<Link href="/assessment" className="action-link">{assessment ? "Retake quiz" : "Take quiz"} <ArrowRight size={15} /></Link>}>{assessment ? <div className="assessment-profile-scores">{(["Technical", "Soft skills", "Other skills"] as const).map((category) => <article key={category}><span>{category}</span><b>{assessment.categoryScores[category]}%</b><small>{assessment.categoryScores[category] >= 80 ? "Strong answer signal" : assessment.categoryScores[category] >= 60 ? "Current answer signal" : "Targeted practice needed"}</small></article>)}<p>Calculated from your latest scored quiz. These signals are considered alongside declared and verified evidence.</p></div> : <div className="assessment-empty"><p>No knowledge quiz has been completed yet. Take the assessment to calculate technical, soft, and other skill signals from your answers.</p><Link href="/assessment/industry-readiness" className="small-outline">Start knowledge quiz <ArrowRight size={15} /></Link></div>}</SectionCard></div>;
 }
 
 function ProfileDocuments() {

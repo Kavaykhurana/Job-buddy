@@ -413,7 +413,7 @@
   ],
   "profile": {
     "displayName": "Anaya Sharma",
-    "email": "anaya.sharma@example.edu",
+    "email": "anaya.sharma@exampl",
     "program": "Computer Science · Batch 2028",
     "declaredSkills": [
       "Python",
@@ -444,7 +444,8 @@
         "title": "Skill evidence note",
         "verified": true
       }
-    ]
+    ],
+    "phone": "+91 9876543290"
   },
   "curriculumNotes": [
     {

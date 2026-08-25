@@ -174,6 +174,7 @@ const initialData = {
   profile: {
     displayName: "Anaya Sharma",
     email: "anaya.sharma@example.edu",
+    phone: "+91 98123 45510",
     program: "Computer Science · Batch 2028",
     declaredSkills: ["Python", "Data analysis", "Research writing", "SQL", "User research", "Presentation"],
     documents: [
