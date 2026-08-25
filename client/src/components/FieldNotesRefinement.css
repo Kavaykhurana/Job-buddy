@@ -1,0 +1,23 @@
+/* Field Notes Institutional Workspace: a shared editorial register system for active, evidence-led work. */
+.workspace-student .section-card-head { border-left: 3px solid var(--olive); padding-left: 13px; }
+.workspace-student .section-card-head h2::before { content: "JOURNEY"; margin-right: 8px; color: var(--olive); font-size: 8px; letter-spacing: .11em; font-weight: 800; }
+.workspace-student .stat-card strong, .workspace-institution .stat-card strong { color: var(--olive); }
+.workspace-recruiter .stat-card strong { color: var(--ochre); }
+.workspace-academician .stat-card strong { color: #70866c; }
+.workspace-student .initiative-list article, .workspace-student .experience-card { border-left: 3px solid var(--olive); }
+.workspace-recruiter .initiative-list article, .workspace-recruiter .experience-manager-list article { border-left: 3px solid var(--ochre); background: linear-gradient(90deg, var(--ochre-wash), transparent 28%); }
+.workspace-institution .initiative-list article { border-left: 3px solid var(--olive); background: linear-gradient(90deg, var(--olive-wash), transparent 28%); }
+.workspace-academician .initiative-list article { border-left: 3px solid #70866c; background: linear-gradient(90deg, #edf1e9, transparent 28%); }
+.initiative-list article { position: relative; padding-left: 12px !important; }
+.initiative-list article::before { content: "ACTIVE RECORD"; position: absolute; top: 10px; right: 0; color: var(--slate); font-size: 8px; letter-spacing: .11em; font-weight: 800; opacity: .78; }
+.workspace-recruiter .initiative-list article::before { content: "COORDINATION RECORD"; color: var(--ochre); }
+.workspace-academician .initiative-list article::before { content: "ALIGNMENT RECORD"; color: #70866c; }
+.experience-card { position: relative; overflow: hidden; box-shadow: 0 5px 17px rgb(32 43 29 / 3%); }
+.experience-card::after { content: none; display: none; }
+.experience-card .experience-card-footer { background: linear-gradient(90deg, var(--olive-wash), transparent 55%); margin-left: -18px; margin-right: -18px; margin-bottom: -18px; padding: 12px 18px 14px; border-top-color: #dce6d7; }
+.workspace-recruiter .section-card { box-shadow: inset 0 1px 0 rgb(176 124 31 / 8%); }
+.workspace-institution .section-card { box-shadow: inset 0 1px 0 rgb(39 84 53 / 7%); }
+.workspace-academician .section-card { box-shadow: inset 0 1px 0 rgb(112 134 108 / 8%); }
+.workspace-recruiter .page-header .eyebrow, .workspace-recruiter .page-header::after { color: var(--ochre); background: var(--ochre); }
+.workspace-academician .page-header .eyebrow { color: #70866c; }
+@media (max-width: 640px) { .initiative-list article::before { position: absolute; top: 8px; left: 33px; display: block; margin: 0; }.initiative-list article { padding-top: 26px !important; }.experience-card .experience-card-footer { margin-left: -18px; margin-right: -18px; } }

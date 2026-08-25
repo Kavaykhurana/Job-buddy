@@ -1,0 +1,505 @@
+{
+  "users": [
+    {
+      "id": "usr_student",
+      "email": "anaya.sharma@example.edu",
+      "displayName": "Anaya Sharma",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_recruiter",
+      "email": "recruitment@quantum-systems.io",
+      "displayName": "Vikram Malhotra",
+      "roles": [
+        "RECRUITER"
+      ]
+    },
+    {
+      "id": "usr_institution",
+      "email": "dean.placements@apex-tech.edu",
+      "displayName": "Dr. Sunita Rao",
+      "roles": [
+        "INSTITUTION"
+      ]
+    },
+    {
+      "id": "usr_academician",
+      "email": "prof.mehta@apex-tech.edu",
+      "displayName": "Prof. Arvind Mehta",
+      "roles": [
+        "ACADEMICIAN"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": "ai-studio",
+      "title": "Applied AI Capability Studio",
+      "organization": "Northstar Systems",
+      "location": "Hybrid · Bengaluru",
+      "date": "Closes 30 Aug",
+      "match": 84,
+      "status": "Eligible",
+      "required": [
+        "Python",
+        "Data Analysis",
+        "Communication"
+      ],
+      "preferred": [
+        "SQL",
+        "Machine Learning"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Support a cross-functional team by evaluating data-led workflows and presenting evidence-backed recommendations."
+    },
+    {
+      "id": "research-analyst",
+      "title": "Research Operations Associate",
+      "organization": "Mosaic Health Labs",
+      "location": "On campus · Chandigarh",
+      "date": "Closes 02 Sep",
+      "match": 72,
+      "status": "Eligible",
+      "required": [
+        "Research",
+        "Documentation",
+        "Teamwork"
+      ],
+      "preferred": [
+        "Excel",
+        "Presentation"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Contribute to evidence review, structured documentation, and stakeholder-ready progress reports."
+    },
+    {
+      "id": "product-review",
+      "title": "Digital Product Review Cohort",
+      "organization": "Tern & Co.",
+      "location": "Remote",
+      "date": "Closes 06 Sep",
+      "match": 61,
+      "status": "Review profile",
+      "required": [
+        "Product Thinking",
+        "Writing",
+        "User Research"
+      ],
+      "preferred": [
+        "Figma",
+        "Analytics"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Review product briefs, map user needs, and prepare concise evidence notes for a product team."
+    }
+  ],
+  "internships": [
+    {
+      "id": "data-practice",
+      "title": "Data Practice Internship",
+      "org": "Northstar Systems",
+      "mode": "Hybrid · Bengaluru",
+      "match": 84,
+      "status": "Recommended",
+      "close": "Closes 30 Aug",
+      "interest": "Applied systems",
+      "required": [
+        "Python",
+        "Data analysis",
+        "Communication"
+      ],
+      "preferred": [
+        "SQL",
+        "Data cleaning"
+      ],
+      "summary": "Participate in data operations, practice evidence documentation, and work with an industry mentor."
+    },
+    {
+      "id": "clinical-support",
+      "title": "Clinical Data Support Internship",
+      "org": "Mosaic Health Labs",
+      "mode": "On campus · Chandigarh",
+      "match": 72,
+      "status": "Eligible",
+      "close": "Closes 02 Sep",
+      "interest": "Research operations",
+      "required": [
+        "Documentation",
+        "Research",
+        "Data entry"
+      ],
+      "preferred": [
+        "Excel",
+        "Presentation"
+      ],
+      "summary": "Support health research records, verify entry accuracy, and prepare structured review notes."
+    },
+    {
+      "id": "product-observation",
+      "title": "Product Observation Internship",
+      "org": "Tern & Co.",
+      "mode": "Remote",
+      "match": 63,
+      "status": "Build evidence",
+      "close": "Closes 08 Sep",
+      "interest": "Digital product",
+      "required": [
+        "User research",
+        "Writing"
+      ],
+      "preferred": [
+        "Analytics"
+      ],
+      "summary": "Observe product workflows, summarise user needs, and prepare a concise evidence-backed review."
+    }
+  ],
+  "experiences": [
+    {
+      "id": "data-apprenticeship",
+      "type": "Apprenticeship",
+      "title": "Data Practice Apprenticeship",
+      "org": "Northstar Systems",
+      "mode": "Hybrid · Bengaluru",
+      "match": 84,
+      "duration": "12 weeks",
+      "required": [
+        "Python",
+        "Data analysis",
+        "Communication"
+      ],
+      "summary": "A guided work-learning pathway with assigned industry supervisors, milestones, and feedback."
+    },
+    {
+      "id": "evidence-project",
+      "type": "Industry project",
+      "title": "Evidence Workflow Improvement Project",
+      "org": "Tern & Co.",
+      "mode": "Remote · Team project",
+      "match": 71,
+      "duration": "6 weeks",
+      "required": [
+        "Research writing",
+        "Documentation",
+        "User research"
+      ],
+      "summary": "Work with an industry brief, team deliverables, review milestones, and a verified project outcome."
+    }
+  ],
+  "applications": [
+    {
+      "id": "app-1",
+      "jobId": "ai-studio",
+      "jobTitle": "Applied AI Capability Studio",
+      "organization": "Northstar Systems",
+      "studentName": "Anaya Sharma",
+      "studentEmail": "anaya.sharma@example.edu",
+      "stage": "Screening",
+      "appliedAt": "20 Aug · 10:42",
+      "statement": "Strong analytical and python background suitable for applied systems evaluation."
+    },
+    {
+      "id": "app-2",
+      "jobId": "research-analyst",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Mosaic Health Labs",
+      "studentName": "Anaya Sharma",
+      "studentEmail": "anaya.sharma@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "21 Aug · 14:15",
+      "statement": "Demonstrated coursework in research methodology and documentation."
+    }
+  ],
+  "candidates": [
+    {
+      "id": "anaya-01",
+      "name": "Anaya Sharma",
+      "program": "Computer Science · Batch 2028",
+      "score": 84,
+      "eligibility": "Eligible",
+      "stage": "Screening",
+      "skills": [
+        "Python",
+        "SQL",
+        "Communication"
+      ],
+      "shortlisted": false
+    },
+    {
+      "id": "kabir-02",
+      "name": "Kabir Mehta",
+      "program": "Information Technology · Batch 2028",
+      "score": 79,
+      "eligibility": "Eligible",
+      "stage": "Screening",
+      "skills": [
+        "Python",
+        "Data Analysis",
+        "Communication"
+      ],
+      "shortlisted": true
+    },
+    {
+      "id": "rhea-03",
+      "name": "Rhea Nair",
+      "program": "Computer Science · Batch 2027",
+      "score": 74,
+      "eligibility": "Review",
+      "stage": "Screening",
+      "skills": [
+        "SQL",
+        "Documentation",
+        "Teamwork"
+      ],
+      "shortlisted": false
+    }
+  ],
+  "companyRequirements": [
+    {
+      "company": "Northstar Systems",
+      "industry": "Applied systems and data operations",
+      "roles": [
+        {
+          "title": "Applied AI Capability Studio",
+          "demand": "High",
+          "updated": "22 Aug 2026",
+          "eligible": "08",
+          "requirements": [
+            {
+              "skill": "Python",
+              "level": "Advanced",
+              "importance": "Required"
+            },
+            {
+              "skill": "Data Analysis",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Communication",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "SQL",
+              "level": "Intermediate",
+              "importance": "Preferred"
+            },
+            {
+              "skill": "Docker",
+              "level": "Advanced",
+              "importance": "Preferred"
+            },
+            {
+              "skill": "Docker",
+              "level": "Advanced",
+              "importance": "Preferred"
+            },
+            {
+              "skill": "Docker",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Docker",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Docker",
+              "level": "Advanced",
+              "importance": "Required"
+            },
+            {
+              "skill": "Docker",
+              "level": "Advanced",
+              "importance": "Required"
+            }
+          ]
+        },
+        {
+          "title": "Data Operations Associate",
+          "demand": "High",
+          "updated": "24 Aug 2026",
+          "eligible": "11",
+          "requirements": [
+            {
+              "skill": "SQL",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Spreadsheet analysis",
+              "level": "Advanced",
+              "importance": "Required"
+            },
+            {
+              "skill": "Data quality review",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Python",
+              "level": "Developing",
+              "importance": "Preferred"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "company": "Mosaic Health Labs",
+      "industry": "Health research and operations",
+      "roles": [
+        {
+          "title": "Research Operations Associate",
+          "demand": "Medium",
+          "updated": "23 Aug 2026",
+          "eligible": "06",
+          "requirements": [
+            {
+              "skill": "Research",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Documentation",
+              "level": "Advanced",
+              "importance": "Required"
+            },
+            {
+              "skill": "Teamwork",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Presentation",
+              "level": "Developing",
+              "importance": "Preferred"
+            }
+          ]
+        },
+        {
+          "title": "Clinical Data Support Intern",
+          "demand": "Medium",
+          "updated": "23 Aug 2026",
+          "eligible": "09",
+          "requirements": [
+            {
+              "skill": "Data entry",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Excel",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Confidentiality awareness",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Research writing",
+              "level": "Developing",
+              "importance": "Preferred"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "profile": {
+    "displayName": "Anaya Sharma",
+    "email": "anaya.sharma@example.edu",
+    "program": "Computer Science · Batch 2028",
+    "declaredSkills": [
+      "Python",
+      "Data analysis",
+      "Research writing",
+      "SQL",
+      "User research",
+      "Presentation"
+    ],
+    "documents": [
+      {
+        "id": "doc-1",
+        "title": "Semester 3 academic record",
+        "verified": true
+      },
+      {
+        "id": "doc-2",
+        "title": "Semester 4 academic record",
+        "verified": false
+      },
+      {
+        "id": "doc-3",
+        "title": "Identity proof",
+        "verified": true
+      },
+      {
+        "id": "doc-4",
+        "title": "Skill evidence note",
+        "verified": true
+      }
+    ]
+  },
+  "curriculumNotes": [
+    {
+      "id": "curr-1787665667509",
+      "program": "Computer Science",
+      "note": "Ensure semester 5 labs include practical SQL and API testing",
+      "createdBy": "Academic Reviewer",
+      "createdAt": "Just now"
+    },
+    {
+      "id": "curr-1787665423161",
+      "program": "Computer Science",
+      "note": "Ensure semester 5 labs include practical SQL and API testing",
+      "createdBy": "Academic Reviewer",
+      "createdAt": "Just now"
+    },
+    {
+      "id": "curr-1787665383121",
+      "program": "Computer Science",
+      "note": "Integrate real-world REST CRUD API testing module",
+      "createdBy": "Academic Reviewer",
+      "createdAt": "Just now"
+    },
+    {
+      "id": "curr-1",
+      "program": "Computer Science",
+      "note": "Add applied SQL evidence workshops to close current high-demand industry requirement gap.",
+      "createdBy": "Dean Office",
+      "createdAt": "24 Aug 2026"
+    }
+  ],
+  "initiatives": [
+    {
+      "id": "init-1",
+      "kind": "mentorship",
+      "title": "Applied systems mentorship circle",
+      "org": "Northstar Systems",
+      "mentor": "Neeraj Patel",
+      "participants": 18
+    },
+    {
+      "id": "init-2",
+      "kind": "guest",
+      "title": "From skill evidence to industry decisions",
+      "org": "Northstar Systems",
+      "speaker": "Vikram Malhotra",
+      "date": "03 Sep"
+    },
+    {
+      "id": "init-3",
+      "kind": "challenge",
+      "title": "Transparent evidence for early-career readiness",
+      "org": "Industry Council",
+      "status": "Open",
+      "participants": 18
+    }
+  ]
+}

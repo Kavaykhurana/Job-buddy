@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="350" viewBox="0 0 600 350" fill="none">
+  <rect width="600" height="350" rx="16" fill="#f5f4ee"/>
+  <defs>
+    <linearGradient id="recOlive" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#415642"/>
+      <stop offset="100%" stop-color="#2f4132"/>
+    </linearGradient>
+    <linearGradient id="recOchre" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#b77a20"/>
+      <stop offset="100%" stop-color="#8a5a12"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background metric lines -->
+  <g opacity="0.3" stroke="#dfe1d8" stroke-width="1">
+    <line x1="60" y1="40" x2="540" y2="40"/>
+    <line x1="60" y1="110" x2="540" y2="110"/>
+    <line x1="60" y1="180" x2="540" y2="180"/>
+    <line x1="60" y1="250" x2="540" y2="250"/>
+  </g>
+
+  <!-- Distribution Area Curves -->
+  <path d="M60 250 Q 180 80, 300 130 T 540 250 L 540 250 L 60 250 Z" fill="#415642" fill-opacity="0.12"/>
+  <path d="M60 250 Q 200 160, 340 100 T 540 250 L 540 250 L 60 250 Z" fill="#b77a20" fill-opacity="0.08"/>
+  <path d="M60 250 Q 180 80, 300 130 T 540 250" stroke="#415642" stroke-width="3" fill="none"/>
+  <path d="M60 250 Q 200 160, 340 100 T 540 250" stroke="#b77a20" stroke-width="2.5" stroke-dasharray="6 4" fill="none"/>
+
+  <!-- Matched Candidate Indicator Nodes -->
+  <g transform="translate(240, 105)">
+    <circle r="16" fill="#415642" filter="drop-shadow(0px 4px 8px rgba(0,0,0,0.15))"/>
+    <circle r="6" fill="#ffffff"/>
+    <rect x="-35" y="-32" width="70" height="18" rx="5" fill="#415642"/>
+    <text x="0" y="-20" fill="#ffffff" font-family="Manrope, sans-serif" font-size="9" font-weight="800" text-anchor="middle">84% MATCH</text>
+  </g>
+
+  <g transform="translate(380, 125)">
+    <circle r="14" fill="#b77a20"/>
+    <circle r="5" fill="#ffffff"/>
+    <rect x="-35" y="-30" width="70" height="18" rx="5" fill="#b77a20"/>
+    <text x="0" y="-18" fill="#ffffff" font-family="Manrope, sans-serif" font-size="9" font-weight="800" text-anchor="middle">79% MATCH</text>
+  </g>
+
+  <g transform="translate(150, 185)">
+    <circle r="10" fill="#68706a"/>
+    <circle r="3.5" fill="#ffffff"/>
+    <text x="0" y="24" fill="#68706a" font-family="Manrope, sans-serif" font-size="9" font-weight="700" text-anchor="middle">SCREENING</text>
+  </g>
+
+  <g transform="translate(470, 200)">
+    <circle r="10" fill="#68706a"/>
+    <circle r="3.5" fill="#ffffff"/>
+    <text x="0" y="24" fill="#68706a" font-family="Manrope, sans-serif" font-size="9" font-weight="700" text-anchor="middle">REVIEW</text>
+  </g>
+</svg>

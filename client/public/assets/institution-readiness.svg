@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="350" viewBox="0 0 600 350" fill="none">
+  <rect width="600" height="350" rx="16" fill="#f5f4ee"/>
+  <defs>
+    <linearGradient id="instBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#415642"/>
+      <stop offset="100%" stop-color="#2f4132"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Horizontal Grid Guides -->
+  <g opacity="0.3" stroke="#dfe1d8" stroke-width="1">
+    <line x1="50" y1="60" x2="550" y2="60"/>
+    <line x1="50" y1="120" x2="550" y2="120"/>
+    <line x1="50" y1="180" x2="550" y2="180"/>
+    <line x1="50" y1="240" x2="550" y2="240"/>
+    <line x1="50" y1="290" x2="550" y2="290"/>
+  </g>
+
+  <!-- Cohort Readiness Bars -->
+  <!-- Bar 1: Applied Systems -->
+  <g transform="translate(100, 0)">
+    <rect x="0" y="80" width="56" height="210" rx="6" fill="#e8eee4"/>
+    <rect x="0" y="115" width="56" height="175" rx="6" fill="url(#instBar)"/>
+    <text x="28" y="105" fill="#415642" font-family="Manrope, sans-serif" font-size="11" font-weight="800" text-anchor="middle">82%</text>
+    <text x="28" y="312" fill="#68706a" font-family="Manrope, sans-serif" font-size="9" font-weight="700" text-anchor="middle">SYSTEMS</text>
+  </g>
+
+  <!-- Bar 2: Data Science -->
+  <g transform="translate(200, 0)">
+    <rect x="0" y="80" width="56" height="210" rx="6" fill="#e8eee4"/>
+    <rect x="0" y="125" width="56" height="165" rx="6" fill="url(#instBar)"/>
+    <text x="28" y="115" fill="#415642" font-family="Manrope, sans-serif" font-size="11" font-weight="800" text-anchor="middle">78%</text>
+    <text x="28" y="312" fill="#68706a" font-family="Manrope, sans-serif" font-size="9" font-weight="700" text-anchor="middle">DATA SCI</text>
+  </g>
+
+  <!-- Bar 3: Research Ops -->
+  <g transform="translate(300, 0)">
+    <rect x="0" y="80" width="56" height="210" rx="6" fill="#e8eee4"/>
+    <rect x="0" y="140" width="56" height="150" rx="6" fill="url(#instBar)"/>
+    <text x="28" y="130" fill="#415642" font-family="Manrope, sans-serif" font-size="11" font-weight="800" text-anchor="middle">71%</text>
+    <text x="28" y="312" fill="#68706a" font-family="Manrope, sans-serif" font-size="9" font-weight="700" text-anchor="middle">RESEARCH</text>
+  </g>
+
+  <!-- Bar 4: Product Review -->
+  <g transform="translate(400, 0)">
+    <rect x="0" y="80" width="56" height="210" rx="6" fill="#f7ecda"/>
+    <rect x="0" y="168" width="56" height="122" rx="6" fill="#b77a20"/>
+    <text x="28" y="158" fill="#b77a20" font-family="Manrope, sans-serif" font-size="11" font-weight="800" text-anchor="middle">58%</text>
+    <text x="28" y="312" fill="#68706a" font-family="Manrope, sans-serif" font-size="9" font-weight="700" text-anchor="middle">PRODUCT</text>
+  </g>
+
+  <!-- Target Baseline Line -->
+  <line x1="70" y1="130" x2="520" y2="130" stroke="#b77a20" stroke-width="2" stroke-dasharray="6 4"/>
+  <rect x="420" y="45" width="110" height="22" rx="5" fill="#b77a20"/>
+  <text x="475" y="60" fill="#ffffff" font-family="Manrope, sans-serif" font-size="9" font-weight="800" text-anchor="middle">TARGET 75%</text>
+</svg>
