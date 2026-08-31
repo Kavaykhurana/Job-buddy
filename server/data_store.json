@@ -197,6 +197,17 @@
   ],
   "applications": [
     {
+      "id": "app-1788183306177",
+      "jobId": "product-review",
+      "jobTitle": "Digital Product Review Cohort",
+      "organization": "Tern & Co.",
+      "studentName": "Anaya Sharma",
+      "studentEmail": "anaya.sharma@exampl",
+      "stage": "Submitted",
+      "appliedAt": "Just now",
+      "statement": ""
+    },
+    {
       "id": "app-1788182462528",
       "jobId": "research-analyst",
       "jobTitle": "Research Operations Associate",
