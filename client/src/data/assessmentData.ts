@@ -733,6 +733,17 @@ export function getDeclaredSkills(): string[] {
   return ["Python", "Data analysis", "Research writing", "Communication"];
 }
 
+export function saveDeclaredSkills(skills: string[]): void {
+  try {
+    const cleanSkills = Array.from(
+      new Set(skills.map((s) => s.trim()).filter(Boolean))
+    );
+    localStorage.setItem("sih-connect-declared-skills", JSON.stringify(cleanSkills));
+  } catch (err) {
+    console.error("Failed to save declared skills:", err);
+  }
+}
+
 // Helper: check if a specific skill name matches any user declared skill
 export function isSkillMatched(skillName: string, userSkills: string[]): boolean {
   if (!skillName || !userSkills || userSkills.length === 0) return false;
