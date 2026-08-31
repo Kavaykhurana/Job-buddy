@@ -130,56 +130,120 @@ export function StudentHome() {
   </StudentLayout>;
 }
 
-type JobFilterTab = "all" | "recommended" | "closingSoon" | "eligible";
-
 export function JobsPage() {
   const [query, setQuery] = useState("");
-  const [fit, setFit] = useState("all");
-  const [deliveryMode, setDeliveryMode] = useState("any");
-  const [catalogueFilter, setCatalogueFilter] = useState<JobFilterTab>("all");
+  const [selectedQuickFilters, setSelectedQuickFilters] = useState<string[]>([]);
+  const [selectedDeliveryModes, setSelectedDeliveryModes] = useState<string[]>([]);
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+  const [minFit, setMinFit] = useState<number>(0);
   const [userSkills, setUserSkills] = useState<string[]>([]);
 
   useEffect(() => {
     setUserSkills(getDeclaredSkills());
   }, []);
 
-  const jobsWithMeta = useMemo(() => {
-    return jobOpportunities.map((item) => {
-      const skillFit = calculateJobSkillFit(item, userSkills);
-      const deadline = getJobDeadlineInfo(item.closeDate);
-      const isRecommended = skillFit.matchPercent >= 70;
-      return {
-        ...item,
-        skillFit,
-        deadline,
-        isRecommended,
-      };
-    }).sort((a, b) => {
-      // Sort highest skill match first
-      return b.skillFit.matchPercent - a.skillFit.matchPercent;
+  // Compute all available unique skills across job opportunities
+  const availableSkills = useMemo(() => {
+    const skillSet = new Set<string>();
+    jobOpportunities.forEach((j) => {
+      j.required.forEach((s) => skillSet.add(s));
+      j.preferred.forEach((s) => skillSet.add(s));
     });
+    return Array.from(skillSet).sort();
+  }, []);
+
+  const jobsWithMeta = useMemo(() => {
+    return jobOpportunities
+      .map((item) => {
+        const skillFit = calculateJobSkillFit(item, userSkills);
+        const deadline = getJobDeadlineInfo(item.closeDate);
+        const isRecommended = skillFit.matchPercent >= 70;
+        const isTopMatch = skillFit.matchPercent >= 90;
+        return {
+          ...item,
+          skillFit,
+          deadline,
+          isRecommended,
+          isTopMatch,
+        };
+      })
+      .sort((a, b) => b.skillFit.matchPercent - a.skillFit.matchPercent);
   }, [userSkills]);
 
   const recommendedCount = jobsWithMeta.filter((j) => j.isRecommended).length;
   const closingSoonCount = jobsWithMeta.filter((j) => j.deadline.isUrgent).length;
   const eligibleCount = jobsWithMeta.filter((j) => j.status === "Eligible").length;
+  const topMatchCount = jobsWithMeta.filter((j) => j.isTopMatch).length;
 
+  const toggleQuickFilter = (key: string) => {
+    setSelectedQuickFilters((prev) =>
+      prev.includes(key) ? prev.filter((f) => f !== key) : [...prev, key]
+    );
+  };
+
+  const toggleDeliveryMode = (mode: string) => {
+    setSelectedDeliveryModes((prev) =>
+      prev.includes(mode) ? prev.filter((m) => m !== mode) : [...prev, mode]
+    );
+  };
+
+  const toggleSkill = (skill: string) => {
+    setSelectedSkills((prev) =>
+      prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]
+    );
+  };
+
+  const resetAllFilters = () => {
+    setQuery("");
+    setSelectedQuickFilters([]);
+    setSelectedDeliveryModes([]);
+    setSelectedSkills([]);
+    setMinFit(0);
+  };
+
+  // Simultaneous multi-filter application
   const filtered = useMemo(() => {
     return jobsWithMeta.filter((item) => {
-      const searchable = `${item.title} ${item.organization} ${item.location} ${item.status} ${item.type} ${item.required.join(" ")} ${item.preferred.join(" ")}`.toLowerCase();
-      const matchesSearch = searchable.includes(query.trim().toLowerCase());
-      const matchesEligibility = fit === "all" || item.status === "Eligible";
-      const matchesDelivery =
-        deliveryMode === "any" || item.deliveryMode === deliveryMode;
+      // 1. Keyword search
+      if (query.trim()) {
+        const searchable = `${item.title} ${item.organization} ${item.location} ${item.status} ${item.type} ${item.required.join(" ")} ${item.preferred.join(" ")} ${item.summary}`.toLowerCase();
+        if (!searchable.includes(query.trim().toLowerCase())) return false;
+      }
 
-      let matchesTab = true;
-      if (catalogueFilter === "recommended") matchesTab = item.isRecommended;
-      else if (catalogueFilter === "closingSoon") matchesTab = item.deadline.isUrgent;
-      else if (catalogueFilter === "eligible") matchesTab = item.status === "Eligible";
+      // 2. Multi-selected quick filters (AND condition: must satisfy all active quick filters)
+      if (selectedQuickFilters.includes("recommended") && !item.isRecommended) return false;
+      if (selectedQuickFilters.includes("closingSoon") && !item.deadline.isUrgent) return false;
+      if (selectedQuickFilters.includes("eligible") && item.status !== "Eligible") return false;
+      if (selectedQuickFilters.includes("topMatch") && !item.isTopMatch) return false;
 
-      return matchesSearch && matchesEligibility && matchesDelivery && matchesTab;
+      // 3. Multi-selected delivery modes (OR condition within delivery mode: matches any selected delivery mode)
+      if (selectedDeliveryModes.length > 0 && !selectedDeliveryModes.includes(item.deliveryMode)) {
+        return false;
+      }
+
+      // 4. Multi-selected skills (AND condition: opportunity must cover all selected skills)
+      if (selectedSkills.length > 0) {
+        const hasAllSelectedSkills = selectedSkills.every(
+          (s) => item.required.includes(s) || item.preferred.includes(s)
+        );
+        if (!hasAllSelectedSkills) return false;
+      }
+
+      // 5. Minimum skill fit threshold
+      if (minFit > 0 && item.skillFit.matchPercent < minFit) {
+        return false;
+      }
+
+      return true;
     });
-  }, [jobsWithMeta, query, fit, deliveryMode, catalogueFilter]);
+  }, [jobsWithMeta, query, selectedQuickFilters, selectedDeliveryModes, selectedSkills, minFit]);
+
+  const activeFilterCount =
+    (query ? 1 : 0) +
+    selectedQuickFilters.length +
+    selectedDeliveryModes.length +
+    selectedSkills.length +
+    (minFit > 0 ? 1 : 0);
 
   return (
     <StudentLayout>
@@ -187,7 +251,11 @@ export function JobsPage() {
         eyebrow="Opportunities"
         title="Browse placement opportunities"
         description="Review industry jobs and placement opportunities dynamically matched to your profile skills and closing deadlines."
-        meta={<span className="date-meta">{filtered.length} MATCHING RECORDS · {closingSoonCount} CLOSING SOON</span>}
+        meta={
+          <span className="date-meta">
+            {filtered.length} MATCHING RECORD{filtered.length === 1 ? "" : "S"} · {closingSoonCount} CLOSING SOON
+          </span>
+        }
       />
 
       {userSkills.length > 0 && (
@@ -208,75 +276,283 @@ export function JobsPage() {
         </div>
       )}
 
-      {/* Catalogue Filter Tabs */}
-      <div className="catalogue-filters">
+      {/* Multi-Select Quick Filter Tabs */}
+      <div className="catalogue-filters" style={{ flexWrap: "wrap", gap: "8px" }}>
         <button
           type="button"
-          className={`catalogue-filter-btn ${catalogueFilter === "all" ? "active" : ""}`}
-          onClick={() => setCatalogueFilter("all")}
+          className={`catalogue-filter-btn ${selectedQuickFilters.length === 0 ? "active" : ""}`}
+          onClick={() => setSelectedQuickFilters([])}
         >
           All Opportunities ({jobsWithMeta.length})
         </button>
         <button
           type="button"
-          className={`catalogue-filter-btn ${catalogueFilter === "recommended" ? "active" : ""}`}
-          onClick={() => setCatalogueFilter("recommended")}
+          className={`catalogue-filter-btn ${
+            selectedQuickFilters.includes("recommended") ? "toggle-active" : ""
+          }`}
+          onClick={() => toggleQuickFilter("recommended")}
+          title="Toggle Recommended filter (can combine with others)"
         >
           <Sparkles size={13} /> Recommended (≥70% Fit) ({recommendedCount})
+          {selectedQuickFilters.includes("recommended") && " ✓"}
         </button>
         <button
           type="button"
-          className={`catalogue-filter-btn ${catalogueFilter === "closingSoon" ? "active" : ""}`}
-          onClick={() => setCatalogueFilter("closingSoon")}
+          className={`catalogue-filter-btn ${
+            selectedQuickFilters.includes("closingSoon") ? "toggle-active" : ""
+          }`}
+          onClick={() => toggleQuickFilter("closingSoon")}
+          title="Toggle Closing Soon filter (can combine with others)"
         >
-          <span style={{ color: catalogueFilter === "closingSoon" ? "white" : "#dc2626", fontWeight: 800 }}>🔥</span> Closing Soon (≤7 Days) ({closingSoonCount})
+          <span
+            style={{
+              color: selectedQuickFilters.includes("closingSoon") ? "white" : "#dc2626",
+              fontWeight: 800,
+            }}
+          >
+            🔥
+          </span>{" "}
+          Closing Soon (≤7 Days) ({closingSoonCount})
+          {selectedQuickFilters.includes("closingSoon") && " ✓"}
         </button>
         <button
           type="button"
-          className={`catalogue-filter-btn ${catalogueFilter === "eligible" ? "active" : ""}`}
-          onClick={() => setCatalogueFilter("eligible")}
+          className={`catalogue-filter-btn ${
+            selectedQuickFilters.includes("eligible") ? "toggle-active" : ""
+          }`}
+          onClick={() => toggleQuickFilter("eligible")}
+          title="Toggle Eligible filter (can combine with others)"
         >
           <CheckCircle2 size={13} /> Eligible ({eligibleCount})
+          {selectedQuickFilters.includes("eligible") && " ✓"}
+        </button>
+        <button
+          type="button"
+          className={`catalogue-filter-btn ${
+            selectedQuickFilters.includes("topMatch") ? "toggle-active" : ""
+          }`}
+          onClick={() => toggleQuickFilter("topMatch")}
+          title="Toggle Top Match (≥90%) filter (can combine with others)"
+        >
+          ★ Top Match (≥90%) ({topMatchCount})
+          {selectedQuickFilters.includes("topMatch") && " ✓"}
         </button>
       </div>
+
+      {/* Active Multi-Filters Bar */}
+      {activeFilterCount > 0 && (
+        <div className="active-filters-bar">
+          <span style={{ fontSize: "11px", fontWeight: 800, color: "var(--slate)" }}>
+            Active filters ({activeFilterCount}):
+          </span>
+
+          {query && (
+            <span className="active-filter-chip">
+              Search: "{query}"
+              <button type="button" onClick={() => setQuery("")} aria-label="Clear query filter">
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          {selectedQuickFilters.map((qf) => (
+            <span key={qf} className="active-filter-chip">
+              {qf === "recommended" && "Recommended (≥70%)"}
+              {qf === "closingSoon" && "🔥 Closing Soon (≤7 Days)"}
+              {qf === "eligible" && "Eligible Only"}
+              {qf === "topMatch" && "★ Top Match (≥90%)"}
+              <button
+                type="button"
+                onClick={() => toggleQuickFilter(qf)}
+                aria-label={`Remove ${qf} filter`}
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+
+          {selectedDeliveryModes.map((dm) => (
+            <span key={dm} className="active-filter-chip">
+              Mode: {dm === "on-campus" ? "On campus" : dm.charAt(0).toUpperCase() + dm.slice(1)}
+              <button
+                type="button"
+                onClick={() => toggleDeliveryMode(dm)}
+                aria-label={`Remove ${dm} filter`}
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+
+          {selectedSkills.map((sk) => (
+            <span key={sk} className="active-filter-chip">
+              Skill: {sk}
+              <button
+                type="button"
+                onClick={() => toggleSkill(sk)}
+                aria-label={`Remove ${sk} skill filter`}
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+
+          {minFit > 0 && (
+            <span className="active-filter-chip">
+              Min Fit: ≥{minFit}%
+              <button
+                type="button"
+                onClick={() => setMinFit(0)}
+                aria-label="Remove min fit filter"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          )}
+
+          <button
+            type="button"
+            className="clear-all-filters-btn"
+            onClick={resetAllFilters}
+          >
+            Clear all filters
+          </button>
+        </div>
+      )}
 
       <div className="jobs-layout">
         <aside className="filter-rail">
           <div className="filter-title">
             <Filter size={16} /> Filter opportunities
           </div>
-          <label>
-            Search
+
+          {/* Keyword Search */}
+          <div className="filter-group">
+            <label className="filter-group-title" htmlFor="filter-search-input">
+              Keyword search
+            </label>
             <input
+              id="filter-search-input"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Role, skill, organisation"
             />
-          </label>
-          <label>
-            Eligibility
-            <select value={fit} onChange={(e) => setFit(e.target.value)}>
-              <option value="all">All visible opportunities</option>
-              <option value="eligible">Eligible now</option>
+          </div>
+
+          {/* Quick Filter Multi-Select Checkboxes */}
+          <div className="filter-group">
+            <span className="filter-group-title">Status & Readiness</span>
+            <label className="filter-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedQuickFilters.includes("recommended")}
+                onChange={() => toggleQuickFilter("recommended")}
+              />
+              Recommended (≥70% Fit)
+            </label>
+            <label className="filter-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedQuickFilters.includes("closingSoon")}
+                onChange={() => toggleQuickFilter("closingSoon")}
+              />
+              Closing Soon (≤7 Days)
+            </label>
+            <label className="filter-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedQuickFilters.includes("eligible")}
+                onChange={() => toggleQuickFilter("eligible")}
+              />
+              Eligible for application
+            </label>
+            <label className="filter-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedQuickFilters.includes("topMatch")}
+                onChange={() => toggleQuickFilter("topMatch")}
+              />
+              Top Match (≥90% Fit)
+            </label>
+          </div>
+
+          {/* Delivery Mode Multi-Select Checkboxes */}
+          <div className="filter-group">
+            <span className="filter-group-title">Delivery Mode</span>
+            <label className="filter-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedDeliveryModes.includes("hybrid")}
+                onChange={() => toggleDeliveryMode("hybrid")}
+              />
+              Hybrid
+            </label>
+            <label className="filter-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedDeliveryModes.includes("on-campus")}
+                onChange={() => toggleDeliveryMode("on-campus")}
+              />
+              On campus
+            </label>
+            <label className="filter-checkbox-label">
+              <input
+                type="checkbox"
+                checked={selectedDeliveryModes.includes("remote")}
+                onChange={() => toggleDeliveryMode("remote")}
+              />
+              Remote
+            </label>
+          </div>
+
+          {/* Minimum Skill Fit Filter */}
+          <div className="filter-group">
+            <label className="filter-group-title" htmlFor="filter-min-fit-select">
+              Minimum Skill Fit
+            </label>
+            <select
+              id="filter-min-fit-select"
+              value={minFit}
+              onChange={(e) => setMinFit(Number(e.target.value))}
+            >
+              <option value={0}>Any skill fit</option>
+              <option value={50}>At least 50% match</option>
+              <option value={70}>At least 70% match</option>
+              <option value={85}>At least 85% match</option>
             </select>
-          </label>
-          <label>
-            Delivery mode
-            <select value={deliveryMode} onChange={(e) => setDeliveryMode(e.target.value)}>
-              <option value="any">Any mode</option>
-              <option value="hybrid">Hybrid</option>
-              <option value="on-campus">On campus</option>
-              <option value="remote">Remote</option>
-            </select>
-          </label>
+          </div>
+
+          {/* Required / Preferred Skills Multi-Select Pills */}
+          <div className="filter-group">
+            <span className="filter-group-title">Filter by Skills</span>
+            <div className="filter-skills-grid">
+              {availableSkills.map((skill) => {
+                const isActive = selectedSkills.includes(skill);
+                const isProfileSkill = isSkillMatched(skill, userSkills);
+                return (
+                  <button
+                    key={skill}
+                    type="button"
+                    className={`filter-skill-pill ${isActive ? "active" : ""}`}
+                    onClick={() => toggleSkill(skill)}
+                    title={
+                      isProfileSkill
+                        ? `Skill in your profile: ${skill}`
+                        : `Filter by ${skill}`
+                    }
+                  >
+                    {isActive && <Check size={10} />}
+                    {skill}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <button
             className="text-button"
-            onClick={() => {
-              setQuery("");
-              setFit("all");
-              setDeliveryMode("any");
-              setCatalogueFilter("all");
-            }}
+            onClick={resetAllFilters}
+            style={{ marginTop: "12px", width: "100%", textAlign: "center" }}
           >
             Reset all filters
           </button>
@@ -330,11 +606,19 @@ export function JobsPage() {
                 <div className="tag-row">
                   {item.required.map((skill) => {
                     const matches = isSkillMatched(skill, userSkills);
+                    const isFilterSelected = selectedSkills.includes(skill);
                     return (
                       <span
                         key={skill}
                         className={`skill-tag ${matches ? "skill-tag-matched" : ""}`}
-                        title={matches ? `Matches your profile skill "${skill}"` : `Required skill: ${skill}`}
+                        style={{
+                          outline: isFilterSelected ? "2px solid var(--olive-deep)" : undefined,
+                        }}
+                        title={
+                          matches
+                            ? `Matches your profile skill "${skill}"`
+                            : `Required skill: ${skill}`
+                        }
                       >
                         {matches && <Check size={11} className="skill-tag-matched-icon" />}
                         {skill}
@@ -343,12 +627,20 @@ export function JobsPage() {
                   })}
                   {item.preferred.map((skill) => {
                     const matches = isSkillMatched(skill, userSkills);
+                    const isFilterSelected = selectedSkills.includes(skill);
                     return (
                       <span
                         key={skill}
                         className={`skill-tag ${matches ? "skill-tag-matched" : ""}`}
-                        style={{ opacity: matches ? 1 : 0.85 }}
-                        title={matches ? `Matches your profile skill "${skill}"` : `Preferred skill: ${skill}`}
+                        style={{
+                          opacity: matches ? 1 : 0.85,
+                          outline: isFilterSelected ? "2px solid var(--olive-deep)" : undefined,
+                        }}
+                        title={
+                          matches
+                            ? `Matches your profile skill "${skill}"`
+                            : `Preferred skill: ${skill}`
+                        }
                       >
                         {matches && <Check size={11} className="skill-tag-matched-icon" />}
                         {skill} (pref)
@@ -373,20 +665,15 @@ export function JobsPage() {
 
           {filtered.length === 0 && (
             <EmptyPanel
-              title="No opportunities match these filters"
-              text="Clear or reset the filters to view other approved opportunities."
+              title="No opportunities match all selected filters"
+              text="You have combined multiple specific filters. Try adjusting or clearing some filters to expand your results."
               action={
                 <button
                   type="button"
                   className="small-outline"
-                  onClick={() => {
-                    setQuery("");
-                    setFit("all");
-                    setDeliveryMode("any");
-                    setCatalogueFilter("all");
-                  }}
+                  onClick={resetAllFilters}
                 >
-                  Reset filters
+                  Reset all filters
                 </button>
               }
             />
