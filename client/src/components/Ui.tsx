@@ -56,7 +56,20 @@ export function ActionLink({ href, children }: { href: string; children: ReactNo
 }
 
 export function ProgressBar({ value, label }: { value: number; label?: string }) {
-  return <div className="progress-wrap">{label && <div className="progress-label"><span>{label}</span><b>{value}%</b></div>}<div className="progress-track"><div className="progress-fill" style={{ width: `${value}%` }} /></div></div>;
+  const rounded = Math.round(Math.min(100, Math.max(0, isNaN(value) ? 0 : value)));
+  return (
+    <div className="progress-wrap">
+      {label && (
+        <div className="progress-label">
+          <span>{label}</span>
+          <b>{rounded}%</b>
+        </div>
+      )}
+      <div className="progress-track">
+        <div className="progress-fill" style={{ width: `${rounded}%` }} />
+      </div>
+    </div>
+  );
 }
 
 export function EmptyPanel({ title, text, action }: { title: string; text: string; action?: ReactNode }) {
