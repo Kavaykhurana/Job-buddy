@@ -31,6 +31,14 @@
       "roles": [
         "ACADEMICIAN"
       ]
+    },
+    {
+      "id": "usr_rlaff0m",
+      "email": "anaya.sharma@example.edu",
+      "displayName": "Anaya Sharma",
+      "roles": [
+        "STUDENT"
+      ]
     }
   ],
   "jobs": [
@@ -188,6 +196,17 @@
     }
   ],
   "applications": [
+    {
+      "id": "app-1788182462528",
+      "jobId": "research-analyst",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Mosaic Health Labs",
+      "studentName": "Anaya Sharma",
+      "studentEmail": "anaya.sharma@exampl",
+      "stage": "Submitted",
+      "appliedAt": "Just now",
+      "statement": ""
+    },
     {
       "id": "app-1",
       "jobId": "ai-studio",
@@ -419,9 +438,8 @@
       "Python",
       "Data analysis",
       "Research writing",
-      "SQL",
-      "User research",
-      "Presentation"
+      "Communication",
+      "YAYY"
     ],
     "documents": [
       {
