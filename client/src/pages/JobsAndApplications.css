@@ -272,3 +272,37 @@
   border-color: var(--olive-deep);
 }
 
+/* Clickable Journey Steps Buttons */
+.journey-step-btn {
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--rule);
+  text-align: left;
+  cursor: pointer;
+  min-height: 115px;
+  position: relative;
+  padding: 10px 12px;
+  transition: all 120ms ease;
+  font: inherit;
+}
+
+.journey-step-btn:last-child {
+  border-right: 0;
+}
+
+.journey-step-btn:hover {
+  background: var(--muted);
+}
+
+.journey-step-btn.journey-selected {
+  background: linear-gradient(180deg, var(--olive-wash), transparent);
+  border-bottom: 2px solid var(--olive-deep);
+}
+
+.journey-step-btn.journey-selected span {
+  background: var(--olive);
+  color: white;
+  box-shadow: 0 0 0 2px var(--olive-deep);
+}
+
+

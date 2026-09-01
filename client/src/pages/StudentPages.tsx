@@ -4,6 +4,7 @@ import { Link, useLocation } from "wouter";
 import {
   ArrowLeft,
   ArrowRight,
+  Award,
   CalendarDays,
   CalendarPlus,
   Check,
@@ -11,15 +12,20 @@ import {
   ChevronRight,
   Download,
   ExternalLink,
+  FileCheck2,
   FileText,
   Filter,
+  Globe,
+  Lock,
   MapPin,
   MessageSquareText,
   Paperclip,
   Plus,
   Search,
+  ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Trash2,
   Upload,
   UserRound,
   X,
@@ -65,7 +71,32 @@ import {
   StudentApplication,
   withdrawStudentApplication,
 } from "@/data/applicationData";
-import { getDeclaredSkills, isSkillMatched } from "@/data/assessmentData";
+import { getDeclaredSkills, isSkillMatched, saveDeclaredSkills } from "@/data/assessmentData";
+import {
+  JobOffer,
+  PlacementStatusRecord,
+  acceptJobOffer,
+  declineJobOffer,
+  downloadOfferLetter,
+  getPlacementStatus,
+  getStudentOffers,
+} from "@/data/offerData";
+import {
+  ProfileDocumentItem,
+  ProfileResumeItem,
+  ProfileSettingsState,
+  addProfileDocument,
+  addProfileResume,
+  deleteProfileDocument,
+  deleteProfileResume,
+  downloadProfileDocument,
+  downloadProfileResume,
+  getProfileDocuments,
+  getProfileResumes,
+  getProfileSettings,
+  saveProfileSettings,
+  setPrimaryResume,
+} from "@/data/profileData";
 import "./EventCompanyMessages.css";
 import "./ProfileSkills.css";
 import "./ScheduleAdd.css";
@@ -1256,6 +1287,9 @@ export function CalendarPage() {
 
 export function SeasonPage() {
   const [applications, setApplications] = useState<StudentApplication[]>([]);
+  const [selectedStage, setSelectedStage] = useState<
+    "all" | "Applied" | "Screening" | "Shortlisted" | "Interview" | "Offer"
+  >("all");
 
   useEffect(() => {
     setApplications(getStudentApplications());
@@ -1264,60 +1298,167 @@ export function SeasonPage() {
   const activeApps = applications.filter((app) => !app.isWithdrawn);
   const withdrawnApps = applications.filter((app) => app.isWithdrawn);
 
-  const screeningCount = activeApps.filter((a) => a.status === "Screening" || a.status === "Application received").length;
+  const screeningCount = activeApps.filter(
+    (a) => a.status === "Screening" || a.status === "Application received"
+  ).length;
   const shortlistedCount = activeApps.filter((a) => a.status === "Shortlisted").length;
   const interviewCount = activeApps.filter((a) => a.status === "Interview").length;
   const offersCount = activeApps.filter((a) => a.status === "Offer").length;
+
+  const handleStageClick = (
+    stage: "Applied" | "Screening" | "Shortlisted" | "Interview" | "Offer"
+  ) => {
+    setSelectedStage((curr) => (curr === stage ? "all" : stage));
+  };
+
+  const filteredApplications = useMemo(() => {
+    if (selectedStage === "all") return applications;
+    if (selectedStage === "Applied") return activeApps;
+    if (selectedStage === "Screening") {
+      return activeApps.filter(
+        (a) => a.status === "Screening" || a.status === "Application received"
+      );
+    }
+    if (selectedStage === "Shortlisted") {
+      return activeApps.filter((a) => a.status === "Shortlisted");
+    }
+    if (selectedStage === "Interview") {
+      return activeApps.filter((a) => a.status === "Interview");
+    }
+    if (selectedStage === "Offer") {
+      return activeApps.filter((a) => a.status === "Offer");
+    }
+    return applications;
+  }, [applications, activeApps, selectedStage]);
 
   return (
     <StudentLayout>
       <PageHeader
         eyebrow="My season"
         title="Placement journey"
-        description="Follow application movement from submission to offer without losing the supporting record."
-        meta={<StatusPill tone={activeApps.length > 0 ? "olive" : "muted"}>{activeApps.length} active application{activeApps.length === 1 ? "" : "s"}</StatusPill>}
+        description="Follow application movement from submission to offer. Click any stage (01–05) below to filter corresponding application records."
+        meta={
+          <StatusPill tone={activeApps.length > 0 ? "olive" : "muted"}>
+            {activeApps.length} active application{activeApps.length === 1 ? "" : "s"}
+          </StatusPill>
+        }
       />
       <div className="season-layout">
-        <SectionCard title="Journey summary">
+        <SectionCard
+          title="Journey summary"
+          aside={
+            selectedStage !== "all" && (
+              <button
+                type="button"
+                className="clear-all-filters-btn"
+                onClick={() => setSelectedStage("all")}
+              >
+                Show All Stages ({applications.length})
+              </button>
+            )
+          }
+        >
           <div className="journey-steps">
-            <div className={`journey-step ${activeApps.length > 0 ? "journey-active" : ""}`}>
+            <button
+              type="button"
+              className={`journey-step journey-step-btn ${
+                activeApps.length > 0 ? "journey-active" : ""
+              } ${selectedStage === "Applied" ? "journey-selected" : ""}`}
+              onClick={() => handleStageClick("Applied")}
+              title="Click to filter applications in Applied stage"
+            >
               <span>01</span>
               <b>Applied</b>
-              <small>{applications.length} record{applications.length === 1 ? "" : "s"}</small>
-            </div>
-            <div className={`journey-step ${screeningCount > 0 ? "journey-active" : ""}`}>
+              <small>
+                {applications.length} record{applications.length === 1 ? "" : "s"}
+              </small>
+            </button>
+
+            <button
+              type="button"
+              className={`journey-step journey-step-btn ${
+                screeningCount > 0 ? "journey-active" : ""
+              } ${selectedStage === "Screening" ? "journey-selected" : ""}`}
+              onClick={() => handleStageClick("Screening")}
+              title="Click to filter applications in Screening stage"
+            >
               <span>02</span>
               <b>Screening</b>
-              <small>{screeningCount} record{screeningCount === 1 ? "" : "s"}</small>
-            </div>
-            <div className={`journey-step ${shortlistedCount > 0 ? "journey-active" : ""}`}>
+              <small>
+                {screeningCount} record{screeningCount === 1 ? "" : "s"}
+              </small>
+            </button>
+
+            <button
+              type="button"
+              className={`journey-step journey-step-btn ${
+                shortlistedCount > 0 ? "journey-active" : ""
+              } ${selectedStage === "Shortlisted" ? "journey-selected" : ""}`}
+              onClick={() => handleStageClick("Shortlisted")}
+              title="Click to filter applications in Shortlisted stage"
+            >
               <span>03</span>
               <b>Shortlisted</b>
-              <small>{shortlistedCount > 0 ? `${shortlistedCount} record(s)` : "No records"}</small>
-            </div>
-            <div className={`journey-step ${interviewCount > 0 ? "journey-active" : ""}`}>
+              <small>
+                {shortlistedCount > 0 ? `${shortlistedCount} record(s)` : "No records"}
+              </small>
+            </button>
+
+            <button
+              type="button"
+              className={`journey-step journey-step-btn ${
+                interviewCount > 0 ? "journey-active" : ""
+              } ${selectedStage === "Interview" ? "journey-selected" : ""}`}
+              onClick={() => handleStageClick("Interview")}
+              title="Click to filter applications in Interview stage"
+            >
               <span>04</span>
               <b>Interview</b>
-              <small>{interviewCount > 0 ? `${interviewCount} record(s)` : "No records"}</small>
-            </div>
-            <div className={`journey-step ${offersCount > 0 ? "journey-active" : ""}`}>
+              <small>
+                {interviewCount > 0 ? `${interviewCount} record(s)` : "No records"}
+              </small>
+            </button>
+
+            <button
+              type="button"
+              className={`journey-step journey-step-btn ${
+                offersCount > 0 ? "journey-active" : ""
+              } ${selectedStage === "Offer" ? "journey-selected" : ""}`}
+              onClick={() => handleStageClick("Offer")}
+              title="Click to filter applications in Offers stage"
+            >
               <span>05</span>
               <b>Offers</b>
               <small>{offersCount > 0 ? `${offersCount} offer(s)` : "No records"}</small>
-            </div>
+            </button>
           </div>
         </SectionCard>
 
         <SectionCard
-          title="Application activity"
+          title={
+            selectedStage === "all"
+              ? "Application activity"
+              : `Application activity · ${selectedStage} stage`
+          }
           aside={
-            <span className="date-meta">
-              {activeApps.length} ACTIVE · {withdrawnApps.length} WITHDRAWN
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              {selectedStage !== "all" && (
+                <button
+                  type="button"
+                  className="small-outline"
+                  onClick={() => setSelectedStage("all")}
+                >
+                  Clear filter
+                </button>
+              )}
+              <span className="date-meta">
+                {filteredApplications.length} MATCHING RECORDS
+              </span>
+            </div>
           }
         >
           <div className="activity-list">
-            {applications.map((app) => (
+            {filteredApplications.map((app) => (
               <article key={app.id}>
                 <div>
                   <b>{app.jobTitle}</b>
@@ -1329,6 +1470,10 @@ export function SeasonPage() {
                   <StatusPill tone="muted">Withdrawn</StatusPill>
                 ) : app.status === "Screening" ? (
                   <StatusPill tone="ochre">Screening</StatusPill>
+                ) : app.status === "Shortlisted" ? (
+                  <StatusPill tone="olive">Shortlisted</StatusPill>
+                ) : app.status === "Interview" ? (
+                  <StatusPill tone="olive">Interview scheduled</StatusPill>
                 ) : app.status === "Offer" ? (
                   <StatusPill tone="olive">Offer extended</StatusPill>
                 ) : (
@@ -1340,14 +1485,32 @@ export function SeasonPage() {
               </article>
             ))}
 
-            {applications.length === 0 && (
+            {filteredApplications.length === 0 && (
               <EmptyPanel
-                title="No applications in placement season"
-                text="Explore approved job and internship opportunities to start your placement journey."
+                title={
+                  selectedStage === "all"
+                    ? "No applications in placement season"
+                    : `No applications currently in ${selectedStage} stage`
+                }
+                text={
+                  selectedStage === "all"
+                    ? "Explore approved job and internship opportunities to start your placement journey."
+                    : "Try selecting a different stage from the journey summary above, or clear the filter."
+                }
                 action={
-                  <Link href="/jobs" className="small-outline">
-                    Browse opportunities
-                  </Link>
+                  selectedStage === "all" ? (
+                    <Link href="/jobs" className="small-outline">
+                      Browse opportunities
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      className="small-outline"
+                      onClick={() => setSelectedStage("all")}
+                    >
+                      Show all applications
+                    </button>
+                  )
                 }
               />
             )}
@@ -1536,17 +1699,402 @@ export function ApplicationTrackerPage({ id = "ai-studio" }: { id?: string }) {
 export function SchedulePage() {
  const [scheduleAdded, setScheduleAdded] = useState(false); return <StudentLayout><PageHeader eyebrow="Schedule" title="Upcoming schedule" description="Evaluations, events, and time-bound application activities in one operational view." meta={<span className="date-meta">THIS WEEK</span>} action={<button type="button" className={scheduleAdded ? "small-outline schedule-add-button schedule-add-complete" : "small-outline schedule-add-button"} onClick={() => { if (scheduleAdded) { toast("This preparation block is already on your schedule."); return; } setScheduleAdded(true); toast.success("Preparation block added to your schedule."); }}><CalendarPlus size={15} /> {scheduleAdded ? "Added to schedule" : "Add to schedule"}</button>} /><div className="schedule-board">{scheduleItems.map((item) => <ScheduleLine key={item.time} {...item} />)}{scheduleAdded && <div className="schedule-added-item"><CheckCircle2 size={16} /><div><b>Application preparation block</b><span>17:30 · 30 min · Personal schedule item</span></div><StatusPill>Added</StatusPill></div>}</div><Notice title="Schedule context" text="Evaluation and interview details appear only when they are scheduled and visible to your role." /></StudentLayout>; }
 
-export function OffersPage() { return <StudentLayout><PageHeader eyebrow="Offers" title="Offer records" description="Review offers that have been issued to you through an approved recruitment workflow." /><SectionCard title="Current offer status"><EmptyPanel title="No offers pending" text="An offer will appear here when an authorised recruiter records it after the relevant recruitment stages." action={<Link href="/season" className="small-outline">View placement journey</Link>} /></SectionCard><section className="quiet-rule"><p>Offer documents, acceptance responses, and placement-status updates are retained with the application record.</p></section></StudentLayout>; }
+export function OffersPage() {
+  const [offers, setOffers] = useState<JobOffer[]>([]);
 
-export function PlacementPage() { return <StudentLayout><PageHeader eyebrow="My placement" title="Placement status" description="Your institution’s current placement visibility and record status." meta={<StatusPill>Open for placement</StatusPill>} /><div className="placement-layout"><SectionCard title="Current record"><div className="placement-status"><span>Placement window</span><b>Open</b><p>Batch 2028 · Computer Science</p></div><div className="placement-figures"><StatCard label="Applications" value="02" /><StatCard label="Shortlists" value="00" /><StatCard label="Offers" value="00" /></div></SectionCard><SectionCard title="Placement record detail"><KeyValue label="Institution" value="SIH Partner Institution" /><KeyValue label="Academic program" value="Computer Science" /><KeyValue label="Eligibility record" value="Current" /><KeyValue label="Academic evidence" value="Partially verified" /><Link href="/profile" className="primary-button">Complete profile <ArrowRight size={16} /></Link></SectionCard></div></StudentLayout>; }
+  useEffect(() => {
+    setOffers(getStudentOffers());
+  }, []);
+
+  const handleAccept = (offerId: string, orgName: string) => {
+    const res = acceptJobOffer(offerId);
+    if (res.success) {
+      setOffers(getStudentOffers());
+      toast.success(`🎉 Congratulations! Offer from ${orgName} accepted!`, {
+        description: "Your placement status has been updated to Placed in institutional records.",
+      });
+    }
+  };
+
+  const handleDecline = (offerId: string, orgName: string) => {
+    const res = declineJobOffer(offerId);
+    if (res.success) {
+      setOffers(getStudentOffers());
+      toast.info(`Offer from ${orgName} declined.`, {
+        description: "Placement status remains open for other opportunities.",
+      });
+    }
+  };
+
+  const activeOffers = offers.filter((o) => o.status !== "Declined");
+
+  return (
+    <StudentLayout>
+      <PageHeader
+        eyebrow="Offers"
+        title="Employment offer records"
+        description="Review, download, accept, or decline official placement offers issued to you by verified recruitment partners."
+        meta={
+          <StatusPill tone={activeOffers.length > 0 ? "olive" : "muted"}>
+            {offers.length} offer record{offers.length === 1 ? "" : "s"}
+          </StatusPill>
+        }
+      />
+
+      <div className="stack-lg">
+        {offers.map((offer) => (
+          <SectionCard
+            key={offer.id}
+            title={offer.jobTitle}
+            aside={
+              <StatusPill
+                tone={
+                  offer.status === "Accepted"
+                    ? "olive"
+                    : offer.status === "Pending Decision"
+                    ? "ochre"
+                    : "muted"
+                }
+              >
+                {offer.status === "Accepted"
+                  ? "Offer Accepted ✓"
+                  : offer.status === "Pending Decision"
+                  ? "Action Required · Pending Decision"
+                  : "Offer Declined"}
+              </StatusPill>
+            }
+          >
+            <div style={{ display: "grid", gap: "14px" }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                }}
+              >
+                <div>
+                  <h3 style={{ margin: "0 0 4px", fontSize: "16px", fontWeight: 800 }}>
+                    {offer.organization}
+                  </h3>
+                  <p style={{ margin: 0, color: "var(--slate)", fontSize: "12px" }}>
+                    {offer.location} · {offer.roleType} · Issued {offer.issuedDate}
+                  </p>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <b style={{ display: "block", fontSize: "18px", color: "var(--olive)" }}>
+                    {offer.ctc}
+                  </b>
+                  <small style={{ color: "var(--slate)", fontSize: "11px" }}>
+                    Decision deadline: {offer.expiryDate}
+                  </small>
+                </div>
+              </div>
+
+              <p className="body-copy">{offer.summary}</p>
+
+              <div>
+                <span className="filter-group-title" style={{ marginBottom: "6px" }}>
+                  Compensation & Package Benefits:
+                </span>
+                <ul style={{ margin: "4px 0 0 18px", padding: 0, fontSize: "11.5px", color: "var(--ink)" }}>
+                  {offer.benefits.map((b) => (
+                    <li key={b} style={{ marginBottom: "4px" }}>
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "10px",
+                  paddingTop: "12px",
+                  borderTop: "1px solid var(--rule)",
+                }}
+              >
+                <button
+                  type="button"
+                  className="small-outline"
+                  onClick={() => downloadOfferLetter(offer)}
+                >
+                  <Download size={14} /> Download Official Letter of Intent
+                </button>
+
+                {offer.status === "Pending Decision" && (
+                  <div style={{ display: "flex", gap: "8px" }}>
+                    <button
+                      type="button"
+                      className="small-outline"
+                      style={{ color: "#dc2626", borderColor: "#fecaca" }}
+                      onClick={() => handleDecline(offer.id, offer.organization)}
+                    >
+                      Decline Offer
+                    </button>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => handleAccept(offer.id, offer.organization)}
+                    >
+                      Accept Offer & Confirm Placement
+                    </button>
+                  </div>
+                )}
+
+                {offer.status === "Accepted" && (
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--olive)" }}>
+                    ✓ Accepted on {offer.acceptedAt || offer.issuedDate} · Record synced to institution
+                  </span>
+                )}
+              </div>
+            </div>
+          </SectionCard>
+        ))}
+
+        {offers.length === 0 && (
+          <SectionCard title="Current offer status">
+            <EmptyPanel
+              title="No offers pending"
+              text="An offer will appear here when an authorised recruiter records it after the relevant recruitment stages."
+              action={
+                <Link href="/season" className="small-outline">
+                  View placement journey
+                </Link>
+              }
+            />
+          </SectionCard>
+        )}
+      </div>
+
+      <section className="quiet-rule" style={{ marginTop: "18px" }}>
+        <p>
+          Offer documents, acceptance responses, and placement-status updates are retained with the
+          application record and institutional placement register.
+        </p>
+      </section>
+    </StudentLayout>
+  );
+}
+
+export function PlacementPage() {
+  const [placement, setPlacement] = useState<PlacementStatusRecord>(getPlacementStatus);
+  const [applications, setApplications] = useState<StudentApplication[]>([]);
+  const [offers, setOffers] = useState<JobOffer[]>([]);
+
+  useEffect(() => {
+    setPlacement(getPlacementStatus());
+    setApplications(getStudentApplications());
+    setOffers(getStudentOffers());
+  }, []);
+
+  const activeAppsCount = applications.filter((a) => !a.isWithdrawn).length;
+  const shortlistsCount = applications.filter(
+    (a) => a.status === "Shortlisted" || a.status === "Interview" || a.status === "Offer"
+  ).length;
+  const acceptedOffers = offers.filter((o) => o.status === "Accepted");
+  const isPlaced = placement.status === "Placed" || acceptedOffers.length > 0;
+
+  const handleDownloadPlacementCert = () => {
+    const company = placement.placedCompany || (acceptedOffers[0]?.organization ?? "Northstar Systems");
+    const role = placement.placedRole || (acceptedOffers[0]?.jobTitle ?? "Junior Applied AI Engineer");
+    const ctc = placement.placedCtc || (acceptedOffers[0]?.ctc ?? "₹14,50,000 / annum");
+
+    const content = `======================================================================
+               INSTITUTIONAL PLACEMENT CONFIRMATION CERTIFICATE
+======================================================================
+Student: Anaya Sharma (STU-102417)
+Batch: 2028 · Department: Computer Science & Engineering
+Institution: SIH Partner Institution
+
+PLACEMENT RECORD:
+Company: ${company}
+Designation: ${role}
+Compensation (CTC): ${ctc}
+Placement Status: VERIFIED & CONFIRMED
+Date of Acceptance: ${placement.placedAt || "31 Aug 2026"}
+
+Placement Officer Verification:
+SIH Partner Institution University Placement Cell
+Verification Hash: PLACEMENT-VERIFIED-${Math.floor(10000 + Math.random() * 90000)}
+======================================================================`;
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Placement_Certificate_Anaya_Sharma_${company.replace(/\s+/g, "_")}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Downloaded Institutional Placement Certificate!");
+  };
+
+  return (
+    <StudentLayout>
+      <PageHeader
+        eyebrow="My placement"
+        title="Placement status & records"
+        description="Your institution’s live placement window visibility, verified employment record, and batch statistics."
+        meta={
+          <StatusPill tone={isPlaced ? "olive" : "ochre"}>
+            {isPlaced ? "Placed ✓" : "Open for placement"}
+          </StatusPill>
+        }
+      />
+
+      <div className="placement-layout">
+        <SectionCard title="Current record">
+          <div className="placement-status">
+            <span>Placement window</span>
+            <b>{placement.placementWindow}</b>
+            <p>
+              {placement.batch} · {placement.department}
+            </p>
+          </div>
+
+          <div className="placement-figures">
+            <StatCard label="Applications" value={String(activeAppsCount).padStart(2, "0")} />
+            <StatCard label="Shortlists" value={String(shortlistsCount).padStart(2, "0")} />
+            <StatCard label="Offers" value={String(offers.length).padStart(2, "0")} tone={offers.length > 0 ? "olive" : undefined} />
+          </div>
+
+          {isPlaced && (
+            <div
+              style={{
+                marginTop: "16px",
+                padding: "14px",
+                background: "var(--olive-wash)",
+                border: "1px solid var(--olive)",
+                borderRadius: "8px",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <CheckCircle2 size={18} style={{ color: "var(--olive)" }} />
+                <b style={{ fontSize: "13px", color: "var(--olive-deep)" }}>
+                  Placement Confirmed at {placement.placedCompany || acceptedOffers[0]?.organization || "Northstar Systems"}
+                </b>
+              </div>
+              <p style={{ margin: "4px 0 10px", fontSize: "11.5px", color: "var(--ink)" }}>
+                Role: {placement.placedRole || acceptedOffers[0]?.jobTitle || "Junior Applied AI Engineer"} · Package: {placement.placedCtc || acceptedOffers[0]?.ctc || "₹14,50,000 / annum"}
+              </p>
+              <button
+                type="button"
+                className="small-outline"
+                onClick={handleDownloadPlacementCert}
+              >
+                <Download size={13} /> Download Placement Certificate
+              </button>
+            </div>
+          )}
+        </SectionCard>
+
+        <SectionCard title="Placement record detail">
+          <KeyValue label="Institution" value={placement.institution} />
+          <KeyValue label="Academic program" value={placement.department} />
+          <KeyValue label="Eligibility record" value="Verified & Current" />
+          <KeyValue label="Academic evidence" value={placement.academicEvidence} />
+
+          <div style={{ display: "grid", gap: "8px", marginTop: "16px" }}>
+            <Link href="/offers" className="primary-button full-button">
+              View All Offer Records <ChevronRight size={16} />
+            </Link>
+            <Link href="/profile" className="small-outline full-button">
+              Update Student Profile <ArrowRight size={16} />
+            </Link>
+          </div>
+        </SectionCard>
+      </div>
+    </StudentLayout>
+  );
+}
 
 const profileTabs = ["overview", "documents", "resumes", "settings"] as const;
-export function ProfilePage({ section = "overview" }: { section?: typeof profileTabs[number] }) { return <StudentLayout><div className="profile-hero"><div className="profile-avatar">AS</div><div><h1>Anaya Sharma</h1><p>STU-102417 · Computer Science · Batch 2028</p></div><div className="profile-availability"><StatusPill>Open for placement</StatusPill><StatusPill tone="muted">Profile visibility: Recruiters</StatusPill></div></div><nav className="subnav">{profileTabs.map((tab) => <Link key={tab} href={tab === "overview" ? "/profile" : `/profile/${tab}`} className={tab === section ? "subnav-link subnav-active" : "subnav-link"}>{tab[0].toUpperCase() + tab.slice(1)}</Link>)}</nav>{section === "overview" && <ProfileOverview />}{section === "documents" && <ProfileDocuments />}{section === "resumes" && <ProfileResumes />}{section === "settings" && <ProfileSettings />}</StudentLayout>; }
 
-function declaredSkillsFromStorage() { try { const stored = localStorage.getItem("sih-connect-declared-skills"); return stored ? JSON.parse(stored) as string[] : ["Python", "Data analysis", "Research writing", "Communication"]; } catch { return ["Python", "Data analysis", "Research writing", "Communication"]; } }
-type ProfessionalLinks = { linkedin: string; github: string; portfolio: string; leetcode: string; codechef: string; codeforces: string };
-const professionalLinkFields: { key: keyof ProfessionalLinks; label: string; placeholder: string }[] = [{ key: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/your-name" }, { key: "github", label: "GitHub", placeholder: "https://github.com/your-handle" }, { key: "portfolio", label: "Portfolio", placeholder: "https://your-portfolio.example" }, { key: "leetcode", label: "LeetCode", placeholder: "https://leetcode.com/your-handle" }, { key: "codechef", label: "CodeChef", placeholder: "https://codechef.com/users/your-handle" }, { key: "codeforces", label: "Codeforces", placeholder: "https://codeforces.com/profile/your-handle" }];
-function professionalLinksFromStorage(): ProfessionalLinks { const defaults: ProfessionalLinks = { linkedin: "", github: "", portfolio: "", leetcode: "", codechef: "", codeforces: "" }; try { const stored = localStorage.getItem("sih-connect-professional-links"); return stored ? { ...defaults, ...JSON.parse(stored) as Partial<ProfessionalLinks> } : defaults; } catch { return defaults; } }
+export function ProfilePage({ section = "overview" }: { section?: typeof profileTabs[number] }) {
+  return (
+    <StudentLayout>
+      <div className="profile-hero">
+        <div className="profile-avatar">AS</div>
+        <div>
+          <h1>Anaya Sharma</h1>
+          <p>STU-102417 · Computer Science · Batch 2028</p>
+        </div>
+        <div className="profile-availability">
+          <StatusPill>Open for placement</StatusPill>
+          <StatusPill tone="muted">Profile visibility: Recruiters</StatusPill>
+        </div>
+      </div>
+      <nav className="subnav">
+        {profileTabs.map((tab) => (
+          <Link
+            key={tab}
+            href={tab === "overview" ? "/profile" : `/profile/${tab}`}
+            className={tab === section ? "subnav-link subnav-active" : "subnav-link"}
+          >
+            {tab[0].toUpperCase() + tab.slice(1)}
+          </Link>
+        ))}
+      </nav>
+      {section === "overview" && <ProfileOverview />}
+      {section === "documents" && <ProfileDocuments />}
+      {section === "resumes" && <ProfileResumes />}
+      {section === "settings" && <ProfileSettings />}
+    </StudentLayout>
+  );
+}
+
+function declaredSkillsFromStorage(): string[] {
+  return getDeclaredSkills();
+}
+
+type ProfessionalLinks = {
+  linkedin: string;
+  github: string;
+  portfolio: string;
+  leetcode: string;
+  codechef: string;
+  codeforces: string;
+};
+
+const professionalLinkFields: { key: keyof ProfessionalLinks; label: string; placeholder: string }[] = [
+  { key: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/your-name" },
+  { key: "github", label: "GitHub", placeholder: "https://github.com/your-handle" },
+  { key: "portfolio", label: "Portfolio", placeholder: "https://your-portfolio.example" },
+  { key: "leetcode", label: "LeetCode", placeholder: "https://leetcode.com/your-handle" },
+  { key: "codechef", label: "CodeChef", placeholder: "https://codechef.com/users/your-handle" },
+  { key: "codeforces", label: "Codeforces", placeholder: "https://codeforces.com/profile/your-handle" },
+];
+
+function professionalLinksFromStorage(): ProfessionalLinks {
+  const defaults: ProfessionalLinks = {
+    linkedin: "https://linkedin.com/in/anaya-sharma",
+    github: "https://github.com/anaya-sharma",
+    portfolio: "https://anaya-sharma.dev",
+    leetcode: "https://leetcode.com/anaya_sharma",
+    codechef: "",
+    codeforces: "",
+  };
+  try {
+    const stored = localStorage.getItem("sih-connect-professional-links");
+    return stored ? { ...defaults, ...(JSON.parse(stored) as Partial<ProfessionalLinks>) } : defaults;
+  } catch {
+    return defaults;
+  }
+}
+
+function sanitizeUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
 function ProfileOverview() {
   const [skillsInput, setSkillsInput] = useState(() => declaredSkillsFromStorage().join(", "));
   const [links, setLinks] = useState<ProfessionalLinks>(professionalLinksFromStorage);
@@ -1593,66 +2141,751 @@ function ProfileOverview() {
   };
 
   async function saveLinksAndSkills() {
-    const skills = Array.from(new Set(skillsInput.split(",").map((skill) => skill.trim()).filter(Boolean)));
-    localStorage.setItem("sih-connect-declared-skills", JSON.stringify(skills));
-    localStorage.setItem("sih-connect-professional-links", JSON.stringify(links));
+    const rawSkills = skillsInput.split(",").map((s) => s.trim()).filter(Boolean);
+    const skills = Array.from(new Set(rawSkills));
+
+    // Format all link URLs
+    const formattedLinks: ProfessionalLinks = {
+      linkedin: sanitizeUrl(links.linkedin),
+      github: sanitizeUrl(links.github),
+      portfolio: sanitizeUrl(links.portfolio),
+      leetcode: sanitizeUrl(links.leetcode),
+      codechef: sanitizeUrl(links.codechef),
+      codeforces: sanitizeUrl(links.codeforces),
+    };
+
+    saveDeclaredSkills(skills);
+    localStorage.setItem("sih-connect-professional-links", JSON.stringify(formattedLinks));
+    setLinks(formattedLinks);
     setSkillsInput(skills.join(", "));
+
     try {
       await api.profile.update({ declaredSkills: skills });
     } catch {}
-    toast.success("Professional links and declared skills saved to profile.");
+
+    toast.success("Professional links and declared skills saved to profile!");
   }
-  return <div className="profile-stack"><SectionCard><div className="completion-banner"><div><b>Profile 78% complete</b><ProgressBar value={78} /><p>Missing: Semester 4 academic record.</p></div><Link href="/profile/documents" className="primary-button">Complete profile</Link></div></SectionCard><div className="academic-grid"><StatCard label="CGPA" value="8.14" note="Current record" /><StatCard label="Backlogs" value="0" note="No active record" /><StatCard label="10th %" value="91.2" /><StatCard label="12th %" value="88.6" /></div><SectionCard title="Contact details"><div className="form-grid"><label>Mobile number (10 digits)<div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><span style={{ padding: "0.5rem 0.75rem", background: "var(--surface-muted, #f1f3f5)", border: "1px solid var(--border-color, #e5e7eb)", borderRadius: "6px", fontSize: "0.9rem", color: "#555" }}>+91</span><input type="tel" inputMode="numeric" pattern="[0-9]{10}" maxLength={10} value={phone} onChange={handlePhoneChange} placeholder="9812345510" style={{ flex: 1 }} /></div><small style={{ color: phone.length === 10 ? "#2b8a3e" : "#e03131", fontSize: "0.75rem", marginTop: "0.25rem", display: "block" }}>{phone.length}/10 digits {phone.length === 10 ? "✓" : "(must be exactly 10 digits)"}</small></label><label>Personal email<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="anaya.sharma@example.edu" /></label></div><div className="section-actions"><button type="button" className="small-outline" onClick={() => void handleSaveContactDetails()}>Save changes</button></div></SectionCard><SectionCard title="Links & skills" aside={<Link href="/skill-map/roles" className="action-link">See skill map <ArrowRight size={15} /></Link>}><form className="links-skills-form" onSubmit={(event) => { event.preventDefault(); void saveLinksAndSkills(); }}><p className="declared-skills-copy">Add professional evidence links and the skills you currently know. These inputs support a clearer profile review; declared skills remain part of your skill-map comparison.</p><div className="professional-links-grid">{professionalLinkFields.map((field) => <label key={field.key}>{field.label}<input type="url" value={links[field.key]} onChange={(event) => setLinks((current) => ({ ...current, [field.key]: event.target.value }))} placeholder={field.placeholder} /></label>)}</div><label className="top-skills-field">Top skills<textarea value={skillsInput} onChange={(event) => setSkillsInput(event.target.value)} placeholder="Python, Data analysis, Research writing, Communication" rows={4} /><small>Comma-separated, for example: Python, React, SQL.</small></label><div className="links-skills-actions"><span>Saved skills appear in your mapping evidence after you select Save.</span><button type="submit" className="small-outline">Save links & skills</button></div></form></SectionCard><SectionCard title="Assessment-calculated skills" aside={<Link href="/assessment" className="action-link">{assessment ? "Retake quiz" : "Take quiz"} <ArrowRight size={15} /></Link>}>{assessment ? <div className="assessment-profile-scores">{(["Technical", "Soft skills", "Other skills"] as const).map((category) => <article key={category}><span>{category}</span><b>{assessment.categoryScores[category]}%</b><small>{assessment.categoryScores[category] >= 80 ? "Strong answer signal" : assessment.categoryScores[category] >= 60 ? "Current answer signal" : "Targeted practice needed"}</small></article>)}<p>Calculated from your latest scored quiz. These signals are considered alongside declared and verified evidence.</p></div> : <div className="assessment-empty"><p>No knowledge quiz has been completed yet. Take the assessment to calculate technical, soft, and other skill signals from your answers.</p><Link href="/assessment/industry-readiness" className="small-outline">Start knowledge quiz <ArrowRight size={15} /></Link></div>}</SectionCard></div>;
+
+  return (
+    <div className="profile-stack">
+      <SectionCard>
+        <div className="completion-banner">
+          <div>
+            <b>Profile 85% complete</b>
+            <ProgressBar value={85} />
+            <p>Verified: Academic records, contact details, declared skills, and resume.</p>
+          </div>
+          <Link href="/profile/documents" className="primary-button">
+            Review documents
+          </Link>
+        </div>
+      </SectionCard>
+
+      <div className="academic-grid">
+        <StatCard label="CGPA" value="8.14" note="Current record" />
+        <StatCard label="Backlogs" value="0" note="No active record" />
+        <StatCard label="10th %" value="91.2" />
+        <StatCard label="12th %" value="88.6" />
+      </div>
+
+      <SectionCard title="Contact details">
+        <div className="form-grid">
+          <label>
+            Mobile number (10 digits)
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span
+                style={{
+                  padding: "0.5rem 0.75rem",
+                  background: "var(--surface-muted, #f1f3f5)",
+                  border: "1px solid var(--border-color, #e5e7eb)",
+                  borderRadius: "6px",
+                  fontSize: "0.9rem",
+                  color: "#555",
+                }}
+              >
+                +91
+              </span>
+              <input
+                type="tel"
+                inputMode="numeric"
+                pattern="[0-9]{10}"
+                maxLength={10}
+                value={phone}
+                onChange={handlePhoneChange}
+                placeholder="9812345510"
+                style={{ flex: 1 }}
+              />
+            </div>
+            <small
+              style={{
+                color: phone.length === 10 ? "#2b8a3e" : "#e03131",
+                fontSize: "0.75rem",
+                marginTop: "0.25rem",
+                display: "block",
+              }}
+            >
+              {phone.length}/10 digits {phone.length === 10 ? "✓" : "(must be exactly 10 digits)"}
+            </small>
+          </label>
+          <label>
+            Personal email
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="anaya.sharma@example.edu"
+            />
+          </label>
+        </div>
+        <div className="section-actions">
+          <button type="button" className="small-outline" onClick={() => void handleSaveContactDetails()}>
+            Save changes
+          </button>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        title="Links & skills"
+        aside={
+          <Link href="/skill-map/roles" className="action-link">
+            See skill map <ArrowRight size={15} />
+          </Link>
+        }
+      >
+        <form
+          className="links-skills-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void saveLinksAndSkills();
+          }}
+        >
+          <p className="declared-skills-copy">
+            Add professional portfolio links and declared skills. Formatted links are verified for recruiters and matching algorithms.
+          </p>
+          <div className="professional-links-grid">
+            {professionalLinkFields.map((field) => (
+              <label key={field.key}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>{field.label}</span>
+                  {links[field.key] && (
+                    <a
+                      href={sanitizeUrl(links[field.key])}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={{ fontSize: "10px", color: "var(--olive)", display: "inline-flex", alignItems: "center", gap: "3px" }}
+                    >
+                      <Globe size={11} /> Open
+                    </a>
+                  )}
+                </div>
+                <input
+                  type="text"
+                  value={links[field.key]}
+                  onChange={(event) =>
+                    setLinks((current) => ({ ...current, [field.key]: event.target.value }))
+                  }
+                  placeholder={field.placeholder}
+                />
+              </label>
+            ))}
+          </div>
+
+          <label className="top-skills-field">
+            Top declared skills (comma separated)
+            <textarea
+              value={skillsInput}
+              onChange={(event) => setSkillsInput(event.target.value)}
+              placeholder="Python, Data analysis, Research writing, Communication, SQL"
+              rows={3}
+            />
+            <small>Comma-separated skills will automatically sync across Jobs, Internships, Assessments, and Skill Map.</small>
+          </label>
+
+          <div className="links-skills-actions">
+            <span>Saved skills immediately recalculate fit scores across placement opportunities.</span>
+            <button type="submit" className="primary-button">
+              Save links & skills
+            </button>
+          </div>
+        </form>
+      </SectionCard>
+
+      <SectionCard
+        title="Assessment-calculated skills"
+        aside={
+          <Link href="/assessment" className="action-link">
+            {assessment ? "Retake quiz" : "Take quiz"} <ArrowRight size={15} />
+          </Link>
+        }
+      >
+        {assessment ? (
+          <div className="assessment-profile-scores">
+            {(["Technical", "Soft skills", "Other skills"] as const).map((category) => (
+              <article key={category}>
+                <span>{category}</span>
+                <b>{assessment.categoryScores[category]}%</b>
+                <small>
+                  {assessment.categoryScores[category] >= 80
+                    ? "Strong answer signal"
+                    : assessment.categoryScores[category] >= 60
+                    ? "Current answer signal"
+                    : "Targeted practice needed"}
+                </small>
+              </article>
+            ))}
+            <p>
+              Calculated from your latest scored quiz ({assessment.overall}% overall). These signals are considered alongside declared and verified evidence.
+            </p>
+          </div>
+        ) : (
+          <div className="assessment-empty">
+            <p>
+              No knowledge quiz has been completed yet. Take the assessment to calculate technical, soft, and other skill signals from your answers.
+            </p>
+            <Link href="/assessment/industry-readiness" className="small-outline">
+              Start knowledge quiz <ArrowRight size={15} />
+            </Link>
+          </div>
+        )}
+      </SectionCard>
+    </div>
+  );
 }
 
 function ProfileDocuments() {
-  const [docs, setDocs] = useState([
-    { id: "1", title: "Semester 3 academic record", verified: true },
-    { id: "2", title: "Semester 4 academic record", verified: false },
-    { id: "3", title: "Identity proof", verified: true },
-    { id: "4", title: "Skill evidence note", verified: true },
-  ]);
-  const [newDocTitle, setNewDocTitle] = useState("");
+  const [docs, setDocs] = useState<ProfileDocumentItem[]>([]);
   const [showUpload, setShowUpload] = useState(false);
+  const [newDocTitle, setNewDocTitle] = useState("");
+  const [newDocCategory, setNewDocCategory] = useState<ProfileDocumentItem["category"]>("Academic Record");
+  const [uploadedFileName, setUploadedFileName] = useState("");
+  const [uploadedFileData, setUploadedFileData] = useState<string | undefined>(undefined);
+  const [uploadedFileSize, setUploadedFileSize] = useState("210 KB");
+
+  useEffect(() => {
+    setDocs(getProfileDocuments());
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUploadedFileName(file.name);
+      setUploadedFileSize(`${Math.round(file.size / 1024)} KB`);
+      const reader = new FileReader();
+      reader.onload = () => setUploadedFileData(reader.result as string);
+      reader.readAsDataURL(file);
+      if (!newDocTitle.trim()) {
+        setNewDocTitle(file.name.replace(/\.[^/.]+$/, ""));
+      }
+    }
+  };
 
   const handleAddDoc = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!newDocTitle.trim()) return;
-    const newDoc = { id: String(Date.now()), title: newDocTitle.trim(), verified: true };
-    setDocs((curr) => [...curr, newDoc]);
+
+    const newDoc = addProfileDocument({
+      title: newDocTitle.trim(),
+      category: newDocCategory,
+      fileName: uploadedFileName || `${newDocTitle.trim().replace(/\s+/g, "_")}.pdf`,
+      fileSize: uploadedFileSize,
+      fileDataUrl: uploadedFileData,
+      verified: true,
+    });
+
+    setDocs(getProfileDocuments());
     setNewDocTitle("");
+    setUploadedFileName("");
+    setUploadedFileData(undefined);
     setShowUpload(false);
+
     try {
       await api.profile.addDocument(newDoc.title);
     } catch {}
+
     toast.success(`Uploaded and registered: ${newDoc.title}`);
   };
 
   const handleDeleteDoc = async (id: string, title: string) => {
-    setDocs((curr) => curr.filter((d) => d.id !== id));
+    deleteProfileDocument(id);
+    setDocs(getProfileDocuments());
     try {
       await api.profile.deleteDocument(id);
     } catch {}
-    toast(`${title} removed.`);
+    toast.info(`Removed document "${title}".`);
   };
 
-  return <div className="profile-stack"><SectionCard title="Academic and supporting documents" aside={<button className="small-outline" onClick={() => setShowUpload((c) => !c)}>{showUpload ? "Cancel" : "Upload document"}</button>}>
-    {showUpload && (
-      <form onSubmit={handleAddDoc} style={{ marginBottom: "1.25rem", padding: "1rem", background: "var(--card-bg, #f8f9fa)", borderRadius: "8px", border: "1px solid var(--border-color, #e5e7eb)" }}>
-        <label style={{ display: "block", marginBottom: "0.5rem", fontWeight: "600" }}>Document title or description</label>
-        <input style={{ width: "100%", padding: "0.5rem", marginBottom: "0.75rem", borderRadius: "4px", border: "1px solid #ccc" }} value={newDocTitle} onChange={(e) => setNewDocTitle(e.target.value)} placeholder="e.g. Semester 5 Marksheet, AWS Certification, Project Report" required />
-        <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button type="submit" className="primary-button">Upload & Verify</button>
-          <button type="button" className="small-outline" onClick={() => setShowUpload(false)}>Cancel</button>
+  return (
+    <div className="profile-stack">
+      <SectionCard
+        title="Academic and supporting documents"
+        aside={
+          <button
+            type="button"
+            className="small-outline"
+            onClick={() => setShowUpload((c) => !c)}
+          >
+            {showUpload ? "Cancel" : "Upload document"}
+          </button>
+        }
+      >
+        {showUpload && (
+          <form
+            onSubmit={handleAddDoc}
+            style={{
+              marginBottom: "1.25rem",
+              padding: "1rem",
+              background: "var(--surface)",
+              borderRadius: "8px",
+              border: "1px solid var(--rule)",
+            }}
+          >
+            <div style={{ display: "grid", gap: "10px" }}>
+              <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                Document title or description *
+                <input
+                  style={{ width: "100%", marginTop: "4px" }}
+                  value={newDocTitle}
+                  onChange={(e) => setNewDocTitle(e.target.value)}
+                  placeholder="e.g. Semester 5 Marksheet, AWS Certification, Identity Proof"
+                  required
+                />
+              </label>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                  Category
+                  <select
+                    style={{ width: "100%", marginTop: "4px" }}
+                    value={newDocCategory}
+                    onChange={(e) => setNewDocCategory(e.target.value as any)}
+                  >
+                    <option value="Academic Record">Academic Record</option>
+                    <option value="Identity Proof">Identity Proof</option>
+                    <option value="Certificate">Certificate</option>
+                    <option value="Skill Evidence">Skill Evidence</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+
+                <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                  Select File from Device *
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                    onChange={handleFileChange}
+                    style={{ width: "100%", marginTop: "4px", fontSize: "11px" }}
+                  />
+                </label>
+              </div>
+
+              {uploadedFileName && (
+                <small style={{ color: "var(--olive)", fontWeight: 600 }}>
+                  ✓ Selected: {uploadedFileName} ({uploadedFileSize})
+                </small>
+              )}
+
+              <div style={{ display: "flex", gap: "8px", marginTop: "6px" }}>
+                <button type="submit" className="primary-button">
+                  Upload & Register Document
+                </button>
+                <button
+                  type="button"
+                  className="small-outline"
+                  onClick={() => setShowUpload(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        <div className="document-list">
+          {docs.map((doc) => (
+            <div key={doc.id} style={{ display: "grid", gridTemplateColumns: "24px 1fr auto auto", gap: "10px", alignItems: "center" }}>
+              <FileText size={18} style={{ color: "var(--olive)" }} />
+              <div>
+                <b>{doc.title}</b>
+                <span>
+                  {doc.category} · {doc.fileName} · {doc.fileSize} · {doc.uploadedAt}
+                </span>
+              </div>
+              <StatusPill tone={doc.verified ? "olive" : "ochre"}>
+                {doc.verified ? "Verified" : "Pending Review"}
+              </StatusPill>
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button
+                  type="button"
+                  className="small-outline"
+                  onClick={() => downloadProfileDocument(doc)}
+                  title="Download document"
+                >
+                  <Download size={13} />
+                </button>
+                <button
+                  type="button"
+                  className="file-remove-btn"
+                  onClick={() => void handleDeleteDoc(doc.id, doc.title)}
+                  title="Delete document"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {docs.length === 0 && (
+            <EmptyPanel
+              title="No documents uploaded"
+              text="Upload your academic records, marksheets, and certifications to verify your profile."
+            />
+          )}
         </div>
-      </form>
-    )}
-    <div className="document-list">{docs.map((doc) => <div key={doc.id}><FileText size={18} /><div><b>{doc.title}</b><span>{doc.verified ? "Verified document" : "Required · Verification pending"}</span></div><StatusPill tone={doc.verified ? "olive" : "ochre"}>{doc.verified ? "Verified" : "Action required"}</StatusPill><button type="button" className="text-button" onClick={() => void handleDeleteDoc(doc.id, doc.title)}>Delete</button></div>)}</div>
-  </SectionCard><Notice title="Access and privacy" text="Documents are visible only according to your consent, application selection, and role-based access rules." /></div>;
+      </SectionCard>
+
+      <Notice
+        title="Access and privacy"
+        text="Documents are visible only according to your consent, application selection, and role-based institutional access rules."
+      />
+    </div>
+  );
 }
 
-function ProfileResumes() { return <div className="profile-stack"><SectionCard title="Resume versions" aside={<button className="small-outline" onClick={() => toast.success("New resume version uploaded successfully.")}>Upload new version</button>}><div className="resume-card"><FileText size={24} /><div><b>Anaya_Sharma_resume.pdf</b><span>Primary resume · Updated 18 Aug · Used in 2 applications</span></div><StatusPill>Primary</StatusPill><button className="icon-text" onClick={() => toast.success("Resume downloaded.")}><Download size={16} /> Download</button></div></SectionCard><SectionCard title="Application use"><p className="body-copy">Selecting a different resume during an application keeps the submitted version attached to that application record.</p></SectionCard></div>; }
-function ProfileSettings() { const [profileVisible, setProfileVisible] = useState(true); const [notificationsEnabled, setNotificationsEnabled] = useState(true); const PreferenceToggle = ({ enabled, onToggle, label }: { enabled: boolean; onToggle: () => void; label: string }) => <button type="button" className={`preference-toggle ${enabled ? "is-on" : "is-off"}`} role="switch" aria-checked={enabled} aria-label={label} onClick={onToggle}><span>{enabled ? "On" : "Off"}</span><i /></button>; return <div className="profile-stack"><SectionCard title="Profile preferences"><div className="setting-row"><div><b>Recruiter profile visibility</b><span>Authorised recruiters may view approved profile evidence.</span></div><PreferenceToggle enabled={profileVisible} onToggle={() => setProfileVisible((current) => !current)} label="Toggle recruiter profile visibility" /></div><div className="setting-row"><div><b>Application notifications</b><span>Receive updates when a recruitment stage changes.</span></div><PreferenceToggle enabled={notificationsEnabled} onToggle={() => setNotificationsEnabled((current) => !current)} label="Toggle application notifications" /></div></SectionCard><SectionCard title="Privacy controls"><p className="body-copy">Consent, access history, and data requests are handled through the connected institutional privacy workflow.</p><button className="small-outline" onClick={() => toast.success("Privacy preferences updated.")}>View privacy options</button></SectionCard></div>; }
+function ProfileResumes() {
+  const [resumes, setResumes] = useState<ProfileResumeItem[]>([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [resumeTitle, setResumeTitle] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [fileData, setFileData] = useState<string | undefined>(undefined);
+  const [fileSize, setFileSize] = useState("200 KB");
+
+  useEffect(() => {
+    setResumes(getProfileResumes());
+  }, []);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      setFileSize(`${Math.round(file.size / 1024)} KB`);
+      const reader = new FileReader();
+      reader.onload = () => setFileData(reader.result as string);
+      reader.readAsDataURL(file);
+      if (!resumeTitle.trim()) {
+        setResumeTitle(file.name.replace(/\.[^/.]+$/, ""));
+      }
+    }
+  };
+
+  const handleAddResume = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resumeTitle.trim()) return;
+
+    addProfileResume(
+      resumeTitle.trim(),
+      fileName || `${resumeTitle.trim().replace(/\s+/g, "_")}.pdf`,
+      fileSize,
+      fileData
+    );
+
+    setResumes(getProfileResumes());
+    setResumeTitle("");
+    setFileName("");
+    setFileData(undefined);
+    setShowUploadModal(false);
+
+    toast.success(`Uploaded new resume: ${resumeTitle.trim()}`);
+  };
+
+  const handleSetPrimary = (id: string, title: string) => {
+    setPrimaryResume(id);
+    setResumes(getProfileResumes());
+    toast.success(`"${title}" is now your primary resume.`);
+  };
+
+  const handleDelete = (id: string, title: string) => {
+    deleteProfileResume(id);
+    setResumes(getProfileResumes());
+    toast.info(`Deleted resume "${title}".`);
+  };
+
+  return (
+    <div className="profile-stack">
+      <SectionCard
+        title="Resume versions"
+        aside={
+          <button
+            type="button"
+            className="small-outline"
+            onClick={() => setShowUploadModal((c) => !c)}
+          >
+            {showUploadModal ? "Cancel" : "Upload new version"}
+          </button>
+        }
+      >
+        {showUploadModal && (
+          <form
+            onSubmit={handleAddResume}
+            style={{
+              marginBottom: "16px",
+              padding: "14px",
+              background: "var(--surface)",
+              border: "1px solid var(--rule)",
+              borderRadius: "8px",
+            }}
+          >
+            <div style={{ display: "grid", gap: "10px" }}>
+              <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                Resume Version Label *
+                <input
+                  style={{ width: "100%", marginTop: "4px" }}
+                  value={resumeTitle}
+                  onChange={(e) => setResumeTitle(e.target.value)}
+                  placeholder="e.g. Technical Systems Resume, Data Science Focused Resume"
+                  required
+                />
+              </label>
+
+              <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                Select Resume File from Device *
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileChange}
+                  style={{ width: "100%", marginTop: "4px", fontSize: "11px" }}
+                />
+              </label>
+
+              {fileName && (
+                <small style={{ color: "var(--olive)", fontWeight: 600 }}>
+                  ✓ Selected: {fileName} ({fileSize})
+                </small>
+              )}
+
+              <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+                <button type="submit" className="primary-button">
+                  Upload Resume Version
+                </button>
+                <button
+                  type="button"
+                  className="small-outline"
+                  onClick={() => setShowUploadModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </form>
+        )}
+
+        <div className="stack-md">
+          {resumes.map((res) => (
+            <div
+              key={res.id}
+              className="attached-file-row"
+              style={{
+                borderLeft: res.isPrimary ? "4px solid var(--olive)" : undefined,
+              }}
+            >
+              <div className="attached-file-info">
+                <FileText size={22} style={{ color: res.isPrimary ? "var(--olive)" : "var(--slate)" }} />
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <b>{res.title}</b>
+                    {res.isPrimary && <StatusPill tone="olive">Primary</StatusPill>}
+                  </div>
+                  <span>
+                    {res.fileName} · {res.fileSize} · Uploaded {res.uploadedAt} · Used in {res.usedInAppsCount} application(s)
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                {!res.isPrimary && (
+                  <button
+                    type="button"
+                    className="small-outline"
+                    onClick={() => handleSetPrimary(res.id, res.title)}
+                    title="Make this the default resume"
+                  >
+                    Make Primary
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => downloadProfileResume(res)}
+                  style={{ padding: "6px 10px", fontSize: "11px" }}
+                  title="Download resume"
+                >
+                  <Download size={13} /> Download
+                </button>
+                {!res.isPrimary && (
+                  <button
+                    type="button"
+                    className="file-remove-btn"
+                    onClick={() => handleDelete(res.id, res.title)}
+                    title="Delete resume version"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Application usage rules">
+        <p className="body-copy">
+          Your primary resume is automatically pre-selected when applying for opportunities. Selecting a tailored resume during application attaches that snapshot permanently to the specific application record.
+        </p>
+      </SectionCard>
+    </div>
+  );
+}
+
+function ProfileSettings() {
+  const [settings, setSettings] = useState<ProfileSettingsState>(getProfileSettings);
+
+  const toggleSetting = (key: keyof ProfileSettingsState, label: string) => {
+    const updated = { ...settings, [key]: !settings[key] };
+    setSettings(updated);
+    saveProfileSettings(updated);
+    toast.success(`${label} preference updated.`);
+  };
+
+  const handleExportData = () => {
+    const exportData = {
+      student: "Anaya Sharma",
+      studentId: "STU-102417",
+      institution: "SIH Partner Institution",
+      batch: "Batch 2028",
+      program: "Computer Science & Engineering",
+      cgpa: "8.14",
+      declaredSkills: getDeclaredSkills(),
+      contact: {
+        phone: localStorage.getItem("sih-connect-profile-phone") || "9812345510",
+        email: localStorage.getItem("sih-connect-profile-email") || "anaya.sharma@example.edu",
+        links: JSON.parse(localStorage.getItem("sih-connect-professional-links") || "{}"),
+      },
+      documents: getProfileDocuments(),
+      resumes: getProfileResumes(),
+      applications: getStudentApplications(),
+      offers: getStudentOffers(),
+      placement: getPlacementStatus(),
+      exportedAt: new Date().toISOString(),
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `SIH_Connect_Student_Profile_Export_Anaya_Sharma.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success("Student profile data exported successfully!");
+  };
+
+  const PreferenceToggle = ({
+    enabled,
+    onToggle,
+    label,
+  }: {
+    enabled: boolean;
+    onToggle: () => void;
+    label: string;
+  }) => (
+    <button
+      type="button"
+      className={`preference-toggle ${enabled ? "is-on" : "is-off"}`}
+      role="switch"
+      aria-checked={enabled}
+      aria-label={label}
+      onClick={onToggle}
+    >
+      <span>{enabled ? "On" : "Off"}</span>
+      <i />
+    </button>
+  );
+
+  return (
+    <div className="profile-stack">
+      <SectionCard title="Profile preferences">
+        <div className="setting-row">
+          <div>
+            <b>Recruiter profile visibility</b>
+            <span>Authorised recruiters may view approved profile evidence and skill match data.</span>
+          </div>
+          <PreferenceToggle
+            enabled={settings.recruiterProfileVisibility}
+            onToggle={() =>
+              toggleSetting("recruiterProfileVisibility", "Recruiter profile visibility")
+            }
+            label="Toggle recruiter profile visibility"
+          />
+        </div>
+
+        <div className="setting-row">
+          <div>
+            <b>Institution & mentor visibility</b>
+            <span>Allow department faculty advisors and career mentors to access verified academic records.</span>
+          </div>
+          <PreferenceToggle
+            enabled={settings.institutionProfileVisibility}
+            onToggle={() =>
+              toggleSetting("institutionProfileVisibility", "Institution visibility")
+            }
+            label="Toggle institution profile visibility"
+          />
+        </div>
+
+        <div className="setting-row">
+          <div>
+            <b>Application & recruitment notifications</b>
+            <span>Receive instant updates when your stage moves from Screening to Interview or Offer.</span>
+          </div>
+          <PreferenceToggle
+            enabled={settings.applicationNotifications}
+            onToggle={() =>
+              toggleSetting("applicationNotifications", "Application notifications")
+            }
+            label="Toggle application notifications"
+          />
+        </div>
+
+        <div className="setting-row">
+          <div>
+            <b>Email alerts & deadline warnings</b>
+            <span>Receive alerts for opportunities closing within 7 days.</span>
+          </div>
+          <PreferenceToggle
+            enabled={settings.emailAlerts}
+            onToggle={() => toggleSetting("emailAlerts", "Email alerts")}
+            label="Toggle email alerts"
+          />
+        </div>
+      </SectionCard>
+
+      <SectionCard title="Data Privacy, Consent & Export">
+        <p className="body-copy">
+          Consent, access logs, and student data retention are managed under institutional privacy policies. You can export a full copy of your portfolio, application snapshots, and credentials.
+        </p>
+        <div style={{ display: "flex", gap: "10px", marginTop: "12px" }}>
+          <button
+            type="button"
+            className="small-outline"
+            onClick={handleExportData}
+          >
+            <Download size={14} /> Export My Complete Profile Data (JSON)
+          </button>
+        </div>
+      </SectionCard>
+    </div>
+  );
+}
 
 export function SkillMapPage({ focus = "industries" }: { focus?: "industries" | "roles" }) {
   const labels = { industries: "Industry alignment", roles: "Role alignment" };
