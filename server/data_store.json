@@ -197,6 +197,17 @@
   ],
   "applications": [
     {
+      "id": "app-1788283106958",
+      "jobId": "ai-studio",
+      "jobTitle": "Applied AI Capability Studio",
+      "organization": "Northstar Systems",
+      "studentName": "Anaya Sharma",
+      "studentEmail": "anaya.sharma@exampl",
+      "stage": "Submitted",
+      "appliedAt": "Just now",
+      "statement": ""
+    },
+    {
       "id": "app-1788183306177",
       "jobId": "product-review",
       "jobTitle": "Digital Product Review Cohort",
@@ -450,7 +461,12 @@
       "Data analysis",
       "Research writing",
       "Communication",
-      "YAYY"
+      "YAYY",
+      "SQL",
+      "Database Design",
+      "Presentation",
+      "Git",
+      "System Design"
     ],
     "documents": [
       {
@@ -472,6 +488,11 @@
         "id": "doc-4",
         "title": "Skill evidence note",
         "verified": true
+      },
+      {
+        "id": "doc-1788279781874",
+        "title": "h",
+        "verified": false
       }
     ],
     "phone": "+91 9876543290"
