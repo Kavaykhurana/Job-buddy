@@ -1,12 +1,13 @@
 // Scalable application repository, document management, withdrawal lifecycle, and file downloads.
+import { saveCandidate } from "./portalData";
 
 export interface AttachedFile {
-  id: string;
+  id?: string;
   name: string;
   size: string;
   type: string;
   dataUrl?: string; // base64 or generated data URI
-  uploadedAt: string;
+  uploadedAt?: string;
 }
 
 export interface TimelineItem {
@@ -190,6 +191,20 @@ export function createStudentApplication(data: {
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    saveCandidate({
+      id: "anaya-01",
+      name: "Anaya Sharma",
+      email: "anaya.sharma@example.edu",
+      program: "Computer Science · Batch 2028",
+      score: data.match,
+      eligibility: data.match >= 70 ? "Eligible" : "Needs review",
+      stage: "Screening",
+      skills: ["Python", "SQL", "Communication", "Data Analysis"],
+      opportunityTitle: data.jobTitle,
+      appliedDate: nowFormatted,
+      avatar: "AS",
+      shortlisted: false,
+    });
   } catch {}
 
   return newApp;
