@@ -59,6 +59,8 @@ import studentSkillMap from "@/assets/student-skill-map.svg";
 import {
   calculateJobSkillFit,
   getJobDeadlineInfo,
+  getJobOpportunities,
+  getJobOpportunityById,
   JobOpportunity,
   jobOpportunities,
 } from "@/data/jobData";
@@ -131,7 +133,7 @@ export function StudentHome() {
   }, []);
 
   const topJobs = useMemo(() => {
-    return jobOpportunities.slice(0, 2).map((job) => {
+    return getJobOpportunities().slice(0, 2).map((job) => {
       const fit = calculateJobSkillFit(job, userSkills);
       return { ...job, fit };
     });
@@ -282,23 +284,25 @@ export function JobsPage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [minFit, setMinFit] = useState<number>(0);
   const [userSkills, setUserSkills] = useState<string[]>([]);
+  const [jobsList, setJobsList] = useState<JobOpportunity[]>(getJobOpportunities);
 
   useEffect(() => {
     setUserSkills(getDeclaredSkills());
+    setJobsList(getJobOpportunities());
   }, []);
 
   // Compute all available unique skills across job opportunities
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
-    jobOpportunities.forEach((j) => {
+    jobsList.forEach((j) => {
       j.required.forEach((s) => skillSet.add(s));
       j.preferred.forEach((s) => skillSet.add(s));
     });
     return Array.from(skillSet).sort();
-  }, []);
+  }, [jobsList]);
 
   const jobsWithMeta = useMemo(() => {
-    return jobOpportunities
+    return jobsList
       .map((item) => {
         const skillFit = calculateJobSkillFit(item, userSkills);
         const deadline = getJobDeadlineInfo(item.closeDate);
@@ -313,7 +317,7 @@ export function JobsPage() {
         };
       })
       .sort((a, b) => b.skillFit.matchPercent - a.skillFit.matchPercent);
-  }, [userSkills]);
+  }, [jobsList, userSkills]);
 
   const recommendedCount = jobsWithMeta.filter((j) => j.isRecommended).length;
   const closingSoonCount = jobsWithMeta.filter((j) => j.deadline.isUrgent).length;
@@ -830,7 +834,8 @@ export function JobsPage() {
 }
 
 function useOpportunity(id: string) {
-  return jobOpportunities.find((item) => item.id === id) ?? jobOpportunities[0];
+  const all = getJobOpportunities();
+  return getJobOpportunityById(id) ?? all.find((item) => item.id === id) ?? all[0];
 }
 
 export function JobDetailPage({ id = "ai-studio" }: { id?: string }) {

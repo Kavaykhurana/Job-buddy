@@ -107,6 +107,29 @@ export const opportunities = [
   },
 ];
 
+export function getPortalOpportunities(): typeof opportunities {
+  try {
+    const posted = loadRecruiterPostedJobs();
+    const converted = posted.map((p) => ({
+      id: p.id,
+      title: p.title,
+      organization: p.organization || "Northstar Systems",
+      location: p.location || `${p.mode} · Bengaluru`,
+      date: "Closes 18 Sep",
+      match: 80,
+      status: p.status === "Closed" ? "Closed" : "Eligible",
+      required: p.requiredSkills ? p.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean) : ["Communication"],
+      preferred: p.preferredSkills ? p.preferredSkills.split(",").map((s) => s.trim()).filter(Boolean) : [],
+      type: "Structured opportunity",
+      summary: p.summary || p.eligibility || "Support placement workflows and technical execution.",
+    }));
+    const postedIds = new Set(converted.map((c) => c.id));
+    return [...converted, ...opportunities.filter((o) => !postedIds.has(o.id))];
+  } catch {
+    return opportunities;
+  }
+}
+
 export const applicationStages = ["Applied", "Shortlisted", "Attended", "Rejected", "Offers"];
 
 export interface JobAttachment {
@@ -501,7 +524,7 @@ export const roleRequirements = [
   { role: "Applied AI Capability Studio", skill: "SQL", level: "Intermediate", importance: "Preferred", demand: "High" },
 ];
 
-export const companyRoleRequirements = [
+export const initialCompanyRoleRequirements = [
   {
     company: "Northstar Systems",
     industry: "Applied systems and data operations",
@@ -519,6 +542,29 @@ export const companyRoleRequirements = [
     ],
   },
 ];
+
+export const companyRoleRequirements = initialCompanyRoleRequirements;
+
+const COMPANY_ROLE_REQUIREMENTS_KEY = "sih-connect-company-role-requirements";
+
+export function loadCompanyRoleRequirements(): typeof initialCompanyRoleRequirements {
+  try {
+    const raw = localStorage.getItem(COMPANY_ROLE_REQUIREMENTS_KEY);
+    if (!raw) {
+      localStorage.setItem(COMPANY_ROLE_REQUIREMENTS_KEY, JSON.stringify(initialCompanyRoleRequirements));
+      return initialCompanyRoleRequirements;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return initialCompanyRoleRequirements;
+  }
+}
+
+export function saveCompanyRoleRequirements(data: typeof initialCompanyRoleRequirements): void {
+  try {
+    localStorage.setItem(COMPANY_ROLE_REQUIREMENTS_KEY, JSON.stringify(data));
+  } catch {}
+}
 
 export const studentSkillMaps = {
   industries: [
