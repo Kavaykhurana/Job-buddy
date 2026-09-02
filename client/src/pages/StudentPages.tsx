@@ -97,6 +97,14 @@ import {
   saveProfileSettings,
   setPrimaryResume,
 } from "@/data/profileData";
+import {
+  ScheduleEvent,
+  addCustomPreparationBlock,
+  downloadCalendarEvent,
+  getFormattedCurrentDate,
+  getScheduleEvents,
+  toggleEventCalendarStatus,
+} from "@/data/scheduleData";
 import "./EventCompanyMessages.css";
 import "./ProfileSkills.css";
 import "./ScheduleAdd.css";
@@ -111,6 +119,11 @@ export function StudentHome() {
   const [userSkills, setUserSkills] = useState<string[]>([]);
   const applications = getStudentApplications();
   const activeAppsCount = applications.filter((a) => !a.isWithdrawn).length;
+  const currentDateLabel = useMemo(() => getFormattedCurrentDate(), []);
+  const todayEvents = useMemo(() => {
+    const all = getScheduleEvents();
+    return all.filter((e) => e.dayNumber === 2 || e.status === "Scheduled");
+  }, []);
 
   useEffect(() => {
     setUserSkills(getDeclaredSkills());
@@ -123,42 +136,142 @@ export function StudentHome() {
     });
   }, [userSkills]);
 
-  return <StudentLayout><PageHeader eyebrow="Student workspace" title="Placement readiness: Open" description="Two actions require attention · Batch 2028" meta={<span className="date-meta">MON, 26 AUG · IST</span>} />
-    <div className="stat-grid">
-      <StatCard label="Applications" value={String(activeAppsCount).padStart(2, "0")} note={`${activeAppsCount} in active review`} />
-      <StatCard label="Upcoming evaluations" value="01" note="This week" />
-      <StatCard label="Offers pending" value="00" tone="ochre" note="No response due" />
-      <StatCard label="Profile complete" value="78%" tone="olive" note="Academic records verified" />
-    </div>
-    <div className="dashboard-grid">
-      <div className="stack-lg">
-        <SectionCard title="Needs attention" aside={<StatusPill tone="ochre">2 items</StatusPill>}><div className="attention-list"><div><span className="attention-dot" /><p><b>Upload your semester 4 transcript.</b><small>Required before the Applied AI Capability Studio review.</small></p><Link href="/profile/documents">Review documents <ChevronRight size={15} /></Link></div><div><span className="attention-dot muted-dot" /><p><b>Confirm your evaluation attendance.</b><small>Candidate evaluation briefing · Thursday, 14:30.</small></p><Link href="/schedule">View schedule <ChevronRight size={15} /></Link></div></div></SectionCard>
-        <SectionCard title="Eligible for you" aside={<ActionLink href="/jobs">View all</ActionLink>}>
-          <div className="eligible-list">
-            {topJobs.map((item) => (
-              <Link href={`/jobs/${item.id}`} key={item.id} className="eligible-row">
-                <div>
-                  <StatusPill tone={item.fit.matchPercent >= 70 ? "olive" : "ochre"}>{item.status}</StatusPill>
-                  <h3>{item.title}</h3>
-                  <p>{item.organization} · {item.location}</p>
-                </div>
-                <div className="fit-score">
-                  <b>{item.fit.matchPercent}%</b>
-                  <span>skill fit</span>
-                </div>
-                <ArrowRight size={17} />
-              </Link>
-            ))}
-          </div>
-        </SectionCard>
-        <section className="skill-callout"><div><span className="eyebrow">Skill map</span><h2>Keep your evidence aligned to the next requirement.</h2><p>Your current profile maps most strongly to applied systems and research operations.</p><ActionLink href="/skill-map/industries">Open skill map</ActionLink></div><img src={studentSkillMap} alt="Abstract student skill mapping illustration" /></section>
+  return (
+    <StudentLayout>
+      <PageHeader
+        eyebrow="Student workspace"
+        title="Placement readiness: Open"
+        description="Two actions require attention · Batch 2028"
+        meta={<span className="date-meta">{currentDateLabel}</span>}
+      />
+      <div className="stat-grid">
+        <StatCard
+          label="Applications"
+          value={String(activeAppsCount).padStart(2, "0")}
+          note={`${activeAppsCount} in active review`}
+        />
+        <StatCard label="Upcoming evaluations" value="01" note="This week" />
+        <StatCard label="Offers pending" value="00" tone="ochre" note="No response due" />
+        <StatCard label="Profile complete" value="85%" tone="olive" note="Academic records verified" />
       </div>
-      <aside className="stack-lg">
-        <SectionCard title="Your season" aside={<ActionLink href="/season">Full journey</ActionLink>}><ol className="season-list">{applicationStages.map((stage, index) => <li key={stage} className={index === 0 ? "season-current" : ""}><span /><div><b>{stage}</b><small>{index === 0 ? `${activeAppsCount} application${activeAppsCount === 1 ? "" : "s"}` : "No activity"}</small></div></li>)}</ol></SectionCard>
-        <SectionCard title="Today"><EmptyPanel title="One scheduled item" text="Skill evidence clinic at 10:00 · Online." action={<Link href="/schedule" className="small-outline">Open schedule</Link>} /></SectionCard>
-      </aside>
-    </div>
-  </StudentLayout>;
+      <div className="dashboard-grid">
+        <div className="stack-lg">
+          <SectionCard title="Needs attention" aside={<StatusPill tone="ochre">2 items</StatusPill>}>
+            <div className="attention-list">
+              <div>
+                <span className="attention-dot" />
+                <p>
+                  <b>Upload your semester 4 transcript.</b>
+                  <small>Required before the Applied AI Capability Studio review.</small>
+                </p>
+                <Link href="/profile/documents">
+                  Review documents <ChevronRight size={15} />
+                </Link>
+              </div>
+              <div>
+                <span className="attention-dot muted-dot" />
+                <p>
+                  <b>Confirm your evaluation attendance.</b>
+                  <small>Candidate evaluation briefing · Thursday, 14:30.</small>
+                </p>
+                <Link href="/schedule">
+                  View schedule <ChevronRight size={15} />
+                </Link>
+              </div>
+            </div>
+          </SectionCard>
+          <SectionCard title="Eligible for you" aside={<ActionLink href="/jobs">View all</ActionLink>}>
+            <div className="eligible-list">
+              {topJobs.map((item) => (
+                <Link href={`/jobs/${item.id}`} key={item.id} className="eligible-row">
+                  <div>
+                    <StatusPill tone={item.fit.matchPercent >= 70 ? "olive" : "ochre"}>
+                      {item.status}
+                    </StatusPill>
+                    <h3>{item.title}</h3>
+                    <p>
+                      {item.organization} · {item.location}
+                    </p>
+                  </div>
+                  <div className="fit-score">
+                    <b>{item.fit.matchPercent}%</b>
+                    <span>skill fit</span>
+                  </div>
+                  <ArrowRight size={17} />
+                </Link>
+              ))}
+            </div>
+          </SectionCard>
+          <section className="skill-callout">
+            <div>
+              <span className="eyebrow">Skill map</span>
+              <h2>Keep your evidence aligned to the next requirement.</h2>
+              <p>Your current profile maps most strongly to applied systems and research operations.</p>
+              <ActionLink href="/skill-map/industries">Open skill map</ActionLink>
+            </div>
+            <img src={studentSkillMap} alt="Abstract student skill mapping illustration" />
+          </section>
+        </div>
+        <aside className="stack-lg">
+          <SectionCard title="Your season" aside={<ActionLink href="/season">Full journey</ActionLink>}>
+            <ol className="season-list">
+              {applicationStages.map((stage, index) => (
+                <li key={stage} className={index === 0 ? "season-current" : ""}>
+                  <span />
+                  <div>
+                    <b>{stage}</b>
+                    <small>
+                      {index === 0
+                        ? `${activeAppsCount} application${activeAppsCount === 1 ? "" : "s"}`
+                        : "No activity"}
+                    </small>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </SectionCard>
+          <SectionCard title="Today's Schedule">
+            {todayEvents.length > 0 ? (
+              <div style={{ display: "grid", gap: "10px" }}>
+                {todayEvents.slice(0, 2).map((ev) => (
+                  <div
+                    key={ev.id}
+                    style={{
+                      padding: "10px",
+                      background: "var(--surface)",
+                      border: "1px solid var(--rule)",
+                      borderRadius: "6px",
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <b style={{ fontSize: "12px" }}>{ev.title}</b>
+                      <StatusPill tone="olive">{ev.kind}</StatusPill>
+                    </div>
+                    <span style={{ fontSize: "10px", color: "var(--slate)", display: "block", marginTop: "3px" }}>
+                      ⏰ {ev.time} · {ev.location}
+                    </span>
+                  </div>
+                ))}
+                <Link href="/schedule" className="action-link" style={{ marginTop: "4px" }}>
+                  View full schedule <ArrowRight size={14} />
+                </Link>
+              </div>
+            ) : (
+              <EmptyPanel
+                title="No events today"
+                text="Check upcoming events and evaluations on your schedule."
+                action={
+                  <Link href="/schedule" className="small-outline">
+                    Open schedule
+                  </Link>
+                }
+              />
+            )}
+          </SectionCard>
+        </aside>
+      </div>
+    </StudentLayout>
+  );
 }
 
 export function JobsPage() {
@@ -1168,46 +1281,78 @@ export function ApplicationSubmittedPage({ id = "ai-studio" }: { id?: string }) 
 }
 
 export function EventsPage() {
-  const [selectedCompany, setSelectedCompany] = useState(events[0]);
+  const [scheduleEventsList, setScheduleEventsList] = useState<ScheduleEvent[]>(getScheduleEvents);
+  const [selectedEvent, setSelectedEvent] = useState<ScheduleEvent>(() => {
+    const list = getScheduleEvents();
+    return list[0] || initialScheduleEvents[0];
+  });
+
+  useEffect(() => {
+    setScheduleEventsList(getScheduleEvents());
+  }, []);
+
+  const handleAdd = (ev: ScheduleEvent) => {
+    const res = toggleEventCalendarStatus(ev.id);
+    setScheduleEventsList(getScheduleEvents());
+    toast.success(
+      res.isAdded
+        ? `Added "${res.event.title}" to your schedule!`
+        : `Removed "${res.event.title}" from your schedule.`
+    );
+  };
+
   return (
     <StudentLayout>
       <PageHeader
         eyebrow="Events"
-        title="Relevant events"
-        description="Evaluation, recruitment, and profile-support events you are permitted to view."
+        title="Relevant events & workshops"
+        description="Evaluation briefings, recruiter clinics, and career workshops permitted to your batch."
+        meta={<span className="date-meta">{getFormattedCurrentDate()}</span>}
       />
       <div className="event-layout">
         <div className="event-list">
-          {events.map((event) => (
-            <article className="event-row" key={event.title}>
+          {scheduleEventsList.map((event) => (
+            <article
+              className={`event-row ${selectedEvent.id === event.id ? "event-row-active" : ""}`}
+              key={event.id}
+              onClick={() => setSelectedEvent(event)}
+              style={{ cursor: "pointer" }}
+            >
               <div className="event-date">
-                <b>{event.day}</b>
+                <b>{String(event.dayNumber).padStart(2, "0")}</b>
                 <span>{event.month}</span>
               </div>
               <div className="event-info">
-                <StatusPill tone="muted">{event.type}</StatusPill>
+                <StatusPill
+                  tone={
+                    event.kind === "Evaluation" || event.kind === "Interview"
+                      ? "ochre"
+                      : event.kind === "Event"
+                      ? "olive"
+                      : "muted"
+                  }
+                >
+                  {event.kind}
+                </StatusPill>
                 <h2>{event.title}</h2>
                 <p>
-                  {event.time} · {event.place}
+                  ⏰ {event.time} · 📍 {event.location}
                 </p>
-                <button
-                  type="button"
-                  className={
-                    selectedCompany.company === event.company
-                      ? "event-company-link event-company-active"
-                      : "event-company-link"
-                  }
-                  onClick={() => setSelectedCompany(event)}
-                >
-                  {event.company}
-                  <MessageSquareText size={14} />
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "4px" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--slate)" }}>
+                    {event.organizer}
+                  </span>
+                </div>
               </div>
               <button
-                className="small-outline"
-                onClick={() => toast("Event is added to your schedule.")}
+                type="button"
+                className={event.isAddedToMyCalendar ? "small-outline toggle-active" : "small-outline"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAdd(event);
+                }}
               >
-                Add to schedule
+                {event.isAddedToMyCalendar ? "✓ On Schedule" : "+ Add to Schedule"}
               </button>
             </article>
           ))}
@@ -1216,20 +1361,31 @@ export function EventsPage() {
           <div className="event-message-mark">
             <MessageSquareText size={18} />
           </div>
-          <span className="event-message-label">Company message</span>
-          <button
-            type="button"
-            className="event-message-company"
-            onClick={() => setSelectedCompany(selectedCompany)}
-          >
-            {selectedCompany.company}
-          </button>
-          <h3>{selectedCompany.messageSubject}</h3>
-          <p className="event-message-date">{selectedCompany.messageDate}</p>
-          <p>{selectedCompany.message}</p>
-          <Link href="/calendar" className="action-link">
-            Open calendar <ArrowRight size={15} />
-          </Link>
+          <span className="event-message-label">Event Briefing</span>
+          <h3 style={{ margin: "6px 0 2px" }}>{selectedEvent.title}</h3>
+          <p className="event-message-date" style={{ color: "var(--olive)", fontWeight: 700 }}>
+            {selectedEvent.dayOfWeek}, {selectedEvent.date} · {selectedEvent.time}
+          </p>
+          <p style={{ fontSize: "11.5px", lineHeight: 1.5 }}>{selectedEvent.description}</p>
+          {selectedEvent.preparationTips && (
+            <div
+              style={{
+                margin: "10px 0",
+                padding: "8px 10px",
+                background: "var(--surface)",
+                border: "1px solid var(--rule)",
+                borderRadius: "6px",
+                fontSize: "10.5px",
+              }}
+            >
+              <b>Preparation:</b> {selectedEvent.preparationTips}
+            </div>
+          )}
+          <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+            <Link href="/schedule" className="primary-button" style={{ flex: 1, textAlign: "center" }}>
+              Open in Schedule <ArrowRight size={14} />
+            </Link>
+          </div>
         </aside>
       </div>
     </StudentLayout>
@@ -1237,20 +1393,29 @@ export function EventsPage() {
 }
 
 export function CalendarPage() {
+  const [events, setEvents] = useState<ScheduleEvent[]>(getScheduleEvents);
+  const [selectedDayEvent, setSelectedDayEvent] = useState<ScheduleEvent | null>(() => {
+    const list = getScheduleEvents();
+    return list[0] || null;
+  });
+
+  useEffect(() => {
+    setEvents(getScheduleEvents());
+  }, []);
+
   const days = Array.from({ length: 35 }, (_, index) => index + 1);
+
   return (
     <StudentLayout>
       <PageHeader
         eyebrow="Calendar"
-        title="August 2026"
+        title="September 2026"
         description="A time-based view of your permitted events, evaluations, and application deadlines."
+        meta={<span className="date-meta">{getFormattedCurrentDate()}</span>}
         action={
-          <button
-            className="small-outline"
-            onClick={() => toast("Month control is ready for the connected calendar source.")}
-          >
-            Today
-          </button>
+          <Link href="/schedule" className="small-outline">
+            Open full schedule
+          </Link>
         }
       />
       <SectionCard className="calendar-card">
@@ -1260,25 +1425,76 @@ export function CalendarPage() {
           ))}
         </div>
         <div className="calendar-grid">
-          {days.map((day) => (
-            <div className={`calendar-cell ${day === 26 ? "calendar-today" : ""}`} key={day}>
-              <b>{day <= 31 ? day : day - 31}</b>
-              {day === 26 && <span className="calendar-chip olive-chip">Skill clinic · 10:00</span>}
-              {day === 28 && <span className="calendar-chip ochre-chip">Evaluation · 14:30</span>}
-              {day === 30 && <span className="calendar-chip gray-chip">Application close</span>}
-            </div>
-          ))}
+          {days.map((day) => {
+            const dayNum = day <= 30 ? day : day - 30;
+            const isToday = day === 2; // 02 Sep
+            const dayEvents = events.filter((e) => e.dayNumber === dayNum && day <= 30);
+            return (
+              <div
+                className={`calendar-cell ${isToday ? "calendar-today" : ""}`}
+                key={day}
+                style={{ cursor: dayEvents.length > 0 ? "pointer" : "default" }}
+                onClick={() => {
+                  if (dayEvents.length > 0) {
+                    setSelectedDayEvent(dayEvents[0]);
+                  }
+                }}
+              >
+                <b>{dayNum}</b>
+                {dayEvents.map((ev) => (
+                  <span
+                    key={ev.id}
+                    className={`calendar-chip ${
+                      ev.kind === "Evaluation" || ev.kind === "Interview"
+                        ? "ochre-chip"
+                        : ev.kind === "Deadline"
+                        ? "gray-chip"
+                        : "olive-chip"
+                    }`}
+                  >
+                    {ev.title.slice(0, 16)}...
+                  </span>
+                ))}
+              </div>
+            );
+          })}
         </div>
       </SectionCard>
+
+      {selectedDayEvent && (
+        <SectionCard
+          title={`Selected Event: ${selectedDayEvent.title}`}
+          aside={
+            <StatusPill tone={selectedDayEvent.kind === "Event" ? "olive" : "ochre"}>
+              {selectedDayEvent.kind}
+            </StatusPill>
+          }
+        >
+          <div style={{ display: "grid", gap: "8px" }}>
+            <p className="body-copy">{selectedDayEvent.description}</p>
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", fontSize: "11.5px", color: "var(--slate)" }}>
+              <span>📅 <b>Date:</b> {selectedDayEvent.date} ({selectedDayEvent.dayOfWeek})</span>
+              <span>⏰ <b>Time:</b> {selectedDayEvent.time}</span>
+              <span>📍 <b>Venue:</b> {selectedDayEvent.location}</span>
+            </div>
+            <div style={{ marginTop: "6px" }}>
+              <Link href="/schedule" className="action-link">
+                View in detailed schedule <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </SectionCard>
+      )}
+
       <div className="legend-row">
         <span>
-          <i className="legend-dot olive-dot" /> Event
+          <i className="legend-dot olive-dot" /> Event / Workshop
         </span>
         <span>
-          <i className="legend-dot ochre-dot" /> Evaluation
+          <i className="legend-dot ochre-dot" /> Evaluation / Interview
         </span>
         <span>
-          <i className="legend-dot gray-dot" /> Deadline
+          <i className="legend-dot gray-dot" /> Application Deadline
         </span>
       </div>
     </StudentLayout>
@@ -1697,7 +1913,365 @@ export function ApplicationTrackerPage({ id = "ai-studio" }: { id?: string }) {
 }
 
 export function SchedulePage() {
- const [scheduleAdded, setScheduleAdded] = useState(false); return <StudentLayout><PageHeader eyebrow="Schedule" title="Upcoming schedule" description="Evaluations, events, and time-bound application activities in one operational view." meta={<span className="date-meta">THIS WEEK</span>} action={<button type="button" className={scheduleAdded ? "small-outline schedule-add-button schedule-add-complete" : "small-outline schedule-add-button"} onClick={() => { if (scheduleAdded) { toast("This preparation block is already on your schedule."); return; } setScheduleAdded(true); toast.success("Preparation block added to your schedule."); }}><CalendarPlus size={15} /> {scheduleAdded ? "Added to schedule" : "Add to schedule"}</button>} /><div className="schedule-board">{scheduleItems.map((item) => <ScheduleLine key={item.time} {...item} />)}{scheduleAdded && <div className="schedule-added-item"><CheckCircle2 size={16} /><div><b>Application preparation block</b><span>17:30 · 30 min · Personal schedule item</span></div><StatusPill>Added</StatusPill></div>}</div><Notice title="Schedule context" text="Evaluation and interview details appear only when they are scheduled and visible to your role." /></StudentLayout>; }
+  const [events, setEvents] = useState<ScheduleEvent[]>(getScheduleEvents);
+  const [selectedEventId, setSelectedEventId] = useState<string>(() => {
+    const list = getScheduleEvents();
+    return list[0]?.id || "sch-01";
+  });
+  const [selectedKind, setSelectedKind] = useState<string>("All");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newTime, setNewTime] = useState("17:30 – 18:00");
+  const [newDate, setNewDate] = useState("02 Sep 2026");
+
+  const currentDateLabel = useMemo(() => getFormattedCurrentDate(), []);
+
+  useEffect(() => {
+    setEvents(getScheduleEvents());
+  }, []);
+
+  const selectedEvent = useMemo(() => {
+    return events.find((e) => e.id === selectedEventId) || events[0];
+  }, [events, selectedEventId]);
+
+  const filteredEvents = useMemo(() => {
+    if (selectedKind === "All") return events;
+    if (selectedKind === "Evaluations & Interviews") {
+      return events.filter((e) => e.kind === "Evaluation" || e.kind === "Interview");
+    }
+    if (selectedKind === "Events & Workshops") {
+      return events.filter((e) => e.kind === "Event" || e.kind === "Workshop");
+    }
+    if (selectedKind === "Deadlines") {
+      return events.filter((e) => e.kind === "Deadline");
+    }
+    return events;
+  }, [events, selectedKind]);
+
+  const handleToggleSchedule = (e: React.MouseEvent, eventId: string) => {
+    e.stopPropagation();
+    try {
+      const res = toggleEventCalendarStatus(eventId);
+      setEvents(getScheduleEvents());
+      toast.success(
+        res.isAdded
+          ? `Added "${res.event.title}" to your personal calendar!`
+          : `Removed "${res.event.title}" from your schedule.`
+      );
+    } catch {
+      toast.error("Failed to update schedule status.");
+    }
+  };
+
+  const handleAddCustomBlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTitle.trim()) return;
+    const added = addCustomPreparationBlock(newTitle.trim(), newTime, newDate);
+    setEvents(getScheduleEvents());
+    setSelectedEventId(added.id);
+    setNewTitle("");
+    setShowAddModal(false);
+    toast.success(`Preparation block "${added.title}" added to your schedule!`);
+  };
+
+  return (
+    <StudentLayout>
+      <PageHeader
+        eyebrow="Schedule"
+        title="Upcoming schedule & calendar"
+        description="Evaluations, interviews, workshops, and application deadlines in one unified schedule. Click on any event to view full agendas, preparation tips, and session details."
+        meta={<span className="date-meta">{currentDateLabel}</span>}
+        action={
+          <button
+            type="button"
+            className="small-outline"
+            onClick={() => setShowAddModal(true)}
+          >
+            <CalendarPlus size={15} /> Add preparation block
+          </button>
+        }
+      />
+
+      {showAddModal && (
+        <SectionCard
+          title="Add Personal Schedule / Preparation Block"
+          aside={
+            <button
+              type="button"
+              className="text-button"
+              onClick={() => setShowAddModal(false)}
+            >
+              <X size={15} />
+            </button>
+          }
+        >
+          <form onSubmit={handleAddCustomBlock} style={{ display: "grid", gap: "12px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px" }}>
+              <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                Activity / Preparation Title *
+                <input
+                  style={{ width: "100%", marginTop: "4px" }}
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder="e.g. System Design Mock Interview, SQL Revision"
+                  required
+                />
+              </label>
+              <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                Date
+                <input
+                  style={{ width: "100%", marginTop: "4px" }}
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  placeholder="e.g. 02 Sep 2026"
+                />
+              </label>
+              <label style={{ fontSize: "11.5px", fontWeight: 700 }}>
+                Time & Duration
+                <input
+                  style={{ width: "100%", marginTop: "4px" }}
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  placeholder="e.g. 17:30 – 18:30"
+                />
+              </label>
+            </div>
+            <div style={{ display: "flex", gap: "8px" }}>
+              <button type="submit" className="primary-button">
+                Save to Schedule
+              </button>
+              <button
+                type="button"
+                className="small-outline"
+                onClick={() => setShowAddModal(false)}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </SectionCard>
+      )}
+
+      {/* Filter Tabs */}
+      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginBottom: "14px" }}>
+        {["All", "Evaluations & Interviews", "Events & Workshops", "Deadlines"].map((kind) => (
+          <button
+            key={kind}
+            type="button"
+            className={selectedKind === kind ? "small-outline toggle-active" : "small-outline"}
+            onClick={() => setSelectedKind(kind)}
+            style={{ fontSize: "11px", padding: "6px 12px" }}
+          >
+            {kind}
+          </button>
+        ))}
+      </div>
+
+      <div className="tracker-layout">
+        {/* Left Side: Schedule Timeline List */}
+        <section className="stack-lg">
+          <SectionCard
+            title="Scheduled activities"
+            aside={<span className="date-meta">{filteredEvents.length} ACTIVITIES</span>}
+          >
+            <div className="schedule-board" style={{ padding: 0, border: 0 }}>
+              {filteredEvents.map((item) => {
+                const isSelected = selectedEvent?.id === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    className={`schedule-line ${isSelected ? "schedule-line-selected" : ""}`}
+                    onClick={() => setSelectedEventId(item.id)}
+                    style={{
+                      cursor: "pointer",
+                      padding: "12px 14px",
+                      background: isSelected ? "var(--olive-wash)" : "transparent",
+                      borderLeft: isSelected ? "4px solid var(--olive)" : "4px solid transparent",
+                      transition: "all 120ms ease",
+                    }}
+                  >
+                    <div style={{ display: "grid", textAlign: "center", minWidth: "50px" }}>
+                      <b style={{ fontSize: "13px", color: "var(--olive-deep)" }}>{item.dayNumber}</b>
+                      <span style={{ fontSize: "9px", color: "var(--slate)", textTransform: "uppercase" }}>{item.month}</span>
+                      <small style={{ fontSize: "8.5px", color: "var(--slate)" }}>{item.dayOfWeek.slice(0, 3)}</small>
+                    </div>
+
+                    <div
+                      className="schedule-dot"
+                      style={{
+                        borderColor:
+                          item.kind === "Evaluation" || item.kind === "Interview"
+                            ? "var(--ochre)"
+                            : item.kind === "Deadline"
+                            ? "var(--slate)"
+                            : "var(--olive)",
+                      }}
+                    />
+
+                    <div className="schedule-main">
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        <b>{item.title}</b>
+                        {item.isAddedToMyCalendar && (
+                          <CheckCircle2 size={13} style={{ color: "var(--olive)" }} />
+                        )}
+                      </div>
+                      <span>
+                        ⏰ {item.time} ({item.duration}) · 📍 {item.location}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                      <StatusPill
+                        tone={
+                          item.kind === "Evaluation" || item.kind === "Interview"
+                            ? "ochre"
+                            : item.kind === "Event"
+                            ? "olive"
+                            : "muted"
+                        }
+                      >
+                        {item.kind}
+                      </StatusPill>
+                      <button
+                        type="button"
+                        className="small-outline"
+                        style={{ fontSize: "10px", padding: "4px 8px" }}
+                        onClick={(e) => handleToggleSchedule(e, item.id)}
+                        title={item.isAddedToMyCalendar ? "Remove from personal schedule" : "Add to personal schedule"}
+                      >
+                        {item.isAddedToMyCalendar ? "✓ Added" : "+ Add"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </SectionCard>
+        </section>
+
+        {/* Right Side: Selected Event Description Panel */}
+        <aside className="stack-lg session-sticky-aside">
+          {selectedEvent ? (
+            <SectionCard
+              title="Event & Session Details"
+              aside={
+                <StatusPill
+                  tone={
+                    selectedEvent.kind === "Evaluation" || selectedEvent.kind === "Interview"
+                      ? "ochre"
+                      : selectedEvent.kind === "Event"
+                      ? "olive"
+                      : "muted"
+                  }
+                >
+                  {selectedEvent.kind}
+                </StatusPill>
+              }
+            >
+              <div style={{ display: "grid", gap: "12px" }}>
+                <div>
+                  <h3 style={{ margin: "0 0 6px", fontSize: "15px", fontWeight: 800 }}>
+                    {selectedEvent.title}
+                  </h3>
+                  <div style={{ display: "grid", gap: "3px", fontSize: "11px", color: "var(--slate)" }}>
+                    <span>📅 <b>Date:</b> {selectedEvent.dayOfWeek}, {selectedEvent.date}</span>
+                    <span>⏰ <b>Time:</b> {selectedEvent.time} ({selectedEvent.duration})</span>
+                    <span>🏛 <b>Host:</b> {selectedEvent.organizer}</span>
+                    <span>📍 <b>Venue:</b> {selectedEvent.location}</span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "10px" }}>
+                  <b style={{ display: "block", fontSize: "11px", marginBottom: "4px" }}>
+                    Description & Objectives:
+                  </b>
+                  <p className="body-copy" style={{ margin: 0, fontSize: "11.5px", lineHeight: 1.5 }}>
+                    {selectedEvent.description}
+                  </p>
+                </div>
+
+                {selectedEvent.agenda && selectedEvent.agenda.length > 0 && (
+                  <div style={{ borderTop: "1px solid var(--rule)", paddingTop: "10px" }}>
+                    <b style={{ display: "block", fontSize: "11px", marginBottom: "6px" }}>
+                      Session Agenda:
+                    </b>
+                    <ul style={{ margin: "0 0 0 16px", padding: 0, fontSize: "11px", color: "var(--ink)" }}>
+                      {selectedEvent.agenda.map((pt, i) => (
+                        <li key={i} style={{ marginBottom: "3px" }}>
+                          {pt}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedEvent.preparationTips && (
+                  <div
+                    style={{
+                      padding: "10px",
+                      background: "var(--surface)",
+                      border: "1px solid var(--rule)",
+                      borderRadius: "6px",
+                      fontSize: "11px",
+                    }}
+                  >
+                    <b style={{ color: "var(--olive-deep)", display: "block", marginBottom: "2px" }}>
+                      💡 Preparation Checklist:
+                    </b>
+                    <span style={{ color: "var(--ink)" }}>{selectedEvent.preparationTips}</span>
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gap: "8px", borderTop: "1px solid var(--rule)", paddingTop: "12px" }}>
+                  {selectedEvent.meetingLink && (
+                    <a
+                      href={selectedEvent.meetingLink}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="primary-button full-button"
+                      style={{ textAlign: "center", justifyContent: "center" }}
+                    >
+                      <Globe size={13} /> Join Virtual Session Room
+                    </a>
+                  )}
+
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      type="button"
+                      className={selectedEvent.isAddedToMyCalendar ? "small-outline toggle-active" : "small-outline"}
+                      style={{ flex: 1, justifyContent: "center" }}
+                      onClick={(e) => handleToggleSchedule(e, selectedEvent.id)}
+                    >
+                      {selectedEvent.isAddedToMyCalendar ? "✓ On My Schedule" : "+ Add to Schedule"}
+                    </button>
+                    <button
+                      type="button"
+                      className="small-outline"
+                      onClick={() => downloadCalendarEvent(selectedEvent)}
+                      title="Download iCal file"
+                    >
+                      <Download size={13} /> .ICS
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </SectionCard>
+          ) : (
+            <SectionCard title="Event Details">
+              <p className="body-copy">Select any scheduled item on the left to view full event descriptions.</p>
+            </SectionCard>
+          )}
+
+          <SectionCard title="Institutional sync">
+            <p className="body-copy" style={{ fontSize: "11px" }}>
+              Interview links and evaluation briefings synchronize directly with your department calendar and placement records.
+            </p>
+          </SectionCard>
+        </aside>
+      </div>
+    </StudentLayout>
+  );
+}
 
 export function OffersPage() {
   const [offers, setOffers] = useState<JobOffer[]>([]);
