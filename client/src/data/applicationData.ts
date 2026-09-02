@@ -1,12 +1,12 @@
 // Scalable application repository, document management, withdrawal lifecycle, and file downloads.
 
 export interface AttachedFile {
-  id: string;
+  id?: string;
   name: string;
   size: string;
   type: string;
   dataUrl?: string; // base64 or generated data URI
-  uploadedAt: string;
+  uploadedAt?: string;
 }
 
 export interface TimelineItem {

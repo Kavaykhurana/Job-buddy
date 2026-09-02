@@ -103,6 +103,7 @@ import {
   downloadCalendarEvent,
   getFormattedCurrentDate,
   getScheduleEvents,
+  initialScheduleEvents,
   toggleEventCalendarStatus,
 } from "@/data/scheduleData";
 import "./EventCompanyMessages.css";
@@ -1074,8 +1075,9 @@ export function ApplyPage({ id = "ai-studio" }: { id?: string }) {
     toast.success(`${files.length} supporting document(s) attached from device.`);
   };
 
-  const removeSupportingDoc = (docId: string) => {
-    setSupportingDocs((current) => current.filter((d) => d.id !== docId));
+  const removeSupportingDoc = (docIdentifier?: string) => {
+    if (!docIdentifier) return;
+    setSupportingDocs((current) => current.filter((d) => (d.id || d.name) !== docIdentifier));
     toast("Attachment removed.");
   };
 
@@ -1194,7 +1196,7 @@ export function ApplyPage({ id = "ai-studio" }: { id?: string }) {
                       <button
                         type="button"
                         className="file-remove-btn"
-                        onClick={() => removeSupportingDoc(doc.id)}
+                        onClick={() => removeSupportingDoc(doc.id || doc.name)}
                         title="Remove file"
                       >
                         <X size={15} />

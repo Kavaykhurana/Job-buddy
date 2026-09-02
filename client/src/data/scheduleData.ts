@@ -223,6 +223,92 @@ export function getFormattedCurrentDate(): string {
   return `${dayName}, ${day} ${month} ${year} · IST`;
 }
 
+import { addStudentNotification, updateCandidateStage } from "./portalData";
+
+export function scheduleInterviewForCandidate(params: {
+  candidateId: string;
+  candidateName: string;
+  opportunityTitle?: string;
+  organization?: string;
+  date: string; // e.g. "05 Sep 2026"
+  time: string; // e.g. "14:00 – 15:00"
+  duration?: string; // e.g. "45 min"
+  mode?: string;
+  location?: string;
+  meetingLink?: string;
+  evaluators?: string;
+  notes?: string;
+  agenda?: string[];
+}): ScheduleEvent {
+  const events = getScheduleEvents();
+  const org = params.organization || "Northstar Systems";
+  const role = params.opportunityTitle || "Applied AI Capability Studio";
+  const duration = params.duration || "45 min";
+  const mode = params.mode || "Online";
+  const loc = params.location || (mode === "Online" ? (params.meetingLink || "Online (Google Meet · Candidate Room)") : "Placement Cell · Interview Room 2");
+  
+  // Parse date components safely
+  let dayNumber = 5;
+  let dayOfWeek = "Friday";
+  let month = "SEP";
+  try {
+    const parts = params.date.split(/[\s-]+/);
+    if (parts.length >= 2) {
+      const parsedNum = parseInt(parts[0], 10);
+      if (!isNaN(parsedNum)) dayNumber = parsedNum;
+      month = parts[1].substring(0, 3).toUpperCase();
+    }
+  } catch {}
+
+  const newEvent: ScheduleEvent = {
+    id: `interview-${Date.now()}`,
+    title: `${org} Interview · ${role}`,
+    kind: "Interview",
+    date: params.date,
+    dayNumber,
+    dayOfWeek,
+    month,
+    time: params.time,
+    duration,
+    location: loc,
+    organizer: `${org} Talent Acquisition`,
+    description: `Structured technical and candidate competency interview with ${org} recruiters and evaluators (${params.evaluators || "Recruitment Panel"}).`,
+    agenda: params.agenda && params.agenda.length > 0 ? params.agenda : [
+      "Candidate introduction & technical evidence walkthrough",
+      "Scenario discussion & role alignment evaluation",
+      "Candidate questions and next steps",
+    ],
+    preparationTips: params.notes || "Ensure your resume and declared skill projects are accessible for live discussion.",
+    meetingLink: params.meetingLink || (mode === "Online" ? "https://meet.google.com/sih-interview-room" : undefined),
+    status: "Scheduled",
+    isAddedToMyCalendar: true,
+  };
+
+  const updatedEvents = [newEvent, ...events];
+  saveScheduleEvents(updatedEvents);
+
+  // 1. Dispatch notification to Candidate/Student perspective
+  addStudentNotification({
+    title: `Interview Invitation · ${org}`,
+    message: `You have been scheduled for an interview for "${role}" on ${params.date} at ${params.time}. Evaluator: ${params.evaluators || "Panel"}.`,
+    type: "interview",
+    link: "/calendar",
+  });
+
+  // 2. Update candidate stage in recruiter register
+  updateCandidateStage(params.candidateId, "Interview Scheduled", {
+    date: params.date,
+    time: params.time,
+    mode,
+    location: loc,
+    evaluators: params.evaluators || "Evaluation Panel",
+    meetingLink: newEvent.meetingLink,
+    notes: params.notes,
+  });
+
+  return newEvent;
+}
+
 export function downloadCalendarEvent(event: ScheduleEvent): void {
   const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
@@ -247,3 +333,5 @@ END:VCALENDAR`;
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+

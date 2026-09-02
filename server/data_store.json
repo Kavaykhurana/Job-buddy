@@ -43,6 +43,43 @@
   ],
   "jobs": [
     {
+      "id": "posted-job-1788333475753",
+      "title": "joo",
+      "organization": "Company Partner",
+      "location": "Hybrid · Bengaluru",
+      "date": "Closes 30 Sep",
+      "match": 75,
+      "status": "Open",
+      "required": [
+        "Python"
+      ],
+      "preferred": [
+        "SQL"
+      ],
+      "type": "Structured opportunity",
+      "summary": "70%"
+    },
+    {
+      "id": "posted-research-ops",
+      "title": "Research Operations Associate",
+      "organization": "Company Partner",
+      "location": "On campus",
+      "date": "Closes 30 Sep",
+      "match": 75,
+      "status": "Open",
+      "required": [
+        "Research",
+        "Documentation",
+        "Teamwork"
+      ],
+      "preferred": [
+        "Excel",
+        "Presentation"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Minimum 65% aggregate; strong documentation & ethical research coursework."
+    },
+    {
       "id": "ai-studio",
       "title": "Applied AI Capability Studio",
       "organization": "Northstar Systems",
@@ -279,7 +316,7 @@
         "Data Analysis",
         "Communication"
       ],
-      "shortlisted": true
+      "shortlisted": false
     },
     {
       "id": "rhea-03",
@@ -293,7 +330,7 @@
         "Documentation",
         "Teamwork"
       ],
-      "shortlisted": false
+      "shortlisted": true
     }
   ],
   "companyRequirements": [
