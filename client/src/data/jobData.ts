@@ -1,5 +1,6 @@
 // Scalable job and internship opportunities data, dynamic skill fit calculation, and urgency tracking.
 import { getDeclaredSkills, isSkillMatched } from "./assessmentData";
+import { loadRecruiterPostedJobs } from "./portalData";
 
 export interface JobOpportunity {
   id: string;
@@ -16,6 +17,10 @@ export interface JobOpportunity {
   summary: string;
   salary?: string;
   department?: string;
+  attachments?: any[];
+  stages?: string;
+  qualification?: string;
+  eligibility?: string;
 }
 
 export const jobOpportunities: JobOpportunity[] = [
@@ -200,4 +205,51 @@ export function getJobDeadlineInfo(closeDateStr: string): {
     isClosed: false,
     badgeText: `Closes in ${daysLeft} days`,
   };
+}
+
+export function getJobOpportunities(): JobOpportunity[] {
+  const postedJobs = loadRecruiterPostedJobs();
+  const convertedPosted: JobOpportunity[] = postedJobs.map((job) => {
+    const rawMode = (job.mode || "").toLowerCase();
+    const deliveryMode: "hybrid" | "on-campus" | "remote" =
+      rawMode.includes("remote") ? "remote"
+      : rawMode.includes("campus") ? "on-campus"
+      : "hybrid";
+
+    const reqSkills = job.requiredSkills
+      ? job.requiredSkills.split(",").map((s) => s.trim()).filter(Boolean)
+      : ["Communication"];
+    const prefSkills = job.preferredSkills
+      ? job.preferredSkills.split(",").map((s) => s.trim()).filter(Boolean)
+      : [];
+
+    return {
+      id: job.id,
+      title: job.title,
+      organization: job.organization || "Northstar Systems",
+      location: job.location || (deliveryMode === "remote" ? "Remote" : `${job.mode || "Hybrid"} · Bengaluru`),
+      deliveryMode,
+      date: "Closes 18 Sep 2026",
+      closeDate: "2026-09-18",
+      status: (job.status === "Closed" ? "Closed" : "Eligible") as "Eligible" | "Review profile" | "Closed",
+      required: reqSkills,
+      preferred: prefSkills,
+      type: "Published placement drive",
+      summary: job.summary || job.eligibility || "Newly published industry role requirement with verified selection criteria.",
+      salary: "₹12,00,000 – ₹16,00,000 / year",
+      department: "Engineering & Applied Systems",
+      attachments: job.attachments || [],
+      stages: job.stages,
+      qualification: job.qualification,
+      eligibility: job.eligibility,
+    };
+  });
+
+  const postedIds = new Set(convertedPosted.map((j) => j.id));
+  const filteredDefault = jobOpportunities.filter((j) => !postedIds.has(j.id));
+  return [...convertedPosted, ...filteredDefault];
+}
+
+export function getJobOpportunityById(id: string): JobOpportunity | undefined {
+  return getJobOpportunities().find((j) => j.id === id);
 }

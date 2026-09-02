@@ -59,6 +59,8 @@ import studentSkillMap from "@/assets/student-skill-map.svg";
 import {
   calculateJobSkillFit,
   getJobDeadlineInfo,
+  getJobOpportunities,
+  getJobOpportunityById,
   JobOpportunity,
   jobOpportunities,
 } from "@/data/jobData";
@@ -131,7 +133,7 @@ export function StudentHome() {
   }, []);
 
   const topJobs = useMemo(() => {
-    return jobOpportunities.slice(0, 2).map((job) => {
+    return getJobOpportunities().slice(0, 2).map((job) => {
       const fit = calculateJobSkillFit(job, userSkills);
       return { ...job, fit };
     });
@@ -282,23 +284,25 @@ export function JobsPage() {
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [minFit, setMinFit] = useState<number>(0);
   const [userSkills, setUserSkills] = useState<string[]>([]);
+  const [jobsList, setJobsList] = useState<JobOpportunity[]>(getJobOpportunities);
 
   useEffect(() => {
     setUserSkills(getDeclaredSkills());
+    setJobsList(getJobOpportunities());
   }, []);
 
   // Compute all available unique skills across job opportunities
   const availableSkills = useMemo(() => {
     const skillSet = new Set<string>();
-    jobOpportunities.forEach((j) => {
+    jobsList.forEach((j) => {
       j.required.forEach((s) => skillSet.add(s));
       j.preferred.forEach((s) => skillSet.add(s));
     });
     return Array.from(skillSet).sort();
-  }, []);
+  }, [jobsList]);
 
   const jobsWithMeta = useMemo(() => {
-    return jobOpportunities
+    return jobsList
       .map((item) => {
         const skillFit = calculateJobSkillFit(item, userSkills);
         const deadline = getJobDeadlineInfo(item.closeDate);
@@ -313,7 +317,7 @@ export function JobsPage() {
         };
       })
       .sort((a, b) => b.skillFit.matchPercent - a.skillFit.matchPercent);
-  }, [userSkills]);
+  }, [jobsList, userSkills]);
 
   const recommendedCount = jobsWithMeta.filter((j) => j.isRecommended).length;
   const closingSoonCount = jobsWithMeta.filter((j) => j.deadline.isUrgent).length;
@@ -830,7 +834,8 @@ export function JobsPage() {
 }
 
 function useOpportunity(id: string) {
-  return jobOpportunities.find((item) => item.id === id) ?? jobOpportunities[0];
+  const all = getJobOpportunities();
+  return getJobOpportunityById(id) ?? all.find((item) => item.id === id) ?? all[0];
 }
 
 export function JobDetailPage({ id = "ai-studio" }: { id?: string }) {
@@ -952,6 +957,58 @@ export function JobDetailPage({ id = "ai-studio" }: { id?: string }) {
               })}
             </div>
           </SectionCard>
+
+          {(item.qualification || item.eligibility) && (
+            <SectionCard title="Qualification & eligibility criteria">
+              {item.qualification && (
+                <div style={{ marginBottom: "12px" }}>
+                  <b style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Academic Qualification:</b>
+                  <p className="body-copy" style={{ margin: 0 }}>{item.qualification}</p>
+                </div>
+              )}
+              {item.eligibility && (
+                <div>
+                  <b style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Eligibility Baseline:</b>
+                  <p className="body-copy" style={{ margin: 0 }}>{item.eligibility}</p>
+                </div>
+              )}
+            </SectionCard>
+          )}
+
+          {item.stages && (
+            <SectionCard title="Selection sequence & evaluation stages">
+              <p className="body-copy">{item.stages}</p>
+            </SectionCard>
+          )}
+
+          {item.attachments && item.attachments.length > 0 && (
+            <SectionCard title="Company brief & attached documents">
+              <div className="uploaded-docs-list">
+                {item.attachments.map((file: any, index: number) => (
+                  <div className="uploaded-doc-item" key={file.id || index}>
+                    <div className="doc-info">
+                      <FileText size={16} />
+                      <div>
+                        <b>{file.name}</b>
+                        <span>{file.size} · Published by hiring team</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="small-outline"
+                      onClick={() => {
+                        downloadAttachedFile(file);
+                        toast.success(`Downloaded ${file.name}`);
+                      }}
+                      style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                    >
+                      <Download size={13} /> Download
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
         </article>
 
         <aside className="detail-side session-sticky-aside">

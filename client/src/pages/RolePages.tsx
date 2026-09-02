@@ -36,11 +36,13 @@ import {
   type JobDraft,
   type RecruiterPostedJob,
   loadCandidates,
+  loadCompanyRoleRequirements,
   loadRecruiterJobDrafts,
   loadRecruiterPostedJobs,
   loadScreeningNotes,
   roleRequirements,
   saveCandidate,
+  saveCompanyRoleRequirements,
   saveScreeningNote,
   scheduleItems,
   toggleCandidateShortlist,
@@ -1129,17 +1131,40 @@ export function RecruiterInterviews() {
 }
 
 export function RecruiterSkillRequirements() {
-  const [reqData, setReqData] = useState(companyRoleRequirements);
+  const [reqData, setReqData] = useState(loadCompanyRoleRequirements);
   const [companyIndex, setCompanyIndex] = useState(0);
   const [roleIndex, setRoleIndex] = useState(0);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showAddRoleForm, setShowAddRoleForm] = useState(false);
   const [newSkill, setNewSkill] = useState("");
   const [newLevel, setNewLevel] = useState("Intermediate");
   const [newImportance, setNewImportance] = useState("Required");
+  const [newRoleTitle, setNewRoleTitle] = useState("");
+  const [newRoleDemand, setNewRoleDemand] = useState("High");
+  const [candidatesList] = useState<CandidateRecord[]>(loadCandidates);
 
-  const company = reqData[companyIndex] || companyRoleRequirements[0];
+  useEffect(() => {
+    setReqData(loadCompanyRoleRequirements());
+  }, []);
+
+  const company = reqData[companyIndex] || reqData[0] || companyRoleRequirements[0];
   const role = company.roles[roleIndex] || company.roles[0];
-  const selectCompany = (index: number) => { setCompanyIndex(index); setRoleIndex(0); };
+  const selectCompany = (index: number) => {
+    setCompanyIndex(index);
+    setRoleIndex(0);
+  };
+
+  // Compute dynamic eligible candidate count based on required skills
+  const requiredSkillsList = (role?.requirements || [])
+    .filter((r: any) => r.importance === "Required")
+    .map((r: any) => r.skill.toLowerCase());
+
+  const dynamicEligibleCount = candidatesList.filter((candidate) => {
+    if (requiredSkillsList.length === 0) return true;
+    return requiredSkillsList.every((req) =>
+      candidate.skills.some((s) => s.toLowerCase().includes(req) || req.includes(s.toLowerCase()))
+    );
+  }).length;
 
   const handleAddRequirement = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -1147,7 +1172,9 @@ export function RecruiterSkillRequirements() {
     const requirement = { skill: newSkill.trim(), level: newLevel, importance: newImportance };
     const updated = JSON.parse(JSON.stringify(reqData)) as typeof reqData;
     updated[companyIndex].roles[roleIndex].requirements.push(requirement);
+    updated[companyIndex].roles[roleIndex].updated = "Just now";
     setReqData(updated);
+    saveCompanyRoleRequirements(updated);
     setNewSkill("");
     setShowAddForm(false);
     try {
@@ -1156,32 +1183,210 @@ export function RecruiterSkillRequirements() {
     toast.success(`Added ${requirement.skill} requirement to ${role.title}.`);
   };
 
-  return <RecruiterLayout><PageHeader eyebrow="Industry skill requirements" title={`${company.company} · ${role.title}`} description="Keep each company’s roles distinct so candidates are screened against the correct requirements and demand context." action={<button className="small-outline" onClick={() => setShowAddForm((c) => !c)}>{showAddForm ? "Cancel" : "Add skill requirement"}</button>} />
-  {showAddForm && (
-    <SectionCard title={`Add requirement for ${role.title}`}>
-      <form className="publish-form" onSubmit={handleAddRequirement}>
-        <label>Skill name<input value={newSkill} onChange={(e) => setNewSkill(e.target.value)} placeholder="e.g. AWS, Docker, React" required /></label>
-        <label>Expected level
-          <select value={newLevel} onChange={(e) => setNewLevel(e.target.value)}>
-            <option>Developing</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-          </select>
-        </label>
-        <label>Requirement importance
-          <select value={newImportance} onChange={(e) => setNewImportance(e.target.value)}>
-            <option>Required</option>
-            <option>Preferred</option>
-          </select>
-        </label>
-        <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
-          <button type="submit" className="primary-button">Save requirement</button>
-          <button type="button" className="small-outline" onClick={() => setShowAddForm(false)}>Cancel</button>
+  const handleDeleteRequirement = (skillIndex: number) => {
+    const updated = JSON.parse(JSON.stringify(reqData)) as typeof reqData;
+    const removed = updated[companyIndex].roles[roleIndex].requirements.splice(skillIndex, 1);
+    updated[companyIndex].roles[roleIndex].updated = "Just now";
+    setReqData(updated);
+    saveCompanyRoleRequirements(updated);
+    toast.success(`Removed requirement "${removed[0]?.skill}".`);
+  };
+
+  const handleAddRole = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRoleTitle.trim()) return;
+    const newRoleObj = {
+      title: newRoleTitle.trim(),
+      demand: newRoleDemand,
+      updated: "Just now",
+      eligible: String(candidatesList.length),
+      requirements: [{ skill: "Communication", level: "Intermediate", importance: "Required" }],
+    };
+    const updated = JSON.parse(JSON.stringify(reqData)) as typeof reqData;
+    updated[companyIndex].roles.push(newRoleObj);
+    setReqData(updated);
+    saveCompanyRoleRequirements(updated);
+    setRoleIndex(updated[companyIndex].roles.length - 1);
+    setNewRoleTitle("");
+    setShowAddRoleForm(false);
+    toast.success(`New role "${newRoleTitle}" added to ${company.company}.`);
+  };
+
+  return (
+    <RecruiterLayout>
+      <PageHeader
+        eyebrow="Industry skill requirements"
+        title={`${company.company} · ${role.title}`}
+        description="Keep each company’s roles distinct so candidates are screened against the correct requirements, level expectations, and demand context."
+        action={
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              type="button"
+              className="small-outline"
+              onClick={() => {
+                setShowAddRoleForm((c) => !c);
+                setShowAddForm(false);
+              }}
+            >
+              {showAddRoleForm ? "Cancel" : "+ Add role offer"}
+            </button>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => {
+                setShowAddForm((c) => !c);
+                setShowAddRoleForm(false);
+              }}
+            >
+              {showAddForm ? "Cancel" : "+ Add skill requirement"}
+            </button>
+          </div>
+        }
+      />
+
+      {showAddRoleForm && (
+        <SectionCard title={`Add a new role offer for ${company.company}`}>
+          <form className="publish-form" onSubmit={handleAddRole}>
+            <label>
+              Role Title
+              <input
+                value={newRoleTitle}
+                onChange={(e) => setNewRoleTitle(e.target.value)}
+                placeholder="e.g. Cloud Infrastructure Architect, AI Research Fellow"
+                required
+              />
+            </label>
+            <label>
+              Industry Demand Level
+              <select value={newRoleDemand} onChange={(e) => setNewRoleDemand(e.target.value)}>
+                <option>High</option>
+                <option>Medium</option>
+                <option>Emerging</option>
+              </select>
+            </label>
+            <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+              <button type="submit" className="primary-button">Create role</button>
+              <button type="button" className="small-outline" onClick={() => setShowAddRoleForm(false)}>Cancel</button>
+            </div>
+          </form>
+        </SectionCard>
+      )}
+
+      {showAddForm && (
+        <SectionCard title={`Add requirement for ${role.title}`}>
+          <form className="publish-form" onSubmit={handleAddRequirement}>
+            <label>
+              Skill name
+              <input
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                placeholder="e.g. AWS, Docker, React, Machine Learning"
+                required
+              />
+            </label>
+            <label>
+              Expected level
+              <select value={newLevel} onChange={(e) => setNewLevel(e.target.value)}>
+                <option>Developing</option>
+                <option>Intermediate</option>
+                <option>Advanced</option>
+              </select>
+            </label>
+            <label>
+              Requirement importance
+              <select value={newImportance} onChange={(e) => setNewImportance(e.target.value)}>
+                <option>Required</option>
+                <option>Preferred</option>
+              </select>
+            </label>
+            <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem" }}>
+              <button type="submit" className="primary-button">Save requirement</button>
+              <button type="button" className="small-outline" onClick={() => setShowAddForm(false)}>Cancel</button>
+            </div>
+          </form>
+        </SectionCard>
+      )}
+
+      <SectionCard title="Company offers" aside={<span className="date-meta">{company.industry}</span>}>
+        <div className="company-role-picker">
+          <div className="company-role-group">
+            <span>Company</span>
+            <div>
+              {reqData.map((item, index) => (
+                <button
+                  type="button"
+                  key={item.company}
+                  onClick={() => selectCompany(index)}
+                  className={companyIndex === index ? "company-role-button active-company-role" : "company-role-button"}
+                >
+                  {item.company}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="company-role-group">
+            <span>Role offered by {company.company}</span>
+            <div>
+              {company.roles.map((item, index) => (
+                <button
+                  type="button"
+                  key={item.title}
+                  onClick={() => setRoleIndex(index)}
+                  className={roleIndex === index ? "company-role-button active-company-role" : "company-role-button"}
+                >
+                  {item.title}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </form>
-    </SectionCard>
-  )}
-  <SectionCard title="Company offers" aside={<span className="date-meta">{company.industry}</span>}><div className="company-role-picker"><div className="company-role-group"><span>Company</span><div>{reqData.map((item, index) => <button type="button" key={item.company} onClick={() => selectCompany(index)} className={companyIndex === index ? "company-role-button active-company-role" : "company-role-button"}>{item.company}</button>)}</div></div><div className="company-role-group"><span>Role offered by {company.company}</span><div>{company.roles.map((item, index) => <button type="button" key={item.title} onClick={() => setRoleIndex(index)} className={roleIndex === index ? "company-role-button active-company-role" : "company-role-button"}>{item.title}</button>)}</div></div></div></SectionCard><div className="detail-layout"><SectionCard title={`${role.title} · published skills`}><div className="requirement-table"><div className="table-head"><span>Skill</span><span>Level</span><span>Importance</span></div>{role.requirements.map((requirement) => <div className="table-row" key={requirement.skill}><b>{requirement.skill}</b><span>{requirement.level}</span><StatusPill tone={requirement.importance === "Required" ? "ink" : "muted"}>{requirement.importance}</StatusPill></div>)}</div></SectionCard><aside className="stack-lg"><SectionCard title="Role demand context"><KeyValue label="Company" value={company.company} /><KeyValue label="Industry demand" value={role.demand} /><KeyValue label="Last updated" value={role.updated} /><KeyValue label="Eligible candidates" value={role.eligible} /></SectionCard><img className="role-illustration" src={recruiterMatchField} alt="Abstract candidate to requirement alignment illustration" /></aside></div><Notice title="Role-specific screening" text="Company offers remain separate: changing the role updates the published skills, level, importance, demand signal, and eligible-candidate context used for that offer." /></RecruiterLayout>;
+      </SectionCard>
+
+      <div className="detail-layout">
+        <SectionCard title={`${role.title} · published skills`}>
+          <div className="requirement-table">
+            <div className="table-head">
+              <span>Skill</span>
+              <span>Level</span>
+              <span>Importance</span>
+              <span style={{ textAlign: "right" }}>Action</span>
+            </div>
+            {role.requirements.map((requirement, idx) => (
+              <div className="table-row" key={`${requirement.skill}-${idx}`} style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr auto", alignItems: "center" }}>
+                <b>{requirement.skill}</b>
+                <span>{requirement.level}</span>
+                <StatusPill tone={requirement.importance === "Required" ? "ink" : "muted"}>
+                  {requirement.importance}
+                </StatusPill>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteRequirement(idx)}
+                  className="text-button"
+                  style={{ color: "var(--slate)", padding: "4px" }}
+                  title={`Remove ${requirement.skill}`}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))}
+          </div>
+        </SectionCard>
+        <aside className="stack-lg">
+          <SectionCard title="Role demand context">
+            <KeyValue label="Company" value={company.company} />
+            <KeyValue label="Industry demand" value={role.demand} />
+            <KeyValue label="Last updated" value={role.updated} />
+            <KeyValue label="Eligible candidates" value={`${String(dynamicEligibleCount).padStart(2, "0")} matching candidates`} />
+          </SectionCard>
+        </aside>
+      </div>
+
+      <Notice
+        title="Role-specific screening"
+        text="Company offers remain separate: changing the role updates the published skills, level, importance, demand signal, and eligible-candidate context used for that offer."
+      />
+    </RecruiterLayout>
+  );
 }
 
 export function InstitutionDashboard() { return <InstitutionLayout><PageHeader eyebrow="Institution workspace" title="Placement readiness overview" description="Monitor the approved student, application, interview, placement-status, and skill-alignment records for your institution." meta={<StatusPill>Batch 2028</StatusPill>} /><div className="stat-grid"><StatCard label="Placement-ready" value="142" tone="olive" note="Verified profile evidence" /><StatCard label="Active applications" value="186" note="Across approved opportunities" /><StatCard label="Interviews scheduled" value="24" note="This week" /><StatCard label="Offers recorded" value="18" tone="ochre" note="Current reporting period" /></div><div className="dashboard-grid"><div className="stack-lg"><SectionCard title="Readiness watch" aside={<ActionLink href="/institution/readiness">View student readiness</ActionLink>}><div className="readiness-summary"><div><b>78%</b><span>profiles above placement-readiness baseline</span></div><ProgressBar value={78} label="Current readiness" /></div><div className="readiness-notes"><span><i /> 31 profiles need academic-document completion.</span><span><i className="ochre-dot" /> 18 students have active application reviews.</span></div></SectionCard><SectionCard title="Placement activity"><div className="activity-list"><article><div><b>Candidate evaluation briefing</b><span>28 Aug · 24 students visible · 2 recruiters assigned</span></div><StatusPill>Scheduled</StatusPill><Link href="/institution/interviews" className="action-link">Review <ArrowRight size={15} /></Link></article><div><b>Applied AI Capability Studio</b><span>8 students currently eligible for recruiter review</span></div><StatusPill tone="ochre">Screening</StatusPill><Link href="/institution/applications" className="action-link">Review <ArrowRight size={15} /></Link></div></SectionCard></div><aside className="stack-lg"><SectionCard title="Placement status"><KeyValue label="Open placement window" value="Yes" /><KeyValue label="Current batch" value="2028" /><KeyValue label="Evidence verification" value="81% complete" /><Link href="/institution/placement-status" className="action-link">Open records <ArrowRight size={15} /></Link></SectionCard><img className="role-illustration" src={institutionReadiness} alt="Abstract institution readiness illustration" /></aside></div></InstitutionLayout>; }

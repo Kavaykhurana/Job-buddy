@@ -17,7 +17,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 import { KeyValue, Notice, PageHeader, SectionCard, StatusPill } from "@/components/Ui";
 import { assessmentCatalog, getDeclaredSkills, isSkillMatched } from "@/data/assessmentData";
-import { jobOpportunities } from "@/data/jobData";
+import { getJobOpportunities, jobOpportunities } from "@/data/jobData";
 
 function StudentLayout({ children }: { children: React.ReactNode }) {
   return <AppShell role="student">{children}</AppShell>;
@@ -154,7 +154,7 @@ export function SkillHubPage({ skillName }: { skillName?: string }) {
 
   // Filter matching jobs
   const matchingJobs = useMemo(() => {
-    return jobOpportunities.filter(
+    return getJobOpportunities().filter(
       (j) =>
         j.required.some((s) => isSkillMatched(s, [decodedSkill])) ||
         j.preferred.some((s) => isSkillMatched(s, [decodedSkill]))
