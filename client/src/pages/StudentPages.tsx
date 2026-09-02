@@ -957,6 +957,58 @@ export function JobDetailPage({ id = "ai-studio" }: { id?: string }) {
               })}
             </div>
           </SectionCard>
+
+          {(item.qualification || item.eligibility) && (
+            <SectionCard title="Qualification & eligibility criteria">
+              {item.qualification && (
+                <div style={{ marginBottom: "12px" }}>
+                  <b style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Academic Qualification:</b>
+                  <p className="body-copy" style={{ margin: 0 }}>{item.qualification}</p>
+                </div>
+              )}
+              {item.eligibility && (
+                <div>
+                  <b style={{ display: "block", marginBottom: "4px", fontSize: "13px" }}>Eligibility Baseline:</b>
+                  <p className="body-copy" style={{ margin: 0 }}>{item.eligibility}</p>
+                </div>
+              )}
+            </SectionCard>
+          )}
+
+          {item.stages && (
+            <SectionCard title="Selection sequence & evaluation stages">
+              <p className="body-copy">{item.stages}</p>
+            </SectionCard>
+          )}
+
+          {item.attachments && item.attachments.length > 0 && (
+            <SectionCard title="Company brief & attached documents">
+              <div className="uploaded-docs-list">
+                {item.attachments.map((file: any, index: number) => (
+                  <div className="uploaded-doc-item" key={file.id || index}>
+                    <div className="doc-info">
+                      <FileText size={16} />
+                      <div>
+                        <b>{file.name}</b>
+                        <span>{file.size} · Published by hiring team</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      className="small-outline"
+                      onClick={() => {
+                        downloadAttachedFile(file);
+                        toast.success(`Downloaded ${file.name}`);
+                      }}
+                      style={{ display: "flex", alignItems: "center", gap: "4px" }}
+                    >
+                      <Download size={13} /> Download
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </SectionCard>
+          )}
         </article>
 
         <aside className="detail-side session-sticky-aside">
