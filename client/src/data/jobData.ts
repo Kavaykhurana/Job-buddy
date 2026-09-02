@@ -17,6 +17,10 @@ export interface JobOpportunity {
   summary: string;
   salary?: string;
   department?: string;
+  attachments?: any[];
+  stages?: string;
+  qualification?: string;
+  eligibility?: string;
 }
 
 export const jobOpportunities: JobOpportunity[] = [
@@ -234,6 +238,10 @@ export function getJobOpportunities(): JobOpportunity[] {
       summary: job.summary || job.eligibility || "Newly published industry role requirement with verified selection criteria.",
       salary: "₹12,00,000 – ₹16,00,000 / year",
       department: "Engineering & Applied Systems",
+      attachments: job.attachments || [],
+      stages: job.stages,
+      qualification: job.qualification,
+      eligibility: job.eligibility,
     };
   });
 
