@@ -2267,6 +2267,23 @@ const samplePlacementOffers: PlacementOfferItem[] = [
   { id: "off-04", studentName: "Devansh Rastogi", program: "Computer Science", company: "Tern & Co.", role: "Associate Software Engineer", packageCTC: "11.5 LPA", status: "Pending Audit", offerDate: "26 Aug 2026" },
 ];
 
+interface PlacementShortlistItem {
+  id: string;
+  studentName: string;
+  program: string;
+  company: string;
+  role: string;
+  status: "Shortlisted" | "Interview Scheduled";
+  shortlistDate: string;
+}
+
+const samplePlacementShortlists: PlacementShortlistItem[] = [
+  { id: "sh-01", studentName: "Kabir Mehta", program: "Information Technology", company: "Northstar Systems", role: "Applied AI Capability Studio", status: "Shortlisted", shortlistDate: "21 Aug 2026" },
+  { id: "sh-02", studentName: "Anaya Sharma", program: "Computer Science", company: "Northstar Systems", role: "Applied AI Capability Studio", status: "Interview Scheduled", shortlistDate: "21 Aug 2026" },
+  { id: "sh-03", studentName: "Rhea Nair", program: "Computer Science", company: "Mosaic Health Labs", role: "Research Operations Associate", status: "Shortlisted", shortlistDate: "22 Aug 2026" },
+  { id: "sh-04", studentName: "Devansh Rastogi", program: "Computer Science", company: "Tern & Co.", role: "Digital Product Review Cohort", status: "Shortlisted", shortlistDate: "23 Aug 2026" },
+];
+
 export function InstitutionPlacement() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [exportScope, setExportScope] = useState<"all" | "offers" | "shortlists">("all");
@@ -2281,12 +2298,32 @@ export function InstitutionPlacement() {
   });
 
   const handleDownloadReport = () => {
+    const timestamp = new Date().toLocaleString();
+
     if (exportFormat === "csv") {
-      const headers = "Student Name,Department,Company,Target Role,Package (CTC),Verification Status,Date\n";
-      const rows = samplePlacementOffers.map(
-        (o) => `"${o.studentName}","${o.program}","${o.company}","${o.role}","${o.packageCTC}","${o.status}","${o.offerDate}"`
-      ).join("\n");
-      const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
+      const headers = "Record Type,Student Name,Department,Company,Target Role,Package (CTC),Verification Status,Date\n";
+      let csvRows = "";
+
+      if (exportScope === "offers") {
+        csvRows = samplePlacementOffers.map(
+          (o) => `"Offer","${o.studentName}","${o.program}","${o.company}","${o.role}","${o.packageCTC}","${o.status}","${o.offerDate}"`
+        ).join("\n");
+      } else if (exportScope === "shortlists") {
+        csvRows = samplePlacementShortlists.map(
+          (s) => `"Shortlist","${s.studentName}","${s.program}","${s.company}","${s.role}","Under Evaluation","${s.status}","${s.shortlistDate}"`
+        ).join("\n");
+      } else {
+        // "all" scope: includes both offers and shortlists
+        const offerRows = samplePlacementOffers.map(
+          (o) => `"Offer","${o.studentName}","${o.program}","${o.company}","${o.role}","${o.packageCTC}","${o.status}","${o.offerDate}"`
+        );
+        const shortlistRows = samplePlacementShortlists.map(
+          (s) => `"Shortlist","${s.studentName}","${s.program}","${s.company}","${s.role}","Under Evaluation","${s.status}","${s.shortlistDate}"`
+        );
+        csvRows = [...offerRows, ...shortlistRows].join("\n");
+      }
+
+      const blob = new Blob([headers + csvRows], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
@@ -2294,9 +2331,130 @@ export function InstitutionPlacement() {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } else {
+      // "summary" format: generate detailed audit summary text report
+      let summaryText = `================================================================================
+SIH CONNECT — INSTITUTIONAL PLACEMENT AUDIT SUMMARY REPORT
+Governed Institutional Placement Office · Batch 2028
+================================================================================
+
+[REPORT METADATA]
+Export Timestamp     : ${timestamp}
+Selected Data Scope  : ${exportScope === "all" ? "All (Applications, Shortlists & Offers)" : exportScope === "offers" ? "Offers" : "Shortlists"}
+Reporting Window     : Active · Batch 2028 Academic Cycle
+Authorisation Level  : Institution Authorised Audit Log
+File Name            : SIH_Connect_Placement_Audit_Summary_${exportScope}_Batch2028.txt
+
+--------------------------------------------------------------------------------
+1. SCOPE & COHORT OVERVIEW
+--------------------------------------------------------------------------------
+Batch Scope          : Batch 2028 (Computer Science & Engineering, Information Technology)
+Total Cohort In Scope: 64 Students
+Placement Window     : Open
+Reporting Controls   : Privacy-Governed Extraction (Authorised Access Only)
+`;
+
+      if (exportScope === "offers") {
+        summaryText += `
+Total Offers In Window : 18 Offers
+Offers In Export Scope : 4 Sample Audited Records
+Offer Verification Rate: 94.4% (17 of 18 verified by institution)
+
+--------------------------------------------------------------------------------
+2. COMPENSATION & HIRING METRICS (OFFERS SCOPE)
+--------------------------------------------------------------------------------
+Highest Package (CTC)  : 16.5 LPA (Northstar Systems · Graduate AI Engineer)
+Lowest Package (CTC)   : 11.5 LPA (Tern & Co. · Associate Software Engineer)
+Average Package (CTC)  : 13.7 LPA
+Partner Organizations  : Northstar Systems (2 offers), Mosaic Health Labs (1 offer), Tern & Co. (1 offer)
+Department Distribution: Computer Science (3), Information Technology (1)
+
+--------------------------------------------------------------------------------
+3. AUDITED OFFER RECORDS (${samplePlacementOffers.length} RECORDS INCLUDED)
+--------------------------------------------------------------------------------
+${samplePlacementOffers.map((o, idx) => `[${idx + 1}] ${o.studentName} (${o.program})
+    Company: ${o.company} | Role: ${o.role}
+    Package: ${o.packageCTC} | Status: ${o.status} | Date: ${o.offerDate}`).join("\n\n")}
+`;
+      } else if (exportScope === "shortlists") {
+        summaryText += `
+Total Shortlists In Window : 44 Shortlists
+Shortlists In Export Scope : 4 Sample Audited Records
+Interview Readiness        : 100% Meeting Published Eligibility Criteria
+
+--------------------------------------------------------------------------------
+2. SHORTLIST PIPELINE METRICS (SHORTLISTS SCOPE)
+--------------------------------------------------------------------------------
+Active Pipeline Roles  : Applied AI Capability Studio, Research Operations Associate, Digital Product Review
+Partner Organizations  : Northstar Systems (2), Mosaic Health Labs (1), Tern & Co. (1)
+Department Distribution: Computer Science (3), Information Technology (1)
+Interview Status       : 1 Interview Scheduled, 3 Screening Shortlisted
+
+--------------------------------------------------------------------------------
+3. AUDITED SHORTLIST RECORDS (${samplePlacementShortlists.length} RECORDS INCLUDED)
+--------------------------------------------------------------------------------
+${samplePlacementShortlists.map((s, idx) => `[${idx + 1}] ${s.studentName} (${s.program})
+    Company: ${s.company} | Target Role: ${s.role}
+    Compensation: Under Evaluation | Status: ${s.status} | Shortlisted Date: ${s.shortlistDate}`).join("\n\n")}
+`;
+      } else {
+        // "all" scope
+        summaryText += `
+Total Applications in Scope : 186
+Total Shortlisted Candidates: 44
+Total Offers Extended       : 18
+Verified Offers             : 17 / 18
+Total Records in Export     : ${samplePlacementOffers.length + samplePlacementShortlists.length} Audited Sample Records (4 Offers + 4 Shortlists)
+
+--------------------------------------------------------------------------------
+2. FULL FUNNEL CONVERSION METRICS (ALL SCOPE)
+--------------------------------------------------------------------------------
+Application-to-Shortlist Conversion : 23.7% (44 shortlisted from 186 applications)
+Shortlist-to-Offer Conversion       : 40.9% (18 offers from 44 shortlists)
+Application-to-Offer Conversion     : 9.7% (18 offers from 186 applications)
+Offer Verification Compliance       : 94.4% (17 verified offers)
+Active Recruitment Partners         : Northstar Systems, Mosaic Health Labs, Tern & Co.
+
+--------------------------------------------------------------------------------
+3. AUDITED PLACEMENT RECORDS (${samplePlacementOffers.length + samplePlacementShortlists.length} RECORDS INCLUDED)
+--------------------------------------------------------------------------------
+--- OFFERS SECTION (${samplePlacementOffers.length} Records) ---
+${samplePlacementOffers.map((o, idx) => `[Offer ${idx + 1}] ${o.studentName} (${o.program})
+    Company: ${o.company} | Role: ${o.role}
+    Package: ${o.packageCTC} | Status: ${o.status} | Date: ${o.offerDate}`).join("\n\n")}
+
+--- SHORTLISTS SECTION (${samplePlacementShortlists.length} Records) ---
+${samplePlacementShortlists.map((s, idx) => `[Shortlist ${idx + 1}] ${s.studentName} (${s.program})
+    Company: ${s.company} | Target Role: ${s.role}
+    Compensation: Under Evaluation | Status: ${s.status} | Shortlisted Date: ${s.shortlistDate}`).join("\n\n")}
+`;
+      }
+
+      summaryText += `
+--------------------------------------------------------------------------------
+4. GOVERNANCE & AUDIT COMPLIANCE
+--------------------------------------------------------------------------------
+- Exported under Institutional Authority for SIH Connect Placement Governance.
+- Records reflect verified candidate credentials and authorised offer details.
+- Logged in localStorage [${PLACEMENT_EXPORT_LOG_KEY}].
+- Sign-off: University Placement Cell Directorate · Batch 2028.
+================================================================================
+END OF AUDIT SUMMARY
+================================================================================
+`;
+
+      const blob = new Blob([summaryText], { type: "text/plain;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `SIH_Connect_Placement_Audit_Summary_${exportScope}_Batch2028.txt`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
     }
 
-    const timestamp = new Date().toLocaleString();
     try {
       const existing = JSON.parse(localStorage.getItem(PLACEMENT_EXPORT_LOG_KEY) || "[]");
       existing.push({ timestamp, scope: exportScope, format: exportFormat });
