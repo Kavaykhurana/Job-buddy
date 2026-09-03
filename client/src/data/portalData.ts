@@ -49,6 +49,7 @@ export const roleNavigation: Record<UserRole, { label: string; href: string }[]>
     { label: "Curriculum", href: "/institution/curriculum" },
     { label: "Analytics", href: "/institution/analytics" },
     { label: "Integrations", href: "/institution/integrations" },
+    { label: "Policy Analytics", href: "/policy-analytics" },
   ],
   academician: [
     { label: "Overview", href: "/academician" },

@@ -215,6 +215,37 @@ function saveDatabase(data: typeof initialData) {
 
 let db = loadDatabase();
 
+// In-memory session store: maps access token to user ID for role-aware /auth/me and /auth/refresh.
+// Resets on server restart; tokens also embed userId so sessions survive server reloads.
+const sessions = new Map<string, string>();
+
+function generateToken(prefix: string, userId: string): string {
+  return `${prefix}_${userId}_${Date.now()}`;
+}
+
+function getSessionUser(req: Request): typeof db.users[0] | undefined {
+  const auth = req.headers.authorization;
+  if (auth?.startsWith("Bearer ")) {
+    const token = auth.slice(7);
+    const userId = sessions.get(token);
+    if (userId) {
+      const user = db.users.find((u) => u.id === userId);
+      if (user) return user;
+    }
+    // Also parse user id from token if present: jwt_token_<userId>_<timestamp> or jwt_refreshed_<userId>_<timestamp>
+    const match = token.match(/^jwt_(?:token|refreshed)_([a-zA-Z0-9_-]+)_\d+$/);
+    if (match) {
+      const idFromToken = match[1];
+      const user = db.users.find((u) => u.id === idFromToken);
+      if (user) {
+        sessions.set(token, user.id);
+        return user;
+      }
+    }
+  }
+  return undefined;
+}
+
 // Helper to persist on changes
 function updateDb<T>(updater: (current: typeof initialData) => T): T {
   const result = updater(db);
@@ -233,8 +264,10 @@ apiRouter.post("/auth/login", (req: Request, res: Response) => {
     displayName: (email || "User").split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
     roles: role ? [role.toUpperCase()] : ["STUDENT"],
   };
+  const token = generateToken("jwt_token", user.id);
+  sessions.set(token, user.id);
   return res.json({
-    accessToken: "jwt_token_" + Date.now(),
+    accessToken: token,
     accessTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
     user,
   });
@@ -251,22 +284,34 @@ apiRouter.post("/auth/register", (req: Request, res: Response) => {
   updateDb((state) => {
     state.users.push(newUser);
   });
+  const token = generateToken("jwt_token", newUser.id);
+  sessions.set(token, newUser.id);
   return res.json({
-    accessToken: "jwt_token_" + Date.now(),
+    accessToken: token,
     accessTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
     user: newUser,
   });
 });
 
 apiRouter.get("/auth/me", (req: Request, res: Response) => {
-  return res.json(db.users[0]);
+  const user = getSessionUser(req);
+  if (!user) {
+    return res.status(401).json({ detail: "Not authenticated" });
+  }
+  return res.json(user);
 });
 
 apiRouter.post("/auth/refresh", (req: Request, res: Response) => {
+  const user = getSessionUser(req);
+  if (!user) {
+    return res.status(401).json({ detail: "No active session to refresh" });
+  }
+  const token = generateToken("jwt_refreshed", user.id);
+  sessions.set(token, user.id);
   return res.json({
-    accessToken: "jwt_refreshed_" + Date.now(),
+    accessToken: token,
     accessTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
-    user: db.users[0],
+    user,
   });
 });
 

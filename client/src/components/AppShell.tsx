@@ -12,13 +12,13 @@ const roleLabel: Record<UserRole, string> = { student: "Student view", recruiter
 const extensionLabels: Record<UserRole, string[]> = {
   student: ["Events", "Calendar", "Schedule"],
   recruiter: ["Internships", "Assessments", "Collaboration", "Analytics", "Integrations"],
-  institution: ["Curriculum", "Analytics", "Integrations"],
+  institution: ["Curriculum", "Analytics", "Integrations", "Policy Analytics"],
   academician: ["Opportunities", "Training & FDPs", "Collaboration"],
 };
 
 export function AppShell({ role = "student", children }: { role?: UserRole; children: ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { user, signOut: endSession } = useAuth();
+  const { user, signOut: endSession, login } = useAuth();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -27,6 +27,19 @@ export function AppShell({ role = "student", children }: { role?: UserRole; chil
   useEffect(() => {
     setNotifications(loadStudentNotifications());
   }, [location, isNotificationsOpen]);
+
+  const handleRoleSelect = async (newRole: UserRole) => {
+    const defaultAccounts: Record<UserRole, { email: string }> = {
+      student: { email: "anaya.sharma@example.edu" },
+      recruiter: { email: "recruitment@quantum-systems.io" },
+      institution: { email: "dean.placements@apex-tech.edu" },
+      academician: { email: "prof.mehta@apex-tech.edu" },
+    };
+    try {
+      await login(defaultAccounts[newRole].email, "password", newRole);
+    } catch {}
+    setLocation(roleHome[newRole]);
+  };
 
   const nav = roleNavigation[role];
   const extensionNav = nav.filter((item) => extensionLabels[role].includes(item.label));
@@ -70,7 +83,7 @@ export function AppShell({ role = "student", children }: { role?: UserRole; chil
           </nav>
           {extensionNav.length > 0 && <div className="more-nav more-nav-root"><button type="button" className={extensionNav.some((item) => location === item.href || location.startsWith(`${item.href}/`)) ? "more-nav-trigger nav-active" : "more-nav-trigger"} aria-expanded={isMoreOpen} aria-controls={`more-menu-${role}`} onClick={() => setIsMoreOpen((open) => !open)}>More <ChevronDown size={13} /></button>{isMoreOpen && <div id={`more-menu-${role}`} className="more-nav-menu">{extensionNav.map((item) => { const active = location === item.href || location.startsWith(`${item.href}/`); return <Link key={item.href} href={item.href} className={active ? "more-active" : ""} onClick={() => setIsMoreOpen(false)}>{item.label}</Link>; })}</div>}</div>}
           <div className="top-actions">
-            <select className="role-select" aria-label="Switch workspace" value={role} onChange={(event) => setLocation(roleHome[event.target.value as UserRole])}>
+            <select className="role-select" aria-label="Switch workspace" value={role} onChange={(event) => void handleRoleSelect(event.target.value as UserRole)}>
               <option value="student">Student</option><option value="recruiter">Recruiter</option><option value="institution">Institution</option><option value="academician">Academician</option>
             </select>
             <div className="notification-menu" style={{ position: "relative" }}>
