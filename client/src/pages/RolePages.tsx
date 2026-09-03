@@ -1,6 +1,7 @@
 // Field Notes Institutional Workspace: distinct recruiter, institution, and academician screens within the approved scope.
 import { useEffect, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   Calendar,
   Check,
@@ -26,6 +27,7 @@ import {
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
+import { useAuth } from "@/contexts/AuthContext";
 import { ActionLink, KeyValue, Notice, PageHeader, ProgressBar, ScheduleLine, SectionCard, StatCard, StatusPill, Timeline } from "@/components/Ui";
 import {
   candidateTimeline,
@@ -56,6 +58,8 @@ import institutionReadiness from "@/assets/institution-readiness.svg";
 import academicianLearningMap from "@/assets/academician-learning-map.svg";
 import "./RecruiterSelection.css";
 import "./CompanyRoleRequirements.css";
+import "./AcademicianStudentMaps.css";
+import "./InstitutionOverview.css";
 
 function RecruiterLayout({ children }: { children: React.ReactNode }) { return <AppShell role="recruiter">{children}</AppShell>; }
 function InstitutionLayout({ children }: { children: React.ReactNode }) { return <AppShell role="institution">{children}</AppShell>; }
@@ -1389,24 +1393,2364 @@ export function RecruiterSkillRequirements() {
   );
 }
 
-export function InstitutionDashboard() { return <InstitutionLayout><PageHeader eyebrow="Institution workspace" title="Placement readiness overview" description="Monitor the approved student, application, interview, placement-status, and skill-alignment records for your institution." meta={<StatusPill>Batch 2028</StatusPill>} /><div className="stat-grid"><StatCard label="Placement-ready" value="142" tone="olive" note="Verified profile evidence" /><StatCard label="Active applications" value="186" note="Across approved opportunities" /><StatCard label="Interviews scheduled" value="24" note="This week" /><StatCard label="Offers recorded" value="18" tone="ochre" note="Current reporting period" /></div><div className="dashboard-grid"><div className="stack-lg"><SectionCard title="Readiness watch" aside={<ActionLink href="/institution/readiness">View student readiness</ActionLink>}><div className="readiness-summary"><div><b>78%</b><span>profiles above placement-readiness baseline</span></div><ProgressBar value={78} label="Current readiness" /></div><div className="readiness-notes"><span><i /> 31 profiles need academic-document completion.</span><span><i className="ochre-dot" /> 18 students have active application reviews.</span></div></SectionCard><SectionCard title="Placement activity"><div className="activity-list"><article><div><b>Candidate evaluation briefing</b><span>28 Aug · 24 students visible · 2 recruiters assigned</span></div><StatusPill>Scheduled</StatusPill><Link href="/institution/interviews" className="action-link">Review <ArrowRight size={15} /></Link></article><div><b>Applied AI Capability Studio</b><span>8 students currently eligible for recruiter review</span></div><StatusPill tone="ochre">Screening</StatusPill><Link href="/institution/applications" className="action-link">Review <ArrowRight size={15} /></Link></div></SectionCard></div><aside className="stack-lg"><SectionCard title="Placement status"><KeyValue label="Open placement window" value="Yes" /><KeyValue label="Current batch" value="2028" /><KeyValue label="Evidence verification" value="81% complete" /><Link href="/institution/placement-status" className="action-link">Open records <ArrowRight size={15} /></Link></SectionCard><img className="role-illustration" src={institutionReadiness} alt="Abstract institution readiness illustration" /></aside></div></InstitutionLayout>; }
+// Per-candidate application records for the Institution workspace.
+// Separate from defaultCandidates (shared with Recruiter) to avoid coupling.
+const institutionAppRecords: Record<string, { opportunity: string; stage: string; eligibility: string }> = {
+  "anaya-01": { opportunity: "Applied AI Capability Studio", stage: "Screening", eligibility: "Eligible" },
+  "kabir-02": { opportunity: "Applied AI Capability Studio", stage: "Screening", eligibility: "Eligible" },
+  "rhea-03": { opportunity: "Research Operations Associate", stage: "Submitted", eligibility: "Review" },
+};
 
-export function InstitutionReadiness() { return <InstitutionLayout><PageHeader eyebrow="Student readiness" title="Readiness and skill evidence" description="View student readiness, evidence completion, and skill-alignment signals without changing their profile records." /><SectionCard title="Readiness cohort"><div className="readiness-table"><div className="table-head"><span>Student</span><span>Profile</span><span>Skill fit</span><span>Academic evidence</span><span /></div>{defaultCandidates.map((candidate) => <div className="candidate-row" key={candidate.id}><div><b>{candidate.name}</b><span>{candidate.program}</span></div><span>78% complete</span><div className="candidate-fit"><b>{candidate.score}%</b><ProgressBar value={candidate.score} /></div><StatusPill tone={candidate.eligibility === "Eligible" ? "olive" : "ochre"}>{candidate.eligibility === "Eligible" ? "Current" : "Review"}</StatusPill><button className="small-outline" onClick={() => toast("Institution profile view is permission-gated in the connected platform.")}>View context</button></div>)}</div></SectionCard></InstitutionLayout>; }
+export function InstitutionDashboard() {
+  return (
+    <InstitutionLayout>
+      <PageHeader
+        eyebrow="Institution workspace"
+        title="Placement readiness overview"
+        description="Monitor the approved student, application, interview, placement-status, and skill-alignment records for your institution."
+        meta={<StatusPill>Batch 2028</StatusPill>}
+      />
+      <div className="stat-grid">
+        <StatCard label="Placement-ready" value="142" tone="olive" note="Verified profile evidence" />
+        <StatCard label="Active applications" value="186" note="Across approved opportunities" />
+        <StatCard label="Interviews scheduled" value="24" note="This week" />
+        <StatCard label="Offers recorded" value="18" tone="ochre" note="Current reporting period" />
+      </div>
+      <div className="dashboard-grid">
+        <div className="stack-lg">
+          <SectionCard title="Readiness watch" aside={<ActionLink href="/institution/readiness">View student readiness</ActionLink>}>
+            <div className="readiness-summary">
+              <div className="readiness-headline">
+                <strong className="readiness-headline-stat">78%</strong>
+                <span className="readiness-headline-label">profiles above placement-readiness baseline</span>
+              </div>
+              <ProgressBar value={78} label="Current readiness" />
+            </div>
+            <div className="readiness-notes">
+              <div className="readiness-note-item">
+                <span className="readiness-note-dot" />
+                <span>31 profiles need academic-document completion.</span>
+              </div>
+              <div className="readiness-note-item">
+                <span className="readiness-note-dot ochre" />
+                <span>18 students have active application reviews.</span>
+              </div>
+            </div>
+          </SectionCard>
 
-export function InstitutionApplications() { return <InstitutionLayout><PageHeader eyebrow="Applications" title="Approved application visibility" description="Monitor application stages, eligibility outcomes, and recruiter activity for institution-supported students." /><SectionCard title="Application records"><div className="candidate-table"><div className="table-head"><span>Student</span><span>Opportunity</span><span>Eligibility</span><span>Stage</span><span /></div>{defaultCandidates.map((candidate, index) => <div className="candidate-row" key={candidate.id}><div><b>{candidate.name}</b><span>{candidate.program}</span></div><span>{index === 0 ? "Applied AI Capability Studio" : "Research Operations Associate"}</span><StatusPill>Eligible</StatusPill><StatusPill tone={index === 0 ? "ochre" : "muted"}>{index === 0 ? "Screening" : "Submitted"}</StatusPill><button className="small-outline" onClick={() => toast("Application context is available to authorised institution users.")}>View context</button></div>)}</div></SectionCard></InstitutionLayout>; }
+          <SectionCard title="Placement activity">
+            <div className="activity-list">
+              <article>
+                <div>
+                  <b>Candidate evaluation briefing</b>
+                  <span>28 Aug · 24 students visible · 2 recruiters assigned</span>
+                </div>
+                <StatusPill>Scheduled</StatusPill>
+                <Link href="/institution/interviews" className="action-link">Review <ArrowRight size={15} /></Link>
+              </article>
+              <article>
+                <div>
+                  <b>Applied AI Capability Studio</b>
+                  <span>8 students currently eligible for recruiter review</span>
+                </div>
+                <StatusPill tone="ochre">Screening</StatusPill>
+                <Link href="/institution/applications" className="action-link">Review <ArrowRight size={15} /></Link>
+              </article>
+            </div>
+          </SectionCard>
+        </div>
 
-export function InstitutionInterviews() { return <InstitutionLayout><PageHeader eyebrow="Interviews" title="Interview and evaluation visibility" description="View scheduled evaluations, participating candidates, and recorded outcomes permitted to the institution." /><SectionCard title="This week"><div className="interview-list"><article><div className="interview-time"><b>28</b><span>AUG</span></div><div><StatusPill>Scheduled</StatusPill><h3>Applied AI Capability Studio</h3><p>14:30–15:15 · 2 candidates · Recruiter-managed evaluation</p></div><button className="small-outline" onClick={() => toast("Interview context opens with role-based access.")}>View context</button></article></div></SectionCard></InstitutionLayout>; }
+        <aside className="stack-lg">
+          <SectionCard title="Placement status">
+            <div className="placement-status-card-body">
+              <KeyValue label="Open placement window" value="Yes" />
+              <KeyValue label="Current batch" value="2028" />
+              <KeyValue label="Evidence verification" value="81% complete" />
+            </div>
+            <div className="placement-status-action">
+              <Link href="/institution/placement-status" className="action-link">Open records <ArrowRight size={15} /></Link>
+            </div>
+          </SectionCard>
+          <img className="role-illustration" src={institutionReadiness} alt="Abstract institution readiness illustration" />
+        </aside>
+      </div>
+    </InstitutionLayout>
+  );
+}
 
-export function InstitutionPlacement() { return <InstitutionLayout><PageHeader eyebrow="Placement status" title="Placement reporting record" description="A controlled summary of placement-window status and offer outcomes visible to the institution." /><div className="placement-layout"><SectionCard title="Current reporting period"><div className="placement-status"><span>Placement window</span><b>Open</b><p>Batch 2028 · Current reporting period</p></div><div className="placement-figures"><StatCard label="Applications" value="186" /><StatCard label="Shortlists" value="44" /><StatCard label="Offers" value="18" /></div></SectionCard><SectionCard title="Reporting controls"><KeyValue label="Record visibility" value="Institution authorised" /><KeyValue label="Offer verification" value="17 / 18 verified" /><KeyValue label="Last refreshed" value="26 Aug, 09:00" /><button className="small-outline full-button" onClick={() => toast("Placement report export is ready for the authorised workflow.")}>Export current report</button></SectionCard></div></InstitutionLayout>; }
+const INST_READINESS_NOTES_PREFIX = "sih_inst_readiness_notes_";
 
-export function InstitutionAlignment() { return <InstitutionLayout><PageHeader eyebrow="Skill alignment" title="Institution-to-industry alignment" description="Review the current relationship between student evidence, role requirements, and industry skill demand." /><div className="detail-layout"><SectionCard title="Current alignment"><div className="map-list"><article><div><h3>Applied systems</h3><p>Strong institution-level evidence in Python and data analysis.</p></div><div className="map-score"><b>82%</b><ProgressBar value={82} /></div></article><article><div><h3>Research operations</h3><p>Evidence present; writing and presentation skill remains a development area.</p></div><div className="map-score"><b>71%</b><ProgressBar value={71} /></div></article><article><div><h3>Digital product</h3><p>Evidence coverage requires more user-research work samples.</p></div><div className="map-score"><b>58%</b><ProgressBar value={58} /></div></article></div></SectionCard><aside className="stack-lg"><img className="role-illustration" src={institutionReadiness} alt="Abstract institution and industry alignment illustration" /><SectionCard title="Data basis"><p className="body-copy">This view uses verified student profiles, role skill requirements, and current demand records. It is not a career-guidance module.</p></SectionCard></aside></div></InstitutionLayout>; }
+export function InstitutionReadiness() {
+  const [candidatesList] = useState<CandidateRecord[]>(defaultCandidates);
+  const [selectedStudent, setSelectedStudent] = useState<CandidateRecord | null>(null);
+  const [advisorNote, setAdvisorNote] = useState("");
 
-export function AcademicianDashboard() { return <AcademicianLayout><PageHeader eyebrow="Academician workspace" title="Student evidence and learning alignment" description="Review the approved student skill-map and learning-alignment context for your academic scope." meta={<StatusPill>Computer Science · Batch 2028</StatusPill>} /><div className="stat-grid"><StatCard label="Students in scope" value="64" note="Assigned academic context" /><StatCard label="Current skill maps" value="53" tone="olive" note="Evidence-led records" /><StatCard label="Learning alignment notes" value="11" tone="ochre" note="Review-ready" /><StatCard label="Upcoming events" value="03" note="This week" /></div><div className="dashboard-grid"><div className="stack-lg"><SectionCard title="Student skill-map review" aside={<ActionLink href="/academician/student-maps">Open maps</ActionLink>}><div className="activity-list"><article><div><b>Applied systems alignment</b><span>Python and data analysis coverage is strong across current evidence.</span></div><StatusPill>82%</StatusPill><Link href="/academician/student-maps" className="action-link">Review <ArrowRight size={15} /></Link></article><article><div><b>Research operations alignment</b><span>Presentation evidence is the leading development signal.</span></div><StatusPill tone="ochre">71%</StatusPill><Link href="/academician/learning-alignment" className="action-link">Review <ArrowRight size={15} /></Link></article></div></SectionCard><SectionCard title="Events in your academic scope"><ScheduleLine time="11:00" title="Skill evidence clinic" meta="Student profile support · Online" kind="Event" /><ScheduleLine time="14:30" title="Candidate evaluation briefing" meta="Placement office · Seminar room 4" kind="Evaluation" /></SectionCard></div><aside className="stack-lg"><img className="role-illustration" src={academicianLearningMap} alt="Abstract academician learning alignment illustration" /><SectionCard title="Academic role"><p className="body-copy">This workspace supports evidence and learning alignment. It does not include excluded faculty-internship, industrial-training, or FDP modules.</p><Link href="/academician/profile" className="action-link">Open profile <ArrowRight size={15} /></Link></SectionCard></aside></div></AcademicianLayout>; }
+  // When a student is selected, load existing note from localStorage
+  useEffect(() => {
+    if (selectedStudent) {
+      try {
+        const saved = localStorage.getItem(INST_READINESS_NOTES_PREFIX + selectedStudent.id);
+        setAdvisorNote(saved || "");
+      } catch {
+        setAdvisorNote("");
+      }
+    }
+  }, [selectedStudent]);
 
-export function AcademicianStudentMaps() { return <AcademicianLayout><PageHeader eyebrow="Student skill maps" title="Evidence-led student alignment" description="Review aggregate and student-level alignment notes within the authorised academic context." /><SectionCard title="Student alignment list"><div className="readiness-table"><div className="table-head"><span>Student</span><span>Industry alignment</span><span>Role alignment</span><span>Evidence status</span><span /></div>{defaultCandidates.map((candidate) => <div className="candidate-row" key={candidate.id}><div><b>{candidate.name}</b><span>{candidate.program}</span></div><span>{candidate.score > 80 ? "Applied systems" : "Research operations"}</span><div className="candidate-fit"><b>{candidate.score}%</b><ProgressBar value={candidate.score} /></div><StatusPill>{candidate.eligibility === "Eligible" ? "Current" : "Developing"}</StatusPill><button className="small-outline" onClick={() => toast("Student evidence is available under academic role permissions.")}>Review</button></div>)}</div></SectionCard></AcademicianLayout>; }
+  // Handle ESC to close modal
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelectedStudent(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-export function AcademicianLearningAlignment() { return <AcademicianLayout><PageHeader eyebrow="Learning alignment" title="Programs matched to skill evidence" description="Review selected learning-program alignment without adding a separate career-guidance module." /><div className="detail-layout"><SectionCard title="Priority learning alignment"><div className="learning-list"><article><div className="book-mark"><GraduationCap size={18} /></div><div><h3>SQL evidence workshop</h3><p>Addresses a preferred industry skill in the current role requirements.</p><small>3 guided sessions</small></div><button className="small-outline" onClick={() => toast("Learning alignment detail is ready for authorised review.")}>Review</button></article><article><div className="book-mark"><FileCheck2 size={18} /></div><div><h3>Communicating analytical findings</h3><p>Strengthens presentation evidence for research operations alignment.</p><small>2 guided sessions</small></div><button className="small-outline" onClick={() => toast("Learning alignment detail is ready for authorised review.")}>Review</button></article></div></SectionCard><aside className="stack-lg"><img className="role-illustration" src={academicianLearningMap} alt="Abstract curriculum and industry skills illustration" /><SectionCard title="Alignment method"><p className="body-copy">Programs are mapped against verified skills, role requirements, industry demand, and known evidence gaps.</p></SectionCard></aside></div></AcademicianLayout>; }
+  function handleSaveNote() {
+    if (!selectedStudent) return;
+    try {
+      localStorage.setItem(INST_READINESS_NOTES_PREFIX + selectedStudent.id, advisorNote);
+      toast(`Institutional readiness note saved for ${selectedStudent.name}.`);
+    } catch {
+      toast.error("Could not save note to local storage.");
+    }
+  }
 
-export function AcademicianEvents() { return <AcademicianLayout><PageHeader eyebrow="Events" title="Academic-scope events" description="Events, evaluations, and placement activities currently visible to your role." /><SectionCard title="Upcoming"><ScheduleLine time="11:00" title="Skill evidence clinic" meta="Online · Student profile support" kind="Event" /><ScheduleLine time="14:30" title="Candidate evaluation briefing" meta="Seminar room 4 · Placement activity" kind="Evaluation" /><ScheduleLine time="16:00" title="Recruitment process Q&A" meta="Online · Student information session" kind="Event" /></SectionCard></AcademicianLayout>; }
+  return (
+    <InstitutionLayout>
+      <PageHeader
+        eyebrow="Student readiness"
+        title="Readiness and skill evidence"
+        description="View student readiness, evidence completion, and skill-alignment signals without changing their profile records."
+        meta={<StatusPill>Batch 2028 · Institutional record</StatusPill>}
+      />
 
-export function AcademicianProfile() { return <AcademicianLayout><PageHeader eyebrow="Profile" title="Dr. Meera Iyer" description="Faculty advisor · Computer Science · Authorised academic workspace" /><div className="profile-stack"><SectionCard title="Academic context"><KeyValue label="Department" value="Computer Science" /><KeyValue label="Assigned student scope" value="64 students" /><KeyValue label="Learning-alignment visibility" value="Enabled" /><KeyValue label="Placement activity visibility" value="Authorised" /></SectionCard><SectionCard title="Workspace preferences"><div className="setting-row"><div><b>Student evidence updates</b><span>Receive a notice when an assigned student’s profile evidence changes.</span></div><button className="toggle-on" onClick={(event) => event.currentTarget.classList.toggle("toggle-off")}>On</button></div><div className="setting-row"><div><b>Event updates</b><span>Receive notices for visible placement and evaluation events.</span></div><button className="toggle-on" onClick={(event) => event.currentTarget.classList.toggle("toggle-off")}>On</button></div></SectionCard></div></AcademicianLayout>; }
+      <SectionCard title="Readiness cohort">
+        <div className="readiness-cohort-card">
+          <div className="readiness-cohort-table-wrap">
+            <div className="readiness-cohort-table">
+              <div className="readiness-cohort-head">
+                <span>Student</span>
+                <span>Profile</span>
+                <span>Skill fit</span>
+                <span>Academic evidence</span>
+                <span>Action</span>
+              </div>
+
+              {candidatesList.map((candidate) => (
+                <div className="readiness-cohort-row" key={candidate.id}>
+                  <div className="readiness-student-cell">
+                    <strong className="readiness-student-name">{candidate.name}</strong>
+                    <span className="readiness-student-meta">{candidate.program}</span>
+                  </div>
+
+                  <div className="readiness-profile-cell">
+                    <strong className="readiness-profile-pct">78% complete</strong>
+                    <span className="readiness-profile-note">Verified profile record</span>
+                  </div>
+
+                  <div className="readiness-fit-cell">
+                    <div className="readiness-fit-score">
+                      <strong className="readiness-fit-pct">{candidate.score}%</strong>
+                      <span className="readiness-fit-label">{candidate.score >= 80 ? "High fit" : "Moderate fit"}</span>
+                    </div>
+                    <ProgressBar value={candidate.score} label="Role skill fit" />
+                  </div>
+
+                  <div className="readiness-evidence-cell">
+                    <StatusPill tone={candidate.eligibility === "Eligible" ? "olive" : "ochre"}>
+                      {candidate.eligibility === "Eligible" ? "Current" : "Review"}
+                    </StatusPill>
+                    <span className="readiness-evidence-meta">
+                      {candidate.eligibility === "Eligible" ? "Documents verified" : "Pending review"}
+                    </span>
+                  </div>
+
+                  <div className="readiness-action-cell">
+                    <button
+                      className="small-outline"
+                      onClick={() => setSelectedStudent(candidate)}
+                    >
+                      View context
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Student Readiness Context Modal */}
+      {selectedStudent && (
+        <div
+          className="student-review-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedStudent(null);
+          }}
+        >
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="readiness-modal-title">
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Institutional Student Record</span>
+                <h2 id="readiness-modal-title" className="student-review-title">{selectedStudent.name}</h2>
+                <span className="student-review-meta">{selectedStudent.program}</span>
+              </div>
+              <button
+                className="student-review-close"
+                aria-label="Close readiness review"
+                onClick={() => setSelectedStudent(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="student-review-body">
+              {/* Key Metrics */}
+              <div className="student-review-stat-grid">
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Overall Skill Fit</span>
+                  <strong className="student-review-stat-value text-olive">{selectedStudent.score}%</strong>
+                  <span className="student-review-stat-note">Against cohort criteria</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Profile Evidence</span>
+                  <strong className="student-review-stat-value">78%</strong>
+                  <span className="student-review-stat-note">Verified documents</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Academic Evidence</span>
+                  <strong className="student-review-stat-value">
+                    {selectedStudent.eligibility === "Eligible" ? "Current" : "Review"}
+                  </strong>
+                  <span className="student-review-stat-note">Institutional audit</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Target Track</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px", marginTop: "2px" }}>
+                    {selectedStudent.opportunityTitle || "Applied Systems Track"}
+                  </strong>
+                  <span className="student-review-stat-note">Current role alignment</span>
+                </div>
+              </div>
+
+              {/* Section 1: Verified Capabilities */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">
+                  <Check size={13} className="text-olive" /> Verified Capabilities & Demonstrated Skills
+                </h4>
+                <div className="student-review-skills-list">
+                  {selectedStudent.skills.map((skill) => (
+                    <span key={skill} className="student-skill-badge">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 2: Institutional Academic & Degree Records */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Institutional Academic Records & Verification Status</h4>
+                <div className="learning-syllabus-list">
+                  <div className="learning-syllabus-item">
+                    <span className="learning-syllabus-num">01</span>
+                    <div>
+                      <strong>Degree & Academic Standing</strong>
+                      <p>Full-time enrollment verified · Department of Computer Science · On track for 2028 graduation.</p>
+                    </div>
+                  </div>
+                  <div className="learning-syllabus-item">
+                    <span className="learning-syllabus-num">02</span>
+                    <div>
+                      <strong>Transcripts & Prerequisite Compliance</strong>
+                      <p>Semester 1–4 grade records verified with no active disciplinary or administrative holds.</p>
+                    </div>
+                  </div>
+                  <div className="learning-syllabus-item">
+                    <span className="learning-syllabus-num">03</span>
+                    <div>
+                      <strong>Placement Cell Clearance</strong>
+                      <p>Authorised for active campus recruitment drives, industry interviews, and recruiter visibility.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Institutional Advisor Notes */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Institutional Advisor Readiness Notes</h4>
+                <p className="student-review-section-desc">
+                  Record official institutional observations or readiness flags for this student's placement file.
+                </p>
+                <textarea
+                  className="review-notes-input"
+                  placeholder="e.g. Student has completed advanced database certification. Ready for high-volume technical screening rounds."
+                  value={advisorNote}
+                  onChange={(e) => setAdvisorNote(e.target.value)}
+                  rows={3}
+                />
+                <div className="student-review-notes-actions">
+                  <button className="primary-button" onClick={handleSaveNote}>
+                    Save Institutional Note
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="student-review-footer">
+              <button className="small-outline" onClick={() => setSelectedStudent(null)}>
+                Back to Student Readiness
+              </button>
+              <span className="record-id-meta" style={{ fontSize: "11px", color: "var(--slate)" }}>
+                Student ID: {selectedStudent.id}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </InstitutionLayout>
+  );
+}
+
+const INST_APP_NOTES_PREFIX = "sih_inst_app_notes_";
+
+export function InstitutionApplications() {
+  const [candidatesList] = useState<CandidateRecord[]>(defaultCandidates);
+  const [selectedCandidate, setSelectedCandidate] = useState<{ candidate: CandidateRecord; appRec: { opportunity: string; stage: string; eligibility: string } } | null>(null);
+  const [advisorNote, setAdvisorNote] = useState("");
+
+  useEffect(() => {
+    if (selectedCandidate) {
+      try {
+        const saved = localStorage.getItem(INST_APP_NOTES_PREFIX + selectedCandidate.candidate.id);
+        setAdvisorNote(saved || "");
+      } catch {
+        setAdvisorNote("");
+      }
+    }
+  }, [selectedCandidate]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelectedCandidate(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  function handleSaveNote() {
+    if (!selectedCandidate) return;
+    try {
+      localStorage.setItem(INST_APP_NOTES_PREFIX + selectedCandidate.candidate.id, advisorNote);
+      toast(`Application review note saved for ${selectedCandidate.candidate.name}.`);
+    } catch {
+      toast.error("Could not save note to local storage.");
+    }
+  }
+
+  return (
+    <InstitutionLayout>
+      <PageHeader
+        eyebrow="Applications"
+        title="Approved application visibility"
+        description="Monitor application stages, eligibility outcomes, and recruiter activity for institution-supported students."
+        meta={<StatusPill>3 Active Applications</StatusPill>}
+      />
+
+      <SectionCard title="Application records">
+        <div className="institution-apps-card">
+          <div className="institution-apps-table-wrap">
+            <div className="institution-apps-table">
+              <div className="institution-apps-head">
+                <span>Student</span>
+                <span>Opportunity</span>
+                <span>Eligibility</span>
+                <span>Stage</span>
+                <span>Action</span>
+              </div>
+
+              {candidatesList.map((candidate) => {
+                const appRec = institutionAppRecords[candidate.id] || { opportunity: "—", stage: "Submitted", eligibility: "Review" };
+                return (
+                  <div className="institution-apps-row" key={candidate.id}>
+                    <div className="app-student-cell">
+                      <strong className="app-student-name">{candidate.name}</strong>
+                      <span className="app-student-meta">{candidate.program}</span>
+                    </div>
+
+                    <div className="app-opportunity-cell">
+                      <strong className="app-opportunity-title">{appRec.opportunity}</strong>
+                      <span className="app-opportunity-meta">Placement-approved requirement</span>
+                    </div>
+
+                    <div className="app-eligibility-cell">
+                      <StatusPill tone={appRec.eligibility === "Eligible" ? "olive" : "ochre"}>
+                        {appRec.eligibility}
+                      </StatusPill>
+                      <span className="app-eligibility-note">
+                        {appRec.eligibility === "Eligible" ? "Verified fit" : "Review needed"}
+                      </span>
+                    </div>
+
+                    <div className="app-stage-cell">
+                      <StatusPill tone={appRec.stage === "Screening" ? "ochre" : "muted"}>
+                        {appRec.stage}
+                      </StatusPill>
+                      <span className="app-stage-note">Active candidate funnel</span>
+                    </div>
+
+                    <div className="app-action-cell">
+                      <button
+                        className="small-outline"
+                        onClick={() => setSelectedCandidate({ candidate, appRec })}
+                      >
+                        View context
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Application Context Modal */}
+      {selectedCandidate && (
+        <div
+          className="student-review-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedCandidate(null);
+          }}
+        >
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="app-modal-title">
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Approved Application Context</span>
+                <h2 id="app-modal-title" className="student-review-title">{selectedCandidate.candidate.name}</h2>
+                <span className="student-review-meta">{selectedCandidate.candidate.program} · {selectedCandidate.appRec.opportunity}</span>
+              </div>
+              <button
+                className="student-review-close"
+                aria-label="Close application review"
+                onClick={() => setSelectedCandidate(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="student-review-body">
+              {/* Key Metrics */}
+              <div className="student-review-stat-grid">
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Application Stage</span>
+                  <strong className="student-review-stat-value text-olive">{selectedCandidate.appRec.stage}</strong>
+                  <span className="student-review-stat-note">Current recruitment status</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Eligibility Outcome</span>
+                  <strong className="student-review-stat-value">{selectedCandidate.appRec.eligibility}</strong>
+                  <span className="student-review-stat-note">Criteria verified</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Capability Fit</span>
+                  <strong className="student-review-stat-value">{selectedCandidate.candidate.score}%</strong>
+                  <span className="student-review-stat-note">Scorecard match</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Institutional Status</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px", marginTop: "2px" }}>Endorsed</strong>
+                  <span className="student-review-stat-note">Placement cell clearance</span>
+                </div>
+              </div>
+
+              {/* Section 1: Opportunity Context */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Target Opportunity Details</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "11.5px" }}>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Opportunity</span>
+                    <strong style={{ color: "var(--ink)", fontSize: "13px" }}>{selectedCandidate.appRec.opportunity}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Workplace Mode</span>
+                    <strong style={{ color: "var(--ink)", fontSize: "13px" }}>Full-Time Graduate Role</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Application Tracking</span>
+                    <span style={{ color: "var(--ink)" }}>Managed via SIH Connect Recruiter Portal</span>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Recruiter Reviewer</span>
+                    <span style={{ color: "var(--ink)" }}>Assigned Talent Assessment Team</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Verified Capabilities */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">
+                  <Check size={13} className="text-olive" /> Verified Student Skills Matched to Requirement
+                </h4>
+                <div className="student-review-skills-list">
+                  {selectedCandidate.candidate.skills.map((skill) => (
+                    <span key={skill} className="student-skill-badge">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 3: Institutional Notes */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Institutional Placement Notes</h4>
+                <p className="student-review-section-desc">
+                  Record official institutional feedback, interview readiness observations, or company communications.
+                </p>
+                <textarea
+                  className="review-notes-input"
+                  placeholder="e.g. Candidate attended mock interview round. Resume endorsed by Department Head for screening."
+                  value={advisorNote}
+                  onChange={(e) => setAdvisorNote(e.target.value)}
+                  rows={3}
+                />
+                <div className="student-review-notes-actions">
+                  <button className="primary-button" onClick={handleSaveNote}>
+                    Save Application Note
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="student-review-footer">
+              <button className="small-outline" onClick={() => setSelectedCandidate(null)}>
+                Back to Applications
+              </button>
+              <span className="record-id-meta" style={{ fontSize: "11px", color: "var(--slate)" }}>
+                Candidate ID: {selectedCandidate.candidate.id}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </InstitutionLayout>
+  );
+}
+
+const INST_INTERVIEW_NOTES_PREFIX = "sih_inst_interview_notes_";
+
+interface InstitutionInterviewItem {
+  id: string;
+  day: string;
+  month: string;
+  time: string;
+  duration: string;
+  title: string;
+  organizer: string;
+  formatMode: string;
+  location: string;
+  candidateSummary: string;
+  candidates: { name: string; program: string; slot: string; fit: number }[];
+  status: "Scheduled" | "Completed" | "Upcoming";
+  agenda: string;
+}
+
+const initialInstitutionInterviews: InstitutionInterviewItem[] = [
+  {
+    id: "inst-int-01",
+    day: "28",
+    month: "AUG",
+    time: "14:30 – 15:15",
+    duration: "45 min",
+    title: "Applied AI Capability Studio",
+    organizer: "Northstar Systems · Technical Recruiter Panel",
+    formatMode: "Hybrid Evaluation",
+    location: "Online & Seminar Room 4 (Placement Cell)",
+    candidateSummary: "2 candidates visible",
+    candidates: [
+      { name: "Anaya Sharma", program: "Computer Science · Batch 2028", slot: "14:30 – 14:50", fit: 84 },
+      { name: "Kabir Mehta", program: "Information Technology · Batch 2028", slot: "14:55 – 15:15", fit: 79 },
+    ],
+    status: "Scheduled",
+    agenda: "Technical architecture evaluation, SQL data query analysis, and practical capability verification.",
+  },
+  {
+    id: "inst-int-02",
+    day: "30",
+    month: "AUG",
+    time: "11:00 – 11:45",
+    duration: "45 min",
+    title: "Research Operations Associate",
+    organizer: "Mosaic Health Labs · Talent Acquisition",
+    formatMode: "Online Session",
+    location: "Virtual Assessment Room · Google Meet",
+    candidateSummary: "1 candidate visible",
+    candidates: [
+      { name: "Rhea Nair", program: "Computer Science · Batch 2027", slot: "11:00 – 11:45", fit: 74 },
+    ],
+    status: "Scheduled",
+    agenda: "Analytical documentation review, data presentation assessment, and institutional fit interview.",
+  },
+  {
+    id: "inst-int-03",
+    day: "02",
+    month: "SEP",
+    time: "10:00 – 11:00",
+    duration: "60 min",
+    title: "Graduate Intake Candidate Briefing",
+    organizer: "Apex Tech Placement Cell & Industry Council",
+    formatMode: "On Campus",
+    location: "Auditorium Hall B · Campus Placement Office",
+    candidateSummary: "64 students in scope",
+    candidates: [
+      { name: "Batch 2028 Cohort", program: "All Placement-Eligible Students", slot: "10:00 – 11:00", fit: 78 },
+    ],
+    status: "Upcoming",
+    agenda: "Official candidate briefing on recruiter expectations, skill verification criteria, and interview scheduling protocols.",
+  },
+];
+
+export function InstitutionInterviews() {
+  const [interviewList] = useState<InstitutionInterviewItem[]>(initialInstitutionInterviews);
+  const [selectedInterview, setSelectedInterview] = useState<InstitutionInterviewItem | null>(null);
+  const [advisorNote, setAdvisorNote] = useState("");
+
+  useEffect(() => {
+    if (selectedInterview) {
+      try {
+        const saved = localStorage.getItem(INST_INTERVIEW_NOTES_PREFIX + selectedInterview.id);
+        setAdvisorNote(saved || "");
+      } catch {
+        setAdvisorNote("");
+      }
+    }
+  }, [selectedInterview]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelectedInterview(null);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  function handleSaveNote() {
+    if (!selectedInterview) return;
+    try {
+      localStorage.setItem(INST_INTERVIEW_NOTES_PREFIX + selectedInterview.id, advisorNote);
+      toast(`Interview log note saved for ${selectedInterview.title}.`);
+    } catch {
+      toast.error("Could not save note to local storage.");
+    }
+  }
+
+  return (
+    <InstitutionLayout>
+      <PageHeader
+        eyebrow="Interviews"
+        title="Interview and evaluation visibility"
+        description="View scheduled evaluations, participating candidates, and recorded outcomes permitted to the institution."
+        meta={<StatusPill>3 Active Schedules</StatusPill>}
+      />
+
+      <SectionCard title="Scheduled evaluations & interviews">
+        <div className="institution-interviews-card">
+          <div className="institution-interviews-table-wrap">
+            <div className="institution-interviews-table">
+              <div className="institution-interviews-head">
+                <span>Date & Time</span>
+                <span>Evaluation</span>
+                <span>Format & Location</span>
+                <span>Cohort Scope</span>
+                <span>Action</span>
+              </div>
+
+              {interviewList.map((item) => (
+                <div className="institution-interviews-row" key={item.id}>
+                  <div className="interview-date-cell">
+                    <div className="interview-date-badge">
+                      <span className="interview-date-day">{item.day}</span>
+                      <span className="interview-date-month">{item.month}</span>
+                    </div>
+                    <div className="interview-date-time">{item.time}</div>
+                  </div>
+
+                  <div className="interview-eval-cell">
+                    <strong className="interview-eval-title">{item.title}</strong>
+                    <span className="interview-eval-organizer">{item.organizer}</span>
+                  </div>
+
+                  <div className="interview-format-cell">
+                    <span className="interview-format-mode">{item.formatMode}</span>
+                    <span className="interview-format-loc">{item.location}</span>
+                  </div>
+
+                  <div className="interview-status-cell">
+                    <StatusPill tone={item.status === "Scheduled" ? "olive" : "ochre"}>
+                      {item.status}
+                    </StatusPill>
+                    <span className="interview-status-note">{item.candidateSummary}</span>
+                  </div>
+
+                  <div className="interview-action-cell">
+                    <button
+                      className="small-outline"
+                      onClick={() => setSelectedInterview(item)}
+                    >
+                      View context
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Interview Context Modal */}
+      {selectedInterview && (
+        <div
+          className="student-review-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedInterview(null);
+          }}
+        >
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="interview-modal-title">
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Institutional Evaluation Record</span>
+                <h2 id="interview-modal-title" className="student-review-title">{selectedInterview.title}</h2>
+                <span className="student-review-meta">{selectedInterview.organizer} · {selectedInterview.day} {selectedInterview.month} 2026</span>
+              </div>
+              <button
+                className="student-review-close"
+                aria-label="Close interview review"
+                onClick={() => setSelectedInterview(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="student-review-body">
+              {/* Key Metrics */}
+              <div className="student-review-stat-grid">
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Evaluation State</span>
+                  <strong className="student-review-stat-value text-olive">{selectedInterview.status}</strong>
+                  <span className="student-review-stat-note">{selectedInterview.duration} session</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Format Mode</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "14px", marginTop: "2px" }}>
+                    {selectedInterview.formatMode}
+                  </strong>
+                  <span className="student-review-stat-note">Recruiter-managed</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Candidate Scope</span>
+                  <strong className="student-review-stat-value">{selectedInterview.candidates.length}</strong>
+                  <span className="student-review-stat-note">Institutional students</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Access Level</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "14px", marginTop: "2px" }}>
+                    Authorised
+                  </strong>
+                  <span className="student-review-stat-note">Placement cell record</span>
+                </div>
+              </div>
+
+              {/* Section 1: Session Logistics */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Schedule & Logistics</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", fontSize: "11.5px" }}>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Time & Date</span>
+                    <strong style={{ color: "var(--ink)" }}>{selectedInterview.day} {selectedInterview.month} 2026 · {selectedInterview.time}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Location / Connection</span>
+                    <strong style={{ color: "var(--ink)" }}>{selectedInterview.location}</strong>
+                  </div>
+                  <div style={{ gridColumn: "1 / -1" }}>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Evaluation Agenda</span>
+                    <span style={{ color: "var(--ink)", lineHeight: 1.4 }}>{selectedInterview.agenda}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Participating Students */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">
+                  <Check size={13} className="text-olive" /> Participating Institutional Students
+                </h4>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {selectedInterview.candidates.map((c, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "10px 14px",
+                        background: "var(--muted)",
+                        borderRadius: "8px",
+                        fontSize: "11.5px",
+                      }}
+                    >
+                      <div>
+                        <strong style={{ color: "var(--ink)", display: "block" }}>{c.name}</strong>
+                        <span style={{ color: "var(--slate)", fontSize: "10.5px" }}>{c.program}</span>
+                      </div>
+                      <div style={{ textAlign: "right" }}>
+                        <span style={{ color: "var(--olive)", fontWeight: 700, display: "block" }}>{c.slot}</span>
+                        <span style={{ color: "var(--slate)", fontSize: "10px" }}>Fit score: {c.fit}%</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 3: Institutional Advisor Notes */}
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Placement Cell Session Notes</h4>
+                <p className="student-review-section-desc">
+                  Record logistical arrangements, candidate attendance verification, or feedback for the company recruiter.
+                </p>
+                <textarea
+                  className="review-notes-input"
+                  placeholder="e.g. Seminar Room 4 audiovisual equipment tested. Students briefed on technical portfolio presentation."
+                  value={advisorNote}
+                  onChange={(e) => setAdvisorNote(e.target.value)}
+                  rows={3}
+                />
+                <div className="student-review-notes-actions">
+                  <button className="primary-button" onClick={handleSaveNote}>
+                    Save Session Note
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="student-review-footer">
+              <button className="small-outline" onClick={() => setSelectedInterview(null)}>
+                Back to Interviews
+              </button>
+              <span className="record-id-meta" style={{ fontSize: "11px", color: "var(--slate)" }}>
+                Session ID: {selectedInterview.id}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </InstitutionLayout>
+  );
+}
+
+const PLACEMENT_EXPORT_LOG_KEY = "sih_inst_placement_exports";
+
+interface PlacementOfferItem {
+  id: string;
+  studentName: string;
+  program: string;
+  company: string;
+  role: string;
+  packageCTC: string;
+  status: "Verified" | "Pending Audit";
+  offerDate: string;
+}
+
+const samplePlacementOffers: PlacementOfferItem[] = [
+  { id: "off-01", studentName: "Anaya Sharma", program: "Computer Science", company: "Northstar Systems", role: "Graduate AI Engineer", packageCTC: "16.5 LPA", status: "Verified", offerDate: "24 Aug 2026" },
+  { id: "off-02", studentName: "Kabir Mehta", program: "Information Technology", company: "Northstar Systems", role: "Cloud Data Associate", packageCTC: "14.0 LPA", status: "Verified", offerDate: "25 Aug 2026" },
+  { id: "off-03", studentName: "Rhea Nair", program: "Computer Science", company: "Mosaic Health Labs", role: "Health Informatics Analyst", packageCTC: "12.8 LPA", status: "Verified", offerDate: "25 Aug 2026" },
+  { id: "off-04", studentName: "Devansh Rastogi", program: "Computer Science", company: "Tern & Co.", role: "Associate Software Engineer", packageCTC: "11.5 LPA", status: "Pending Audit", offerDate: "26 Aug 2026" },
+];
+
+export function InstitutionPlacement() {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  const [exportScope, setExportScope] = useState<"all" | "offers" | "shortlists">("all");
+  const [exportFormat, setExportFormat] = useState<"csv" | "summary">("csv");
+  const [lastExported, setLastExported] = useState<string | null>(() => {
+    try {
+      const logs = JSON.parse(localStorage.getItem(PLACEMENT_EXPORT_LOG_KEY) || "[]");
+      return logs.length > 0 ? logs[logs.length - 1].timestamp : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const handleDownloadReport = () => {
+    if (exportFormat === "csv") {
+      const headers = "Student Name,Department,Company,Target Role,Package (CTC),Verification Status,Date\n";
+      const rows = samplePlacementOffers.map(
+        (o) => `"${o.studentName}","${o.program}","${o.company}","${o.role}","${o.packageCTC}","${o.status}","${o.offerDate}"`
+      ).join("\n");
+      const blob = new Blob([headers + rows], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `SIH_Connect_Placement_Report_${exportScope}_Batch2028.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    const timestamp = new Date().toLocaleString();
+    try {
+      const existing = JSON.parse(localStorage.getItem(PLACEMENT_EXPORT_LOG_KEY) || "[]");
+      existing.push({ timestamp, scope: exportScope, format: exportFormat });
+      localStorage.setItem(PLACEMENT_EXPORT_LOG_KEY, JSON.stringify(existing));
+    } catch {}
+
+    setLastExported(timestamp);
+    setIsExportModalOpen(false);
+    toast.success(`Placement report exported successfully (${exportFormat.toUpperCase()}).`);
+  };
+
+  return (
+    <InstitutionLayout>
+      <PageHeader
+        eyebrow="Placement status"
+        title="Placement reporting record"
+        description="A controlled summary of placement-window status and offer outcomes visible to the institution."
+        meta={<StatusPill tone="olive">Batch 2028 · Window Active</StatusPill>}
+      />
+      <div className="placement-layout">
+        <SectionCard title="Current reporting period">
+          <div className="placement-status">
+            <span>Placement window</span>
+            <b>Open</b>
+            <p>Batch 2028 · Current reporting period</p>
+          </div>
+          <div className="placement-figures">
+            <StatCard label="Applications" value="186" />
+            <StatCard label="Shortlists" value="44" />
+            <StatCard label="Offers" value="18" />
+          </div>
+        </SectionCard>
+        <SectionCard title="Reporting controls">
+          <KeyValue label="Record visibility" value="Institution authorised" />
+          <KeyValue label="Offer verification" value="17 / 18 verified" />
+          <KeyValue label="Last refreshed" value="26 Aug, 09:00" />
+          {lastExported && <KeyValue label="Last export" value={lastExported} />}
+          <button
+            className="primary-button full-button"
+            onClick={() => setIsExportModalOpen(true)}
+            style={{ marginTop: "12px" }}
+          >
+            Export current report
+          </button>
+        </SectionCard>
+      </div>
+
+      {/* Verified Offers Table Preview */}
+      <SectionCard title="Verified offer sample & audit status">
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {samplePlacementOffers.map((offer) => (
+            <div
+              key={offer.id}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "12px 16px",
+                borderRadius: "8px",
+                background: "var(--surface)",
+                border: "1px solid var(--rule)",
+                fontSize: "12px",
+              }}
+            >
+              <div>
+                <strong style={{ color: "var(--ink)", display: "block", fontSize: "13px" }}>{offer.studentName}</strong>
+                <span style={{ color: "var(--slate)" }}>{offer.program} · {offer.company} ({offer.role})</span>
+              </div>
+              <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: "12px" }}>
+                <div>
+                  <strong style={{ color: "var(--ink)", display: "block" }}>{offer.packageCTC}</strong>
+                  <span style={{ color: "var(--slate)", fontSize: "10.5px" }}>{offer.offerDate}</span>
+                </div>
+                <StatusPill tone={offer.status === "Verified" ? "olive" : "ochre"}>{offer.status}</StatusPill>
+              </div>
+            </div>
+          ))}
+        </div>
+      </SectionCard>
+
+      {/* Export Report Modal */}
+      {isExportModalOpen && (
+        <div className="student-review-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setIsExportModalOpen(false); }}>
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="export-modal-title" style={{ maxWidth: "540px" }}>
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Institutional Reporting</span>
+                <h2 id="export-modal-title" className="student-review-title">Export Placement Records</h2>
+                <span className="student-review-meta">Batch 2028 · Governed Data Extraction</span>
+              </div>
+              <button className="student-review-close" onClick={() => setIsExportModalOpen(false)} aria-label="Close export dialog">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="student-review-body">
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Data Scope</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginTop: "6px" }}>
+                  {(["all", "offers", "shortlists"] as const).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setExportScope(s)}
+                      style={{
+                        padding: "8px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        textTransform: "capitalize",
+                        border: exportScope === s ? "2px solid var(--olive)" : "1px solid var(--rule)",
+                        background: exportScope === s ? "var(--olive-wash)" : "var(--surface)",
+                        color: exportScope === s ? "var(--olive)" : "var(--ink)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {s === "all" ? "All (186)" : s === "offers" ? "Offers (18)" : "Shortlists (44)"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Output Format</h4>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginTop: "6px" }}>
+                  {(["csv", "summary"] as const).map((fmt) => (
+                    <button
+                      key={fmt}
+                      type="button"
+                      onClick={() => setExportFormat(fmt)}
+                      style={{
+                        padding: "8px",
+                        borderRadius: "6px",
+                        fontSize: "11px",
+                        fontWeight: 700,
+                        textTransform: "uppercase",
+                        border: exportFormat === fmt ? "2px solid var(--olive)" : "1px solid var(--rule)",
+                        background: exportFormat === fmt ? "var(--olive-wash)" : "var(--surface)",
+                        color: exportFormat === fmt ? "var(--olive)" : "var(--ink)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {fmt === "csv" ? "CSV Spreadsheet (.csv)" : "Audit Summary"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Governed Institutional Compliance</h4>
+                <p className="student-review-section-desc">
+                  Exports are privacy-controlled and recorded in the institutional audit log. Only verified candidate credentials and authorised offer details are included.
+                </p>
+              </div>
+            </div>
+
+            <div className="student-review-footer">
+              <button className="small-outline" onClick={() => setIsExportModalOpen(false)}>Cancel</button>
+              <button className="primary-button" onClick={handleDownloadReport}>
+                Download & Log Export
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </InstitutionLayout>
+  );
+}
+
+interface AlignmentTrackItem {
+  id: string;
+  title: string;
+  evidenceDesc: string;
+  score: number;
+  studentsInScope: number;
+  benchmarkStudents: number;
+  strongCompetencies: string[];
+  growthAreas: string[];
+  curriculumAdvice: string;
+}
+
+const alignmentTracks: AlignmentTrackItem[] = [
+  {
+    id: "app-sys",
+    title: "Applied systems",
+    evidenceDesc: "Strong institution-level evidence in Python and data analysis.",
+    score: 82,
+    studentsInScope: 64,
+    benchmarkStudents: 53,
+    strongCompetencies: ["Python scripting", "SQL relational modeling", "Data wrangling"],
+    growthAreas: ["System architecture diagrams", "Scalability benchmarks"],
+    curriculumAdvice: "Introduce production-grade microservices and containerized workflows in semester 6 lab sessions.",
+  },
+  {
+    id: "res-ops",
+    title: "Research operations",
+    evidenceDesc: "Evidence present; writing and presentation skill remains a development area.",
+    score: 71,
+    studentsInScope: 64,
+    benchmarkStudents: 45,
+    strongCompetencies: ["Literature search", "Methodology documentation", "Data synthesis"],
+    growthAreas: ["Executive technical writing", "Live oral pitch presentation"],
+    curriculumAdvice: "Incorporate peer-reviewed capstone presentations with industry mentor evaluation rubrics.",
+  },
+  {
+    id: "dig-prod",
+    title: "Digital product",
+    evidenceDesc: "Evidence coverage requires more user-research work samples.",
+    score: 58,
+    studentsInScope: 64,
+    benchmarkStudents: 37,
+    strongCompetencies: ["User persona definition", "Figma wireframing"],
+    growthAreas: ["Usability testing methodologies", "Telemetry metrics analysis"],
+    curriculumAdvice: "Partner with industry design sprint mentors to provide live product review cohorts.",
+  },
+];
+
+export function InstitutionAlignment() {
+  const [selectedTrack, setSelectedTrack] = useState<AlignmentTrackItem | null>(null);
+
+  return (
+    <InstitutionLayout>
+      <PageHeader
+        eyebrow="Skill alignment"
+        title="Institution-to-industry alignment"
+        description="Review the current relationship between student evidence, role requirements, and industry skill demand."
+        meta={<StatusPill tone="olive">3 Tracks Mapped</StatusPill>}
+      />
+      <div className="detail-layout">
+        <SectionCard title="Current alignment">
+          <div className="map-list">
+            {alignmentTracks.map((track) => (
+              <article key={track.id} style={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: "16px", alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "14px", fontWeight: 700 }}>{track.title}</h3>
+                  <p style={{ margin: "4px 0 0", color: "var(--slate)", fontSize: "11.5px" }}>{track.evidenceDesc}</p>
+                </div>
+                <div className="map-score" style={{ minWidth: "110px" }}>
+                  <b>{track.score}%</b>
+                  <ProgressBar value={track.score} />
+                </div>
+                <button
+                  className="small-outline"
+                  onClick={() => setSelectedTrack(track)}
+                >
+                  Inspect track
+                </button>
+              </article>
+            ))}
+          </div>
+        </SectionCard>
+
+        <aside className="stack-lg">
+          <img className="role-illustration" src={institutionReadiness} alt="Abstract institution and industry alignment illustration" />
+          <SectionCard title="Data basis">
+            <p className="body-copy">This view uses verified student profiles, role skill requirements, and current demand records. It is not a career-guidance module.</p>
+          </SectionCard>
+        </aside>
+      </div>
+
+      {/* Alignment Track Detail Modal */}
+      {selectedTrack && (
+        <div className="student-review-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setSelectedTrack(null); }}>
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="track-modal-title">
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Industry Skill Alignment Track</span>
+                <h2 id="track-modal-title" className="student-review-title">{selectedTrack.title} Track</h2>
+                <span className="student-review-meta">{selectedTrack.benchmarkStudents} of {selectedTrack.studentsInScope} students meeting benchmark</span>
+              </div>
+              <button className="student-review-close" onClick={() => setSelectedTrack(null)} aria-label="Close track review">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="student-review-body">
+              <div className="student-review-stat-grid">
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Alignment Score</span>
+                  <strong className="student-review-stat-value text-olive">{selectedTrack.score}%</strong>
+                  <span className="student-review-stat-note">Industry standard match</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Benchmark Met</span>
+                  <strong className="student-review-stat-value">{selectedTrack.benchmarkStudents}</strong>
+                  <span className="student-review-stat-note">Students verified</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Cohort Scope</span>
+                  <strong className="student-review-stat-value">{selectedTrack.studentsInScope}</strong>
+                  <span className="student-review-stat-note">Computer Science 2028</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Curriculum Signal</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px", marginTop: "2px" }}>
+                    {selectedTrack.score >= 75 ? "Healthy" : "Needs Review"}
+                  </strong>
+                  <span className="student-review-stat-note">Faculty advisory</span>
+                </div>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">
+                  <Check size={13} className="text-olive" /> Strong Student Competencies
+                </h4>
+                <div className="student-review-skills-list">
+                  {selectedTrack.strongCompetencies.map((c) => (
+                    <span key={c} className="student-skill-badge">{c}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Primary Development & Growth Areas</h4>
+                <div className="student-review-skills-list">
+                  {selectedTrack.growthAreas.map((g) => (
+                    <span key={g} className="student-skill-badge" style={{ borderColor: "var(--ochre)", color: "var(--ochre)" }}>{g}</span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Curriculum Advisory Recommendation</h4>
+                <p className="student-review-section-desc" style={{ color: "var(--ink)", fontSize: "12px", lineHeight: 1.5 }}>
+                  {selectedTrack.curriculumAdvice}
+                </p>
+              </div>
+            </div>
+
+            <div className="student-review-footer">
+              <button className="small-outline" onClick={() => setSelectedTrack(null)}>Back to Alignment</button>
+              <Link href="/institution/curriculum" className="primary-button" onClick={() => setSelectedTrack(null)}>
+                Open Curriculum Alignment <ArrowRight size={14} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+    </InstitutionLayout>
+  );
+}
+
+const ACAD_PREFS_KEY = "sih_acad_prefs";
+export function loadAcadPrefs(): { evidenceUpdates: boolean; eventUpdates: boolean } {
+  try {
+    const raw = localStorage.getItem(ACAD_PREFS_KEY);
+    return raw ? JSON.parse(raw) : { evidenceUpdates: true, eventUpdates: true };
+  } catch {
+    return { evidenceUpdates: true, eventUpdates: true };
+  }
+}
+
+export function AcademicianDashboard() {
+  const [prefs] = useState<{ evidenceUpdates: boolean; eventUpdates: boolean }>(loadAcadPrefs);
+
+  return (
+    <AcademicianLayout>
+      <PageHeader
+        eyebrow="Academician workspace"
+        title="Student evidence and learning alignment"
+        description="Review the approved student skill-map and learning-alignment context for your academic scope."
+        meta={<StatusPill>Computer Science · Batch 2028</StatusPill>}
+      />
+
+      <div className="stat-grid">
+        <StatCard label="Students in scope" value="64" note="Assigned academic context" />
+        <StatCard
+          label="Current skill maps"
+          value={prefs.evidenceUpdates ? "53" : "Muted"}
+          tone={prefs.evidenceUpdates ? "olive" : undefined}
+          note={prefs.evidenceUpdates ? "Evidence-led records" : "Evidence alerts muted in profile"}
+        />
+        <StatCard label="Learning alignment notes" value="11" tone="ochre" note="Review-ready" />
+        <StatCard
+          label="Upcoming events"
+          value={prefs.eventUpdates ? "03" : "Muted"}
+          note={prefs.eventUpdates ? "This week" : "Event notices muted in profile"}
+        />
+      </div>
+
+      <div className="dashboard-grid">
+        <div className="stack-lg">
+          <SectionCard
+            title="Student skill-map review"
+            aside={
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {!prefs.evidenceUpdates && <StatusPill tone="muted">Alerts Muted</StatusPill>}
+                <ActionLink href="/academician/student-maps">Open maps</ActionLink>
+              </div>
+            }
+          >
+            {!prefs.evidenceUpdates ? (
+              <div style={{ padding: "14px 16px", background: "var(--muted)", borderRadius: "8px", border: "1px dashed var(--rule)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <strong style={{ display: "block", fontSize: "13px", color: "var(--ink)" }}>Student evidence updates are currently muted</strong>
+                  <span style={{ fontSize: "11px", color: "var(--slate)" }}>Real-time evidence change alerts are suppressed according to your profile preferences.</span>
+                </div>
+                <Link href="/academician/profile" className="action-link" style={{ fontSize: "12px" }}>
+                  Manage preferences →
+                </Link>
+              </div>
+            ) : (
+              <div className="activity-list">
+                <article>
+                  <div>
+                    <b>Applied systems alignment</b>
+                    <span>Python and data analysis coverage is strong across current evidence.</span>
+                  </div>
+                  <StatusPill>82%</StatusPill>
+                  <Link href="/academician/student-maps" className="action-link">
+                    Review <ArrowRight size={15} />
+                  </Link>
+                </article>
+                <article>
+                  <div>
+                    <b>Research operations alignment</b>
+                    <span>Presentation evidence is the leading development signal.</span>
+                  </div>
+                  <StatusPill tone="ochre">71%</StatusPill>
+                  <Link href="/academician/learning-alignment" className="action-link">
+                    Review <ArrowRight size={15} />
+                  </Link>
+                </article>
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard
+            title="Events in your academic scope"
+            aside={
+              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                {!prefs.eventUpdates && <StatusPill tone="muted">Alerts Muted</StatusPill>}
+                <ActionLink href="/academician/events">All events</ActionLink>
+              </div>
+            }
+          >
+            {!prefs.eventUpdates ? (
+              <div style={{ padding: "14px 16px", background: "var(--muted)", borderRadius: "8px", border: "1px dashed var(--rule)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div>
+                  <strong style={{ display: "block", fontSize: "13px", color: "var(--ink)" }}>Placement and evaluation event alerts are muted</strong>
+                  <span style={{ fontSize: "11px", color: "var(--slate)" }}>Automated event notifications are hidden based on your profile preferences.</span>
+                </div>
+                <Link href="/academician/profile" className="action-link" style={{ fontSize: "12px" }}>
+                  Manage preferences →
+                </Link>
+              </div>
+            ) : (
+              <div>
+                <ScheduleLine time="11:00" title="Skill evidence clinic" meta="Student profile support · Online" kind="Event" />
+                <ScheduleLine time="14:30" title="Candidate evaluation briefing" meta="Placement office · Seminar room 4" kind="Evaluation" />
+              </div>
+            )}
+          </SectionCard>
+        </div>
+
+        <aside className="stack-lg">
+          <img className="role-illustration" src={academicianLearningMap} alt="Abstract academician learning alignment illustration" />
+          <SectionCard title="Academic role">
+            <p className="body-copy">
+              This workspace provides student evidence review, learning alignment, academic collaboration, industrial training, and Faculty Development Program opportunities for your academic role.
+            </p>
+            <Link href="/academician/profile" className="action-link">
+              Open profile <ArrowRight size={15} />
+            </Link>
+          </SectionCard>
+        </aside>
+      </div>
+    </AcademicianLayout>
+  );
+}
+
+export function AcademicianStudentMaps() {
+  const [candidatesList, setCandidatesList] = useState<CandidateRecord[]>(loadCandidates);
+  const [selectedStudent, setSelectedStudent] = useState<CandidateRecord | null>(null);
+  const [studentNote, setStudentNote] = useState("");
+
+  useEffect(() => {
+    setCandidatesList(loadCandidates());
+  }, []);
+
+  // Sync saved note for the selected student from local storage
+  useEffect(() => {
+    if (selectedStudent) {
+      try {
+        const savedNote = localStorage.getItem(`sih_acad_note_${selectedStudent.id}`);
+        setStudentNote(savedNote || "");
+      } catch {
+        setStudentNote("");
+      }
+    }
+  }, [selectedStudent]);
+
+  // Handle saving academic observation note
+  const handleSaveNote = () => {
+    if (!selectedStudent) return;
+    try {
+      localStorage.setItem(`sih_acad_note_${selectedStudent.id}`, studentNote);
+      toast.success(`Academic observation saved for ${selectedStudent.name}`);
+    } catch {
+      toast.error("Unable to save note to local storage");
+    }
+  };
+
+  // Close modal on escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedStudent(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return (
+    <AcademicianLayout>
+      <PageHeader
+        eyebrow="Student skill maps"
+        title="Evidence-led student alignment"
+        description="Review aggregate and student-level alignment notes within the authorised academic context."
+      />
+
+      <SectionCard title="Student alignment list">
+        <div className="student-maps-table-wrap">
+          <div className="student-maps-table">
+            <div className="student-maps-head">
+              <span>Student</span>
+              <span>Industry alignment</span>
+              <span>Role alignment</span>
+              <span>Evidence status</span>
+              <span style={{ textAlign: "right" }}>Action</span>
+            </div>
+
+            {candidatesList.map((candidate) => {
+              const programParts = (candidate.program || "").split(" · ");
+              const department = programParts[0] || candidate.program || "Computer Science";
+              const batch = programParts[1] || "Batch 2028";
+              const isHighScorer = candidate.score >= 80;
+              const industryTrack = isHighScorer ? "Applied systems" : "Research operations";
+              const industryScore = isHighScorer ? 86 : 74;
+              const roleTrack = candidate.opportunityTitle || (isHighScorer ? "Applied AI Capability Studio" : "Research Operations Associate");
+              const isCurrent = candidate.eligibility === "Eligible";
+
+              return (
+                <div className="student-maps-row" key={candidate.id}>
+                  {/* Column 1: Prominent student name with secondary department & batch */}
+                  <div className="student-info-cell">
+                    <b className="student-name">{candidate.name}</b>
+                    <span className="student-meta">{department} · {batch}</span>
+                  </div>
+
+                  {/* Column 2: Industry Alignment */}
+                  <div className="alignment-cell" data-label="Industry alignment">
+                    <span className="alignment-track">{industryTrack}</span>
+                    <span className="alignment-sub">{industryScore}% track alignment</span>
+                  </div>
+
+                  {/* Column 3: Role Alignment */}
+                  <div className="alignment-cell" data-label="Role alignment">
+                    <span className="alignment-track">{roleTrack}</span>
+                    <span className="alignment-sub">{candidate.score}% role fit</span>
+                  </div>
+
+                  {/* Column 4: Evidence Status (Pill + % + Progress Bar grouped) */}
+                  <div className="evidence-status-cell">
+                    <div className="evidence-status-header">
+                      <StatusPill tone={isCurrent ? "olive" : "ochre"}>
+                        {isCurrent ? "Current" : "Developing"}
+                      </StatusPill>
+                      <span className="evidence-percentage">{candidate.score}%</span>
+                    </div>
+                    <ProgressBar value={candidate.score} />
+                  </div>
+
+                  {/* Column 5: Review Action */}
+                  <div className="student-maps-action">
+                    <button
+                      type="button"
+                      className="student-review-btn"
+                      onClick={() => setSelectedStudent(candidate)}
+                    >
+                      Review
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </SectionCard>
+
+      {/* Dynamic Student Review Detail Modal */}
+      {selectedStudent && (
+        <div
+          className="student-review-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedStudent(null);
+          }}
+        >
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="student-review-heading">
+            {/* Modal Header */}
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Academician Review · Student Evidence Record</span>
+                <h2 id="student-review-heading" className="student-review-title">{selectedStudent.name}</h2>
+                <span className="student-review-meta">
+                  {selectedStudent.program} · {selectedStudent.email || `${selectedStudent.id}@apex-tech.edu`}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="student-review-close"
+                aria-label="Close review"
+                onClick={() => setSelectedStudent(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="student-review-body">
+              {/* Stat Grid */}
+              <div className="student-review-stat-grid">
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Evidence Score</span>
+                  <strong className="student-review-stat-value" style={{ color: "var(--olive)" }}>
+                    {selectedStudent.score}%
+                  </strong>
+                  <span className="student-review-stat-note">Overall composite</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Evidence Status</span>
+                  <div style={{ marginTop: "3px" }}>
+                    <StatusPill tone={selectedStudent.eligibility === "Eligible" ? "olive" : "ochre"}>
+                      {selectedStudent.eligibility === "Eligible" ? "Current" : "Developing"}
+                    </StatusPill>
+                  </div>
+                  <span className="student-review-stat-note">{selectedStudent.stage} stage</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Industry Track</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "14px", marginTop: "2px" }}>
+                    {selectedStudent.score >= 80 ? "Applied systems" : "Research operations"}
+                  </strong>
+                  <span className="student-review-stat-note">
+                    {selectedStudent.score >= 80 ? "86% alignment" : "74% alignment"}
+                  </span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Role Target</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px", marginTop: "2px" }}>
+                    {selectedStudent.opportunityTitle || (selectedStudent.score >= 80 ? "Applied AI Studio" : "Research Operations")}
+                  </strong>
+                  <span className="student-review-stat-note">{selectedStudent.score}% role fit</span>
+                </div>
+              </div>
+
+              {/* Section 1: Verified Capabilities & Academic Context */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <Check size={14} style={{ color: "var(--olive)" }} />
+                  Verified Skills & Demonstrated Capabilities
+                </h3>
+                <div className="student-review-skills-list">
+                  {selectedStudent.skills && selectedStudent.skills.length > 0 ? (
+                    selectedStudent.skills.map((skill) => (
+                      <span className="student-skill-badge" key={skill}>
+                        {skill}
+                      </span>
+                    ))
+                  ) : (
+                    <span style={{ fontSize: "11px", color: "var(--slate)" }}>No verified skills recorded.</span>
+                  )}
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "6px", fontSize: "11.5px" }}>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Department Scope</span>
+                    <b>{(selectedStudent.program || "").split(" · ")[0] || selectedStudent.program}</b>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Academic Cohort</span>
+                    <b>{(selectedStudent.program || "").split(" · ")[1] || "Batch 2028"}</b>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Associated Opportunity</span>
+                    <b>{selectedStudent.opportunityTitle || "Institutional Placement Cohort"}</b>
+                  </div>
+                  <div>
+                    <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", textTransform: "uppercase", fontWeight: 700 }}>Application Record</span>
+                    <b>{selectedStudent.appliedDate || "Current Evaluation Term"}</b>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Learning Alignment Recommendations */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <GraduationCap size={14} style={{ color: "var(--olive)" }} />
+                  Curriculum & Learning Alignment Recommendation
+                </h3>
+                <p style={{ margin: 0, fontSize: "11.5px", color: "var(--slate)", lineHeight: 1.55 }}>
+                  {selectedStudent.score >= 80
+                    ? "Student exhibits high proficiency in computational foundations. Recommended action: Complete the SQL evidence workshop to reinforce database pipeline artifacts for applied systems evaluation."
+                    : "Student exhibits sound analytical writing discipline. Recommended action: Complete the 'Communicating analytical findings' clinic to bolster presentation and verbal briefing evidence."}
+                </p>
+              </div>
+
+              {/* Section 3: Data Boundaries & Unavailable Backend Evidence Notice */}
+              <div className="student-review-notice-box">
+                <b>Institutional Data Scope Notice</b>
+                <p>
+                  Official semester marksheets, proctored exam telemetry, and uploaded project dossiers are not stored in the client-side data register. Full archival artifacts require connected institutional SIS/LMS backend API integration.
+                </p>
+              </div>
+
+              {/* Section 4: Faculty Advisor Observation Notes */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <FilePenLine size={14} style={{ color: "var(--olive)" }} />
+                  Faculty Advisor Observations
+                </h3>
+                <div className="student-review-notes-area">
+                  <textarea
+                    value={studentNote}
+                    onChange={(e) => setStudentNote(e.target.value)}
+                    placeholder={`Record academic feedback, advising notes, or skill remediation advice for ${selectedStudent.name}...`}
+                  />
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      style={{ padding: "6px 14px", fontSize: "11px" }}
+                      onClick={handleSaveNote}
+                    >
+                      Save Observation
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="student-review-footer">
+              <button
+                type="button"
+                className="small-outline"
+                onClick={() => setSelectedStudent(null)}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <ArrowLeft size={13} /> Back to Student List
+              </button>
+              <span style={{ fontSize: "10.5px", color: "var(--slate)" }}>
+                Student Record ID: {selectedStudent.id} · Academician Authorised
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </AcademicianLayout>
+  );
+}
+
+interface LearningAlignmentProgram {
+  id: string;
+  title: string;
+  type: string;
+  provider: string;
+  duration: string;
+  fit: string;
+  industryTrack: string;
+  targetRole: string;
+  skills: string[];
+  recommendedStudents: Array<{ name: string; program: string; gap: string }>;
+  curriculumRationale: string;
+  syllabusHighlights: string[];
+}
+
+const academicLearningPrograms: LearningAlignmentProgram[] = [
+  {
+    id: "sql-evidence",
+    title: "SQL evidence workshop",
+    type: "Guided Workshop",
+    provider: "Data Practice Network",
+    duration: "3 guided sessions",
+    fit: "Addresses high-priority industry requirements in database pipeline modeling and schema analysis.",
+    industryTrack: "Applied systems and data operations",
+    targetRole: "Applied AI Capability Studio · Data Operations Associate",
+    skills: ["SQL", "Data Analysis", "Database Schemas", "Query Optimization"],
+    recommendedStudents: [
+      { name: "Anaya Sharma", program: "Computer Science · Batch 2028", gap: "Declared Python proficiency; SQL portfolio sample needed for offer stage" },
+      { name: "Kabir Mehta", program: "Information Technology · Batch 2028", gap: "Strong analytical baseline; relational query evidence developing" },
+    ],
+    curriculumRationale: "Mapped against current role requirements from Northstar Systems and Mosaic Health Labs, which designate SQL as a required or preferred core competency for 2028 graduates.",
+    syllabusHighlights: [
+      "Session 1: Relational Modeling & Complex Joins under Production Constraints",
+      "Session 2: Analytical Aggregations, Window Functions, and Query Performance",
+      "Session 3: Capstone Evidence Artifact – Exporting Verified Query Dossiers to Student Portfolio",
+    ],
+  },
+  {
+    id: "analytical-findings",
+    title: "Communicating analytical findings",
+    type: "Executive Clinic & Assessment",
+    provider: "Industry Council Academic Committee",
+    duration: "2 guided sessions + assessment",
+    fit: "Strengthens presentation evidence, stakeholder briefing skills, and technical storytelling.",
+    industryTrack: "Research operations and applied analytics",
+    targetRole: "Research Operations Associate · Analytics Briefing Lead",
+    skills: ["Technical Presentation", "Stakeholder Briefing", "Analytical Writing", "Visualization"],
+    recommendedStudents: [
+      { name: "Rhea Nair", program: "Computer Science · Batch 2027", gap: "Solid written documentation; oral briefing evidence required for partner interviews" },
+      { name: "Anaya Sharma", program: "Computer Science · Batch 2028", gap: "Supporting communication signal flagged for multi-stakeholder project review" },
+    ],
+    curriculumRationale: "Directly addresses the presentation gap identified in the Academician Student Skill Map for students transitioning from raw analysis to recruiter-facing briefings.",
+    syllabusHighlights: [
+      "Session 1: Translating Technical Data Models into Executive Summaries",
+      "Session 2: Live Oral Briefing Simulation with Recruiter Rubric Rubrics",
+      "Assessment: 3-minute recorded walkthrough verified by Faculty Reviewer",
+    ],
+  },
+  {
+    id: "research-writing",
+    title: "Evidence-led research writing",
+    type: "Faculty-Supported Lab",
+    provider: "Research Practice Network",
+    duration: "4 guided sessions",
+    fit: "Builds structured research documentation discipline, literature synthesis, and methodology tracking.",
+    industryTrack: "Health research and operations",
+    targetRole: "Research Operations Associate · Clinical Data Support",
+    skills: ["Research Methodology", "Documentation Discipline", "Literature Synthesis", "Ethics & Confidentiality"],
+    recommendedStudents: [
+      { name: "Rhea Nair", program: "Computer Science · Batch 2027", gap: "Directly matches thesis and clinical documentation requirements" },
+      { name: "Kabir Mehta", program: "Information Technology · Batch 2028", gap: "Expands cross-disciplinary research evidence base" },
+    ],
+    curriculumRationale: "Aligned with Mosaic Health Labs research partnership guidelines where reproducible documentation and confidentiality protocols are required.",
+    syllabusHighlights: [
+      "Session 1: Systematic Literature Synthesis and Problem Formulation",
+      "Session 2: Research Protocol Documentation & Data Provenance Standards",
+      "Session 3: Ethical Compliance and Confidentiality in Health-Data Contexts",
+      "Session 4: Final Peer-Reviewed Artifact Submission",
+    ],
+  },
+];
+
+export function AcademicianLearningAlignment() {
+  const [selectedProgram, setSelectedProgram] = useState<LearningAlignmentProgram | null>(null);
+  const [programNote, setProgramNote] = useState("");
+  const [endorsedPrograms, setEndorsedPrograms] = useState<Record<string, boolean>>(() => {
+    try {
+      const stored = localStorage.getItem("sih_acad_learning_endorsements");
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  // Load saved note when selected program changes
+  useEffect(() => {
+    if (selectedProgram) {
+      try {
+        const saved = localStorage.getItem(`sih_acad_learning_note_${selectedProgram.id}`);
+        setProgramNote(saved || "");
+      } catch {
+        setProgramNote("");
+      }
+    }
+  }, [selectedProgram]);
+
+  // Handle saving curriculum note
+  const handleSaveNote = () => {
+    if (!selectedProgram) return;
+    try {
+      localStorage.setItem(`sih_acad_learning_note_${selectedProgram.id}`, programNote);
+      toast.success(`Curriculum note saved for ${selectedProgram.title}`);
+    } catch {
+      toast.error("Unable to save note to local storage");
+    }
+  };
+
+  // Toggle program endorsement
+  const handleToggleEndorsement = () => {
+    if (!selectedProgram) return;
+    const nextState = !endorsedPrograms[selectedProgram.id];
+    const updated = { ...endorsedPrograms, [selectedProgram.id]: nextState };
+    setEndorsedPrograms(updated);
+    try {
+      localStorage.setItem("sih_acad_learning_endorsements", JSON.stringify(updated));
+    } catch {}
+    if (nextState) {
+      toast.success(`Endorsed '${selectedProgram.title}' for Computer Science Batch 2028 scope.`);
+    } else {
+      toast.info(`Endorsement removed for '${selectedProgram.title}'.`);
+    }
+  };
+
+  // Escape key handler to close modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSelectedProgram(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  return (
+    <AcademicianLayout>
+      <PageHeader
+        eyebrow="Learning alignment"
+        title="Programs matched to skill evidence"
+        description="Review selected learning-program alignment without adding a separate career-guidance module."
+      />
+
+      <div className="detail-layout">
+        <SectionCard title="Priority learning alignment">
+          <div className="learning-list">
+            {academicLearningPrograms.map((prog, idx) => {
+              const isEndorsed = Boolean(endorsedPrograms[prog.id]);
+              return (
+                <article key={prog.id}>
+                  <div className="book-mark">
+                    {idx === 0 ? <GraduationCap size={18} /> : idx === 1 ? <FileCheck2 size={18} /> : <FileText size={18} />}
+                  </div>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <h3>{prog.title}</h3>
+                      {isEndorsed && <StatusPill tone="olive">Endorsed</StatusPill>}
+                    </div>
+                    <p>{prog.fit}</p>
+                    <small>{prog.duration} · {prog.provider}</small>
+                  </div>
+                  <button
+                    type="button"
+                    className="small-outline"
+                    onClick={() => setSelectedProgram(prog)}
+                  >
+                    Review
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </SectionCard>
+
+        <aside className="stack-lg">
+          <img className="role-illustration" src={academicianLearningMap} alt="Abstract curriculum and industry skills illustration" />
+          <SectionCard title="Alignment method">
+            <p className="body-copy">
+              Programs are mapped against verified skills, role requirements, industry demand, and known evidence gaps.
+            </p>
+          </SectionCard>
+          <SectionCard title="Academic scope">
+            <KeyValue label="Department" value="Computer Science" />
+            <KeyValue label="Active cohort" value="Batch 2028 (64 students)" />
+            <KeyValue label="Programs mapped" value={`${academicLearningPrograms.length} priority programs`} />
+          </SectionCard>
+        </aside>
+      </div>
+
+      {/* Review Modal for Selected Learning Alignment Program */}
+      {selectedProgram && (
+        <div
+          className="student-review-backdrop"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedProgram(null);
+          }}
+        >
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="learning-review-heading">
+            {/* Modal Header */}
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Academician Review · Learning Alignment Program</span>
+                <h2 id="learning-review-heading" className="student-review-title">{selectedProgram.title}</h2>
+                <span className="student-review-meta">
+                  {selectedProgram.type} · {selectedProgram.provider} · {selectedProgram.duration}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="student-review-close"
+                aria-label="Close review"
+                onClick={() => setSelectedProgram(null)}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="student-review-body">
+              {/* Stat Grid */}
+              <div className="student-review-stat-grid">
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Duration</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "14px" }}>
+                    {selectedProgram.duration}
+                  </strong>
+                  <span className="student-review-stat-note">{selectedProgram.type}</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Industry Track</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px" }}>
+                    {selectedProgram.industryTrack.split(" and ")[0]}
+                  </strong>
+                  <span className="student-review-stat-note">High demand signal</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Target Role</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px" }}>
+                    {selectedProgram.targetRole.split(" · ")[0]}
+                  </strong>
+                  <span className="student-review-stat-note">Industry mapped</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Endorsement</span>
+                  <div style={{ marginTop: "3px" }}>
+                    <StatusPill tone={endorsedPrograms[selectedProgram.id] ? "olive" : "ochre"}>
+                      {endorsedPrograms[selectedProgram.id] ? "Endorsed" : "Pending Review"}
+                    </StatusPill>
+                  </div>
+                  <span className="student-review-stat-note">Cohort scope</span>
+                </div>
+              </div>
+
+              {/* Endorsement Callout Box */}
+              <div className="learning-endorse-box">
+                <div>
+                  <b style={{ fontSize: "12px", color: "var(--olive-deep)" }}>Cohort Curriculum Endorsement</b>
+                  <p>
+                    {endorsedPrograms[selectedProgram.id]
+                      ? "This program is currently endorsed for your assigned students (Computer Science · Batch 2028). Recommended students will see this program prioritized."
+                      : "Endorse this learning alignment program so assigned students with corresponding evidence gaps are guided toward it."}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className={endorsedPrograms[selectedProgram.id] ? "small-outline" : "primary-button"}
+                  style={{ whiteSpace: "nowrap", flexShrink: 0 }}
+                  onClick={handleToggleEndorsement}
+                >
+                  {endorsedPrograms[selectedProgram.id] ? "Remove Endorsement" : "Endorse Program"}
+                </button>
+              </div>
+
+              {/* Section 1: Alignment Rationale */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <Check size={14} style={{ color: "var(--olive)" }} />
+                  Alignment Rationale & Industry Demand
+                </h3>
+                <p style={{ margin: 0, fontSize: "11.5px", color: "var(--slate)", lineHeight: 1.55 }}>
+                  {selectedProgram.curriculumRationale}
+                </p>
+              </div>
+
+              {/* Section 2: Core Competencies & Skills Covered */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <GraduationCap size={14} style={{ color: "var(--olive)" }} />
+                  Target Competencies & Skills Covered
+                </h3>
+                <div className="student-review-skills-list">
+                  {selectedProgram.skills.map((skill) => (
+                    <span className="student-skill-badge" key={skill}>
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 3: Recommended Students in Academic Scope */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <UsersRound size={14} style={{ color: "var(--olive)" }} />
+                  Recommended Students in Your Academic Scope
+                </h3>
+                <div className="learning-student-list">
+                  {selectedProgram.recommendedStudents.map((stud) => (
+                    <div className="learning-student-item" key={stud.name}>
+                      <div>
+                        <b>{stud.name}</b>
+                        <span> · {stud.program}</span>
+                      </div>
+                      <div className="learning-student-gap">
+                        {stud.gap}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 4: Syllabus & Module Breakdown */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <FileText size={14} style={{ color: "var(--olive)" }} />
+                  Syllabus & Learning Outcomes
+                </h3>
+                <div className="learning-syllabus-list">
+                  {selectedProgram.syllabusHighlights.map((session, i) => (
+                    <div className="learning-syllabus-item" key={i}>
+                      <span>Part {i + 1}:</span>
+                      <div>{session}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Section 5: Faculty Advisor Alignment Notes */}
+              <div className="student-review-section">
+                <h3 className="student-review-section-title">
+                  <FilePenLine size={14} style={{ color: "var(--olive)" }} />
+                  Faculty Curriculum Notes & Observations
+                </h3>
+                <div className="student-review-notes-area">
+                  <textarea
+                    value={programNote}
+                    onChange={(e) => setProgramNote(e.target.value)}
+                    placeholder={`Record curriculum integration notes, prerequisite advisories, or scheduling feedback for ${selectedProgram.title}...`}
+                  />
+                  <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      style={{ padding: "6px 14px", fontSize: "11px" }}
+                      onClick={handleSaveNote}
+                    >
+                      Save Curriculum Note
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="student-review-footer">
+              <button
+                type="button"
+                className="small-outline"
+                onClick={() => setSelectedProgram(null)}
+                style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+              >
+                <ArrowLeft size={13} /> Back to Learning Alignment
+              </button>
+              <span style={{ fontSize: "10.5px", color: "var(--slate)" }}>
+                Program ID: {selectedProgram.id} · Academician Authorised
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+    </AcademicianLayout>
+  );
+}
+
+interface AcademicianEventItem {
+  id: string;
+  time: string;
+  title: string;
+  meta: string;
+  kind: string;
+  location: string;
+  description: string;
+  agenda: string[];
+  meetingLink?: string;
+}
+
+const academicianEventList: AcademicianEventItem[] = [
+  {
+    id: "acad-ev-01",
+    time: "11:00 – 12:00",
+    title: "Skill evidence clinic",
+    meta: "Online · Student profile support",
+    kind: "Event",
+    location: "Google Meet Virtual Session",
+    description: "Faculty advisory session helping Batch 2028 Computer Science students structure their GitHub repositories, technical blogs, and portfolio evidence for recruiter visibility.",
+    agenda: ["Repository documentation standards", "Evaluating student portfolio submissions", "Q&A with student candidates"],
+    meetingLink: "https://meet.google.com/sih-faculty-clinic",
+  },
+  {
+    id: "acad-ev-02",
+    time: "14:30 – 15:15",
+    title: "Candidate evaluation briefing",
+    meta: "Seminar room 4 · Placement activity",
+    kind: "Evaluation",
+    location: "Placement Office · Seminar Room 4 (Hybrid)",
+    description: "Coordination briefing between faculty advisors and the campus recruitment committee regarding technical screening benchmarks for Applied AI and Data roles.",
+    agenda: ["Review of recruiter technical scorecard criteria", "Faculty input on student academic standing", "Scheduling interview slot allocations"],
+    meetingLink: "https://meet.google.com/sih-eval-briefing",
+  },
+  {
+    id: "acad-ev-03",
+    time: "16:00 – 17:00",
+    title: "Recruitment process Q&A",
+    meta: "Online · Student information session",
+    kind: "Event",
+    location: "Virtual Auditorium · Live Webinar",
+    description: "Open Q&A for prospective graduates addressing company requirements, institutional sponsorship clearance, and interview etiquette.",
+    agenda: ["Key placement calendar dates", "Company eligibility criteria breakdown", "Open floor student questions"],
+    meetingLink: "https://meet.google.com/sih-recruitment-qa",
+  },
+];
+
+const ACAD_CALENDAR_KEY = "sih_acad_calendar_events";
+
+export function AcademicianEvents() {
+  const [selectedEvent, setSelectedEvent] = useState<AcademicianEventItem | null>(null);
+  const [savedEvents, setSavedEvents] = useState<string[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem(ACAD_CALENDAR_KEY) || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  const toggleCalendarEvent = (eventId: string) => {
+    setSavedEvents((prev) => {
+      const exists = prev.includes(eventId);
+      const updated = exists ? prev.filter((id) => id !== eventId) : [...prev, eventId];
+      try {
+        localStorage.setItem(ACAD_CALENDAR_KEY, JSON.stringify(updated));
+      } catch {}
+      if (exists) {
+        toast("Removed from your academic calendar.");
+      } else {
+        toast.success("Added to your academic calendar!");
+      }
+      return updated;
+    });
+  };
+
+  return (
+    <AcademicianLayout>
+      <PageHeader
+        eyebrow="Events"
+        title="Academic-scope events"
+        description="Events, evaluations, and placement activities currently visible to your role."
+        meta={<StatusPill tone="olive">3 Upcoming Sessions</StatusPill>}
+      />
+      <SectionCard title="Upcoming academic sessions & briefings">
+        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+          {academicianEventList.map((ev) => {
+            const isSaved = savedEvents.includes(ev.id);
+            return (
+              <div
+                key={ev.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "14px 18px",
+                  borderRadius: "8px",
+                  background: "var(--surface)",
+                  border: "1px solid var(--rule)",
+                  gap: "16px",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 800, color: "var(--olive)", minWidth: "90px" }}>{ev.time}</span>
+                  <div>
+                    <strong style={{ display: "block", fontSize: "13.5px", color: "var(--ink)" }}>{ev.title}</strong>
+                    <span style={{ fontSize: "11px", color: "var(--slate)" }}>{ev.meta}</span>
+                  </div>
+                </div>
+
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <StatusPill tone={ev.kind === "Evaluation" ? "ochre" : "muted"}>{ev.kind}</StatusPill>
+                  {isSaved && <StatusPill tone="olive">In Calendar</StatusPill>}
+                  <button className="small-outline" onClick={() => setSelectedEvent(ev)}>
+                    View briefing
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </SectionCard>
+
+      {/* Event Briefing Modal */}
+      {selectedEvent && (
+        <div className="student-review-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setSelectedEvent(null); }}>
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="event-modal-title">
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Academic Scope Briefing</span>
+                <h2 id="event-modal-title" className="student-review-title">{selectedEvent.title}</h2>
+                <span className="student-review-meta">{selectedEvent.time} · {selectedEvent.location}</span>
+              </div>
+              <button className="student-review-close" onClick={() => setSelectedEvent(null)} aria-label="Close event briefing">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="student-review-body">
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Session Purpose</h4>
+                <p className="student-review-section-desc" style={{ color: "var(--ink)", fontSize: "12.5px", lineHeight: 1.5 }}>
+                  {selectedEvent.description}
+                </p>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Agenda & Discussion Points</h4>
+                <ul style={{ margin: "6px 0 0", paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", color: "var(--ink)" }}>
+                  {selectedEvent.agenda.map((pt, i) => (
+                    <li key={i}>{pt}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Connection & Location</h4>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 14px", background: "var(--muted)", borderRadius: "6px", fontSize: "12px" }}>
+                  <span>{selectedEvent.location}</span>
+                  {selectedEvent.meetingLink && (
+                    <a
+                      href={selectedEvent.meetingLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="action-link"
+                      style={{ fontSize: "11px", fontWeight: 700 }}
+                    >
+                      Join Virtual Room <ExternalLink size={12} />
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="student-review-footer">
+              <button className="small-outline" onClick={() => setSelectedEvent(null)}>Back to Events</button>
+              <button
+                className={savedEvents.includes(selectedEvent.id) ? "small-outline" : "primary-button"}
+                onClick={() => toggleCalendarEvent(selectedEvent.id)}
+              >
+                {savedEvents.includes(selectedEvent.id) ? "Remove from Calendar" : "Add to Academic Calendar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </AcademicianLayout>
+  );
+}
+
+export function AcademicianProfile() {
+  const { user } = useAuth();
+  const [prefs, setPrefs] = useState<{ evidenceUpdates: boolean; eventUpdates: boolean }>(loadAcadPrefs);
+
+  function togglePref(key: "evidenceUpdates" | "eventUpdates") {
+    setPrefs((current) => {
+      const nextVal = !current[key];
+      const updated = { ...current, [key]: nextVal };
+      try {
+        localStorage.setItem(ACAD_PREFS_KEY, JSON.stringify(updated));
+      } catch {}
+      if (key === "evidenceUpdates") {
+        if (nextVal) {
+          toast.success("Student evidence update alerts enabled on your dashboard.");
+        } else {
+          toast("Student evidence update alerts muted across your dashboard.");
+        }
+      } else {
+        if (nextVal) {
+          toast.success("Placement and evaluation event alerts enabled on your dashboard.");
+        } else {
+          toast("Placement and evaluation event alerts muted across your dashboard.");
+        }
+      }
+      return updated;
+    });
+  }
+
+  const displayName = user?.displayName || "Prof. Arvind Mehta";
+
+  return (
+    <AcademicianLayout>
+      <PageHeader
+        eyebrow="Profile"
+        title={displayName}
+        description="Faculty advisor · Computer Science · Authorised academic workspace"
+      />
+      <div className="profile-stack">
+        <SectionCard title="Academic context">
+          <KeyValue label="Department" value="Computer Science" />
+          <KeyValue label="Assigned student scope" value="64 students" />
+          <KeyValue label="Learning-alignment visibility" value="Enabled" />
+          <KeyValue label="Placement activity visibility" value="Authorised" />
+        </SectionCard>
+        <SectionCard
+          title="Workspace preferences"
+          aside={
+            <StatusPill tone={prefs.evidenceUpdates && prefs.eventUpdates ? "olive" : "ochre"}>
+              {prefs.evidenceUpdates && prefs.eventUpdates ? "All notices active" : "Selective muting active"}
+            </StatusPill>
+          }
+        >
+          <div className="setting-row">
+            <div>
+              <b>Student evidence updates</b>
+              <span>Receive a notice when an assigned student's profile evidence changes.</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <StatusPill tone={prefs.evidenceUpdates ? "olive" : "muted"}>
+                {prefs.evidenceUpdates ? "Active" : "Muted"}
+              </StatusPill>
+              <button
+                className={prefs.evidenceUpdates ? "toggle-on" : "toggle-off"}
+                onClick={() => togglePref("evidenceUpdates")}
+              >
+                {prefs.evidenceUpdates ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+          <div className="setting-row">
+            <div>
+              <b>Event updates</b>
+              <span>Receive notices for visible placement and evaluation events.</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <StatusPill tone={prefs.eventUpdates ? "olive" : "muted"}>
+                {prefs.eventUpdates ? "Active" : "Muted"}
+              </StatusPill>
+              <button
+                className={prefs.eventUpdates ? "toggle-on" : "toggle-off"}
+                onClick={() => togglePref("eventUpdates")}
+              >
+                {prefs.eventUpdates ? "On" : "Off"}
+              </button>
+            </div>
+          </div>
+
+          {(!prefs.evidenceUpdates || !prefs.eventUpdates) && (
+            <div
+              style={{
+                marginTop: "14px",
+                padding: "12px 14px",
+                background: "var(--muted)",
+                borderRadius: "6px",
+                fontSize: "12px",
+                border: "1px dashed var(--rule)",
+                color: "var(--ink)",
+                lineHeight: 1.5,
+              }}
+            >
+              <b>Notice:</b>{" "}
+              {!prefs.evidenceUpdates && !prefs.eventUpdates
+                ? "Both student evidence update notices and event briefing alerts are currently muted across your dashboard."
+                : !prefs.evidenceUpdates
+                ? "Student evidence update notices are currently muted across your dashboard."
+                : "Event briefing alerts are currently muted across your dashboard."}
+            </div>
+          )}
+        </SectionCard>
+      </div>
+    </AcademicianLayout>
+  );
+}

@@ -5,7 +5,14 @@ export type AuthResponse = { accessToken: string; accessTokenExpiresAt: string; 
 
 const LOCAL_SESSION_KEY = "sih_connect_active_session";
 const apiRoot = (import.meta.env.VITE_API_BASE_URL || "/api/v1").replace(/\/$/, "");
-let accessToken: string | null = null;
+let accessToken: string | null = (() => {
+  try {
+    const raw = localStorage.getItem(LOCAL_SESSION_KEY);
+    return raw ? (JSON.parse(raw) as AuthResponse).accessToken : null;
+  } catch {
+    return null;
+  }
+})();
 
 export function clearAccessToken() {
   accessToken = null;
@@ -57,6 +64,10 @@ async function request<T>(path: string, init: RequestInit = {}, retryAfterRefres
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
   if (init.body) headers.set("Content-Type", "application/json");
+  if (!accessToken) {
+    const local = getLocalSession();
+    if (local?.accessToken) accessToken = local.accessToken;
+  }
   if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
   
   try {

@@ -1,6 +1,6 @@
 // Field Notes Institutional Workspace: explicit named opportunity and collaboration types required by the final SIH brief.
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, CheckCircle2, FileText, Lightbulb, Milestone, Presentation, Rocket, Send, UsersRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, CheckCircle2, FileText, Lightbulb, Milestone, Presentation, Rocket, Send, UsersRound, X } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -40,4 +40,272 @@ export function CompleteStudentCollaborationPage() { return <StudentLayout><Page
 
 export function CompleteRecruiterCollaborationPage() { return <RecruiterLayout><PageHeader eyebrow="Industry collaboration" title="Mentorship, projects, lectures, challenges, and research" description="Coordinate all approved industry–academia initiative types, participants, events, milestones, deliverables, feedback, and outcomes." action={<button className="primary-button" onClick={() => toast("Initiative creation is ready for the connected collaboration workflow.")}>Create initiative <ArrowRight size={15} /></button>} /><div className="collaboration-grid"><SectionCard title="Active initiatives"><div className="initiative-list"><article><UsersRound size={19} /><div><StatusPill>Mentorship</StatusPill><h3>Applied systems mentorship circle</h3><p>2 mentors · 18 student participants · 6 sessions scheduled.</p></div><button className="small-outline">Manage</button></article><article><Rocket size={19} /><div><StatusPill tone="muted">Live industry project</StatusPill><h3>Evidence review project studio</h3><p>4 team places · Project brief, milestones, and deliverable evidence configured.</p></div><Link href="/recruiter/experiences" className="small-outline">Manage</Link></article><article><Presentation size={19} /><div><StatusPill tone="muted">Workshop</StatusPill><h3>Evidence-led review workshop</h3><p>Partner institution · 42 registered participants · feedback template issued.</p></div><button className="small-outline">Manage</button></article><article><Presentation size={19} /><div><StatusPill>Guest lecture</StatusPill><h3>From skill evidence to industry decisions</h3><p>Speaker, audience, registration, attendance, materials, and feedback available.</p></div><Link href="/recruiter/collaboration/guest-lectures" className="small-outline">Manage</Link></article><article><Lightbulb size={19} /><div><StatusPill tone="ochre">Innovation challenge</StatusPill><h3>Transparent evidence for early-career readiness</h3><p>Team eligibility, milestones, reviews, deliverables, awards, and verification configured.</p></div><Link href="/recruiter/collaboration/innovation-challenges" className="small-outline">Manage</Link></article><article><UsersRound size={19} /><div><StatusPill tone="ochre">Research partnership</StatusPill><h3>Health-data research partnership</h3><p>Partner organisations, participants, deliverables, and milestone review pending.</p></div><button className="small-outline">Manage</button></article></div></SectionCard><SectionCard title="Initiative evidence"><p className="body-copy">Each collaboration type preserves organisation roles, participant records, event/session details, project milestones, deliverables, feedback, documents, and outcomes in the connected workflow.</p></SectionCard></div></RecruiterLayout>; }
 
-export function CompleteAcademicianCollaborationPage() { return <AcademicianLayout><PageHeader eyebrow="Academic collaboration" title="Industry collaboration portfolio" description="Coordinate academic participation across mentorship, live projects, workshops, guest lectures, innovation challenges, and research partnerships." /><SectionCard title="Your collaboration work"><div className="initiative-list"><article><UsersRound size={19} /><div><StatusPill>Mentorship</StatusPill><h3>Applied systems mentorship circle</h3><p>Academic mentor for 8 students · feedback reviews current.</p></div><button className="small-outline">Open</button></article><article><Rocket size={19} /><div><StatusPill tone="muted">Live industry project</StatusPill><h3>Evidence review project studio</h3><p>Industry brief · milestone 2 of 4 · deliverable review scheduled.</p></div><button className="small-outline">Open</button></article><article><Presentation size={19} /><div><StatusPill tone="muted">Workshop</StatusPill><h3>Evidence-led review workshop</h3><p>Academic facilitator · participant outcomes and feedback collection current.</p></div><button className="small-outline">Open</button></article><article><Presentation size={19} /><div><StatusPill>Guest lecture</StatusPill><h3>From skill evidence to industry decisions</h3><p>Coordinate academic context, student registration, participation, materials, and follow-up learning actions.</p></div><Link href="/collaboration/guest-lectures" className="small-outline">Open</Link></article><article><Lightbulb size={19} /><div><StatusPill tone="ochre">Innovation challenge</StatusPill><h3>Transparent evidence for early-career readiness</h3><p>Review team eligibility, challenge milestones, academic guidance, deliverables, and verified outcomes.</p></div><Link href="/collaboration/innovation-challenges" className="small-outline">Open</Link></article><article><UsersRound size={19} /><div><StatusPill tone="ochre">Research partnership</StatusPill><h3>Health-data research partnership</h3><p>Partner institution and industry · research deliverable approval required.</p></div><button className="small-outline">Open</button></article></div></SectionCard></AcademicianLayout>; }
+interface CollabInitiativeItem {
+  id: string;
+  type: string;
+  title: string;
+  partner: string;
+  description: string;
+  participants: string;
+  milestone: string;
+  nextDate: string;
+  details: string[];
+}
+
+const academicianCollabInitiatives: Record<string, CollabInitiativeItem> = {
+  mentorship: {
+    id: "mentorship",
+    type: "Mentorship",
+    title: "Applied systems mentorship circle",
+    partner: "Northstar Systems",
+    description: "Academic mentor for 8 computer science undergraduates focusing on relational schema modeling, data pipelines, and industry work sample presentation.",
+    participants: "8 assigned students (Anaya Sharma, Kabir Mehta, et al.)",
+    milestone: "Session 3 of 6 Completed",
+    nextDate: "29 Aug · 16:00 – 16:45",
+    details: [
+      "Review student project repository documentation and SQL query samples",
+      "Provide written feedback on industry readiness scorecards",
+      "Clear students for campus recruiter technical interviews",
+    ],
+  },
+  project: {
+    id: "project",
+    type: "Live industry project",
+    title: "Evidence review project studio",
+    partner: "Tern & Co.",
+    description: "Multi-disciplinary student project studio developing automated portfolio evidence validation tooling for campus placement offices.",
+    participants: "4 students in active sprint team",
+    milestone: "Milestone 2 of 4: Prototype Schema Review",
+    nextDate: "04 Sep 2026",
+    details: [
+      "Validate technical implementation against project requirements",
+      "Verify student team commit history and code quality standards",
+      "Submit milestone sign-off for industry sponsor review",
+    ],
+  },
+  workshop: {
+    id: "workshop",
+    type: "Workshop",
+    title: "Evidence-led review workshop",
+    partner: "Apex Tech & Industry Council",
+    description: "Faculty-led practical workshop on documenting applied engineering work samples, writing technical design documents, and presenting to recruiters.",
+    participants: "42 registered student participants",
+    milestone: "Materials Distributed · Ready to Host",
+    nextDate: "02 Sep 2026 · 11:00",
+    details: [
+      "Host live walkthrough of student portfolio case studies",
+      "Distribute industry assessment rubrics and evaluation criteria",
+      "Record attendance for placement cell credential verification",
+    ],
+  },
+  research: {
+    id: "research",
+    type: "Research partnership",
+    title: "Health-data research partnership",
+    partner: "Mosaic Health Labs",
+    description: "Joint applied research initiative between Computer Science faculty and health-informatics industry researchers analyzing privacy-preserving medical ML pipelines.",
+    participants: "Faculty Lead + 3 Student Research Fellows",
+    milestone: "Deliverable 1 Approval Required",
+    nextDate: "08 Sep 2026",
+    details: [
+      "Review research data governance and ethical clearance filings",
+      "Approve student co-author contributions to conference submission",
+      "Verify lab milestone completion for institutional research grant",
+    ],
+  },
+};
+
+const COLLAB_NOTES_PREFIX = "sih_acad_collab_notes_";
+
+export function CompleteAcademicianCollaborationPage() {
+  const [activeInitiative, setActiveInitiative] = useState<CollabInitiativeItem | null>(null);
+  const [noteText, setNoteText] = useState("");
+
+  const handleOpenInitiative = (key: string) => {
+    const item = academicianCollabInitiatives[key];
+    if (item) {
+      setActiveInitiative(item);
+      try {
+        const saved = localStorage.getItem(COLLAB_NOTES_PREFIX + item.id);
+        setNoteText(saved || "");
+      } catch {
+        setNoteText("");
+      }
+    }
+  };
+
+  const handleSaveNote = () => {
+    if (!activeInitiative) return;
+    try {
+      localStorage.setItem(COLLAB_NOTES_PREFIX + activeInitiative.id, noteText);
+      toast.success(`Collaboration notes saved for ${activeInitiative.title}.`);
+    } catch {
+      toast.error("Could not save notes.");
+    }
+  };
+
+  return (
+    <AcademicianLayout>
+      <PageHeader
+        eyebrow="Academic collaboration"
+        title="Industry collaboration portfolio"
+        description="Coordinate academic participation across mentorship, live projects, workshops, guest lectures, innovation challenges, and research partnerships."
+        meta={<StatusPill tone="olive">6 Initiatives Visible</StatusPill>}
+      />
+      <SectionCard title="Your collaboration work">
+        <div className="initiative-list">
+          <article>
+            <UsersRound size={19} />
+            <div>
+              <StatusPill>Mentorship</StatusPill>
+              <h3>Applied systems mentorship circle</h3>
+              <p>Academic mentor for 8 students · feedback reviews current.</p>
+            </div>
+            <button className="small-outline" onClick={() => handleOpenInitiative("mentorship")}>
+              Open
+            </button>
+          </article>
+          <article>
+            <Rocket size={19} />
+            <div>
+              <StatusPill tone="muted">Live industry project</StatusPill>
+              <h3>Evidence review project studio</h3>
+              <p>Industry brief · milestone 2 of 4 · deliverable review scheduled.</p>
+            </div>
+            <button className="small-outline" onClick={() => handleOpenInitiative("project")}>
+              Open
+            </button>
+          </article>
+          <article>
+            <Presentation size={19} />
+            <div>
+              <StatusPill tone="muted">Workshop</StatusPill>
+              <h3>Evidence-led review workshop</h3>
+              <p>Academic facilitator · participant outcomes and feedback collection current.</p>
+            </div>
+            <button className="small-outline" onClick={() => handleOpenInitiative("workshop")}>
+              Open
+            </button>
+          </article>
+          <article>
+            <Presentation size={19} />
+            <div>
+              <StatusPill>Guest lecture</StatusPill>
+              <h3>From skill evidence to industry decisions</h3>
+              <p>Coordinate academic context, student registration, participation, materials, and follow-up learning actions.</p>
+            </div>
+            <Link href="/collaboration/guest-lectures" className="small-outline">
+              Open
+            </Link>
+          </article>
+          <article>
+            <Lightbulb size={19} />
+            <div>
+              <StatusPill tone="ochre">Innovation challenge</StatusPill>
+              <h3>Transparent evidence for early-career readiness</h3>
+              <p>Review team eligibility, challenge milestones, academic guidance, deliverables, and verified outcomes.</p>
+            </div>
+            <Link href="/collaboration/innovation-challenges" className="small-outline">
+              Open
+            </Link>
+          </article>
+          <article>
+            <UsersRound size={19} />
+            <div>
+              <StatusPill tone="ochre">Research partnership</StatusPill>
+              <h3>Health-data research partnership</h3>
+              <p>Partner institution and industry · research deliverable approval required.</p>
+            </div>
+            <button className="small-outline" onClick={() => handleOpenInitiative("research")}>
+              Open
+            </button>
+          </article>
+        </div>
+      </SectionCard>
+
+      {/* Collaboration Initiative Modal */}
+      {activeInitiative && (
+        <div className="student-review-backdrop" onClick={(e) => { if (e.target === e.currentTarget) setActiveInitiative(null); }}>
+          <div className="student-review-modal" role="dialog" aria-modal="true" aria-labelledby="collab-modal-title">
+            <div className="student-review-header">
+              <div className="student-review-title-group">
+                <span className="student-review-eyebrow">Academic Collaboration Context</span>
+                <h2 id="collab-modal-title" className="student-review-title">{activeInitiative.title}</h2>
+                <span className="student-review-meta">{activeInitiative.type} · Partner: {activeInitiative.partner}</span>
+              </div>
+              <button className="student-review-close" onClick={() => setActiveInitiative(null)} aria-label="Close collaboration review">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="student-review-body">
+              <div className="student-review-stat-grid">
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Initiative Type</span>
+                  <strong className="student-review-stat-value text-olive" style={{ fontSize: "13px" }}>{activeInitiative.type}</strong>
+                  <span className="student-review-stat-note">Approved program</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Participants</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px" }}>{activeInitiative.participants.split(" ")[0]} Active</strong>
+                  <span className="student-review-stat-note">Assigned cohort</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Next Scheduled</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "12.5px" }}>{activeInitiative.nextDate.split(" · ")[0]}</strong>
+                  <span className="student-review-stat-note">Calendar target</span>
+                </div>
+                <div className="student-review-stat">
+                  <span className="student-review-stat-label">Current State</span>
+                  <strong className="student-review-stat-value" style={{ fontSize: "13px" }}>Active</strong>
+                  <span className="student-review-stat-note">Institutional clearance</span>
+                </div>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Initiative Scope & Objectives</h4>
+                <p className="student-review-section-desc" style={{ color: "var(--ink)", fontSize: "12.5px", lineHeight: 1.5 }}>
+                  {activeInitiative.description}
+                </p>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">
+                  <Check size={13} className="text-olive" /> Faculty Advisor Responsibilities
+                </h4>
+                <ul style={{ margin: "6px 0 0", paddingLeft: "20px", display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px", color: "var(--ink)" }}>
+                  {activeInitiative.details.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="student-review-section">
+                <h4 className="student-review-section-title">Academic Advisor Observations & Log</h4>
+                <textarea
+                  className="review-notes-input"
+                  placeholder="Record student progress, evaluation sign-offs, or partner communications..."
+                  value={noteText}
+                  onChange={(e) => setNoteText(e.target.value)}
+                  rows={3}
+                />
+                <div className="student-review-notes-actions">
+                  <button className="primary-button" onClick={handleSaveNote}>
+                    Save Initiative Note
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="student-review-footer">
+              <button className="small-outline" onClick={() => setActiveInitiative(null)}>Back to Collaboration</button>
+              <button className="primary-button" onClick={() => { handleSaveNote(); setActiveInitiative(null); }}>
+                Confirm & Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </AcademicianLayout>
+  );
+}
