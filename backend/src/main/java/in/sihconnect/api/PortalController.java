@@ -66,7 +66,25 @@ public class PortalController {
     public ResponseEntity<?> me(@RequestHeader(value = "Authorization", required = false) String auth) { User user = authenticated(auth); return user == null ? unauthorized() : ResponseEntity.ok(publicUser(user)); }
 
     @GetMapping("/jobs")
-    public ResponseEntity<?> listJobs(@RequestHeader(value = "Authorization", required = false) String auth) { return authenticated(auth) == null ? unauthorized() : ResponseEntity.ok(jobs); }
+    public ResponseEntity<?> listJobs(@RequestHeader(value = "Authorization", required = false) String auth) {
+        if (authenticated(auth) == null) return unauthorized();
+        if (jobRepository != null) return ResponseEntity.ok(jobRepository.findAll().stream().map(this::jobView).toList());
+        return ResponseEntity.ok(jobs);
+    }
+
+    @GetMapping("/jobs/{id}")
+    public ResponseEntity<?> getJob(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable UUID id) {
+        if (authenticated(auth) == null) return unauthorized();
+        if (jobRepository != null) return jobRepository.findById(id).<ResponseEntity<?>>map(job -> ResponseEntity.ok(jobView(job))).orElseGet(() -> ResponseEntity.notFound().build());
+        return jobs.stream().filter(item -> id.toString().equals(item.get("id"))).findFirst().<ResponseEntity<?>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    private Map<String, Object> jobView(JobEntity job) {
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("id", job.getId().toString()); view.put("title", job.getTitle()); view.put("organization", job.getOrganization());
+        view.put("location", job.getLocation()); view.put("type", job.getType()); view.put("summary", job.getSummary());
+        view.put("required", job.getRequired()); view.put("preferred", job.getPreferred()); return view;
+    }
 
     @GetMapping("/profile")
     public ResponseEntity<?> profile(@RequestHeader(value = "Authorization", required = false) String auth) { User user = authenticated(auth); return user == null ? unauthorized() : ResponseEntity.ok(profiles.get(user.id())); }
