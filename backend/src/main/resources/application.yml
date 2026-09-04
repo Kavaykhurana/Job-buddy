@@ -7,6 +7,15 @@ spring:
     name: sih-connect-api
   main:
     banner-mode: "off"
+  # The in-memory migration slice is self-contained until the PostgreSQL
+  # repositories and Flyway migrations are added. Production must use the
+  # `postgres` profile before Render is switched to Java.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+      - org.springframework.boot.autoconfigure.flyway.FlywayAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 
 management:
   endpoints:
