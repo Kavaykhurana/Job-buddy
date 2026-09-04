@@ -53,6 +53,7 @@ import {
 } from "@/data/portalData";
 import { getScheduleEvents, scheduleInterviewForCandidate, type ScheduleEvent } from "@/data/scheduleData";
 import { api } from "@/lib/api";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 import recruiterMatchField from "@/assets/recruiter-match-field.svg";
 import institutionReadiness from "@/assets/institution-readiness.svg";
 import academicianLearningMap from "@/assets/academician-learning-map.svg";
@@ -1177,14 +1178,16 @@ export function RecruiterSkillRequirements() {
     const updated = JSON.parse(JSON.stringify(reqData)) as typeof reqData;
     updated[companyIndex].roles[roleIndex].requirements.push(requirement);
     updated[companyIndex].roles[roleIndex].updated = "Just now";
-    setReqData(updated);
-    saveCompanyRoleRequirements(updated);
-    setNewSkill("");
-    setShowAddForm(false);
     try {
       await api.requirements.addRequirement(companyIndex, roleIndex, requirement);
-    } catch {}
-    toast.success(`Added ${requirement.skill} requirement to ${role.title}.`);
+      setReqData(updated);
+      saveCompanyRoleRequirements(updated);
+      setNewSkill("");
+      setShowAddForm(false);
+      toast.success(`Added ${requirement.skill} requirement to ${role.title}.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The requirement could not be saved.");
+    }
   };
 
   const handleDeleteRequirement = (skillIndex: number) => {

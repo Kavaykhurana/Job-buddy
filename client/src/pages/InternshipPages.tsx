@@ -1322,7 +1322,7 @@ export function InternshipCompletionPage({ id = "data-practice" }: { id?: string
       a.click();
       document.body.removeChild(a);
     } else {
-      const content = `SIH CONNECT INTERNSHIP COMPLETION REPORT\n\nInternship: ${item.title}\nOrganization: ${item.org}\nAuthor: Anaya Sharma\nStatus: Complete & Mentor Verified\nDate: 2026-08-31`;
+      const content = `SIH CONNECT INTERNSHIP REPORT RECEIPT\n\nInternship: ${item.title}\nOrganization: ${item.org}\nAuthor: Anaya Sharma\nStatus: Locally recorded; mentor verification pending\nDate: 2026-08-31`;
       const blob = new Blob([content], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1338,7 +1338,7 @@ export function InternshipCompletionPage({ id = "data-practice" }: { id?: string
 
   const handleDownloadCertificate = () => {
     const certId = engagement.certificateId || "CERT-INT-NORTHSTAR-8819";
-    const certContent = `SIH CONNECT OFFICIAL INTERNSHIP COMPLETION CERTIFICATE\n\n=======================================================\nThis certifies that\nANAYA SHARMA\nhas successfully completed the industry internship program\n"${item.title.toUpperCase()}"\nat ${item.org.toUpperCase()}\n\nIssued: ${engagement.certificateDate || "31 Aug 2026"}\nCredential ID: ${certId}\nIndustry Mentor: ${item.mentors[0].name} (${item.mentors[0].organization})\nStatus: Official Verified Institutional Record\n=======================================================`;
+    const certContent = `SIH CONNECT INTERNSHIP COMPLETION DRAFT\n\n=======================================================\nStudent: ANAYA SHARMA\nProgram: ${item.title.toUpperCase()}\nOrganization: ${item.org.toUpperCase()}\n\nRecorded: ${engagement.certificateDate || "31 Aug 2026"}\nReference ID: ${certId}\nIndustry Mentor: ${item.mentors[0].name} (${item.mentors[0].organization})\nStatus: Draft record — institutional and mentor verification pending\n=======================================================`;
 
     const blob = new Blob([certContent], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
@@ -1350,7 +1350,7 @@ export function InternshipCompletionPage({ id = "data-practice" }: { id?: string
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success("Downloaded official internship completion certificate!");
+    toast.success("Downloaded internship completion draft.");
   };
 
   const isReportUploaded = !!engagement.reportUploaded || !!uploadedReportData;
@@ -1524,7 +1524,7 @@ export function InternshipCompletionPage({ id = "data-practice" }: { id?: string
                   letterSpacing: "0.06em",
                 }}
               >
-                Verified Institutional Credential
+                Internship completion record (verification pending)
               </span>
               <h2 style={{ margin: "8px 0 4px", fontSize: "18px" }}>
                 {item.title}
@@ -1551,7 +1551,7 @@ export function InternshipCompletionPage({ id = "data-practice" }: { id?: string
             <div className="stack-md">
               <KeyValue label="Host Organization" value={item.org} />
               <KeyValue label="Lead Mentor Signoff" value={item.mentors[0].name} />
-              <KeyValue label="Verification Status" value="Official Verified Record ✓" />
+              <KeyValue label="Verification Status" value="Pending institutional review" />
             </div>
 
             <div

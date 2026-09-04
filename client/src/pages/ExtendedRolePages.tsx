@@ -5,6 +5,7 @@ import { Link } from "wouter";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { ActionLink, KeyValue, Notice, PageHeader, ProgressBar, SectionCard, StatCard, StatusPill } from "@/components/Ui";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 import "./ExtendedRolePages.css";
 
 function StudentLayout({ children }: { children: React.ReactNode }) { return <AppShell role="student">{children}</AppShell>; }
@@ -61,13 +62,15 @@ export function RecruiterCollaborationPage() {
     e.preventDefault();
     if (!newTitle.trim()) return;
     const item = { id: String(Date.now()), type: newType, title: newTitle.trim(), detail: "New collaboration initiative created.", tone: "olive" };
-    setInitiatives((curr) => [item, ...curr]);
-    setNewTitle("");
-    setShowForm(false);
     try {
-      await api.initiatives.create({ title: item.title, kind: item.type });
-    } catch {}
-    toast.success(`Created initiative: ${item.title}`);
+      await api.initiatives.create({ title: item.title, kind: item.type, org: "Northstar Systems" });
+      setInitiatives((curr) => [item, ...curr]);
+      setNewTitle("");
+      setShowForm(false);
+      toast.success(`Created initiative: ${item.title}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The initiative could not be created.");
+    }
   };
 
   return <RecruiterLayout><PageHeader eyebrow="Industry collaboration" title="Mentorship, workshops, projects, and research" description="Coordinate approved industry–academia initiatives, partners, participants, events, feedback, and deliverables." action={<button className="primary-button" onClick={() => setShowForm((c) => !c)}>{showForm ? "Cancel" : "Create initiative"} <Plus size={15} /></button>} /><div className="collaboration-grid">
@@ -484,13 +487,15 @@ export function InstitutionCurriculumPage() {
     e.preventDefault();
     if (!newNote.trim()) return;
     const item = { id: String(Date.now()), text: newNote.trim(), date: "Just now" };
-    setNotes((curr) => [item, ...curr]);
-    setNewNote("");
-    setShowNoteForm(false);
     try {
       await api.curriculum.addNote("Computer Science", item.text);
-    } catch {}
-    toast.success("Curriculum review note recorded and synced to database.");
+      setNotes((curr) => [item, ...curr]);
+      setNewNote("");
+      setShowNoteForm(false);
+      toast.success("Curriculum review note recorded and synced to database.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The curriculum note could not be saved.");
+    }
   };
 
   return <InstitutionLayout><PageHeader eyebrow="Curriculum alignment" title="Academic program vs. industry demand" description="Compare the current program skill coverage with industry roles, requirements, internships, and learning opportunities." action={<button className="primary-button" onClick={() => setShowNoteForm((c) => !c)}>{showNoteForm ? "Cancel" : "Add review note"}</button>} /><div className="curriculum-grid"><SectionCard title="Computer Science curriculum alignment"><div className="curriculum-row"><div><b>Python and data analysis</b><span>Strong curriculum coverage · High industry demand</span></div><ProgressBar value={82} label="Alignment" /></div><div className="curriculum-row"><div><b>SQL evidence</b><span>Partial curriculum coverage · High industry demand</span></div><ProgressBar value={58} label="Alignment" /></div><div className="curriculum-row"><div><b>Evidence-led communication</b><span>Partial curriculum coverage · Medium industry demand</span></div><ProgressBar value={61} label="Alignment" /></div></SectionCard><aside className="stack-lg">

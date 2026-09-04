@@ -1,6 +1,6 @@
 # Self-Managed Deployment
 
-Deploy the portal through one HTTPS origin. The browser then calls the Java API at `/api/v1`, so the refresh cookie is same-site and the frontend does not need to expose an API host in its bundle.
+This directory is a future Java backend scaffold. It is not the service used by the current Render deployment. The active application is the Node/Express service in `server/`; follow the root README and `render.yaml` for that deployment.
 
 | Component | Runtime | Responsibility |
 |---|---|---|
@@ -10,15 +10,15 @@ Deploy the portal through one HTTPS origin. The browser then calls the Java API 
 | Redis | Redis 7 or compatible | Distributed login/register rate limit counter in production. |
 | Nginx | Nginx with TLS termination | Static delivery, reverse proxy, security headers, and same-origin API routing. |
 
-## Required production configuration
+## Future Java-service configuration
 
 Set the variables named in `deployment.env.template` in your deployment platform’s secret manager. Generate `APP_JWT_SECRET` from at least 32 random bytes encoded with Base64. Set `APP_CORS_ALLOWED_ORIGINS` to the precise HTTPS frontend origin, never `*`. Keep `APP_COOKIE_SECURE=true` in production.
 
 > Do not commit a `.env` file, a database password, a bootstrap password, or a JWT secret. The included template contains variable names only.
 
-## Build and run
+## Build and run (not currently available)
 
-Build the API with `cd backend && mvn clean verify`. The resulting `target/sih-connect-api-1.0.0.jar` runs with `java -jar target/sih-connect-api-1.0.0.jar` after production environment variables are supplied. Flyway applies forward-only migrations at startup and Hibernate validates the resulting schema.
+The Java service cannot currently be built because its `src/` tree and migrations are not present. Do not advertise this module as a production API until those artifacts and their tests are committed.
 
 For an OCI deployment, build `backend/Dockerfile` from the `backend` directory. The supplied `compose.yaml` starts the API with PostgreSQL and Redis; inject its environment variables from your secret manager rather than committing a local secrets file. For a static frontend container, build from the repository root with `docker build -f backend/Dockerfile.frontend -t sih-connect-web .`. Adapt `backend/deployment/nginx.conf` if the API runs in another container or host; its `/api/` target must reach the Java API.
 

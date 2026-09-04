@@ -5,6 +5,7 @@ import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { KeyValue, Notice, PageHeader, ProgressBar, SectionCard, StatusPill, Timeline } from "@/components/Ui";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 import "./FinalRequirementPages.css";
 
 function StudentLayout({ children }: { children: React.ReactNode }) { return <AppShell role="student">{children}</AppShell>; }

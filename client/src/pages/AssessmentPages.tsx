@@ -790,7 +790,7 @@ export function AssessmentResultsPage({ id = "industry-readiness" }: { id?: stri
                   ))}
                 {categories.every((category) => scores[category.key] >= 67) && (
                   <p className="body-copy">
-                    Your current quiz scores meet the expected baseline across all measured categories. Continue adding verified evidence.
+                    Your current practice scores meet the expected baseline across all measured categories. Add independently reviewed evidence before treating this as a credential.
                   </p>
                 )}
               </div>
@@ -802,7 +802,7 @@ export function AssessmentResultsPage({ id = "industry-readiness" }: { id?: stri
               aside={<span className="date-meta">SHOWING {filteredQuestions.length} OF {totalQuestions} QUESTIONS</span>}
             >
               <p className="body-copy" style={{ marginBottom: "10px" }}>
-                Click category filters below or the skill cards above to inspect which questions were correct, which were wrong, and review the verified answers.
+                Click category filters below or the skill cards above to inspect your practice answers. Results are calculated in this browser and are not a verified credential.
               </p>
 
               {/* Filter Tabs */}

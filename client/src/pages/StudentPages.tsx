@@ -54,6 +54,7 @@ import {
   studentSkillMaps,
 } from "@/data/portalData";
 import { api } from "@/lib/api";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 import { loadLatestAssessmentResult } from "./AssessmentPages";
 import studentSkillMap from "@/assets/student-skill-map.svg";
 import {
@@ -1141,7 +1142,17 @@ export function ApplyPage({ id = "ai-studio" }: { id?: string }) {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    // Persist full application snapshot into application repository
+    try {
+      await api.applications.submit({
+        jobId: item.id,
+        statement,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Your application could not be submitted.");
+      return;
+    }
+
+    // Keep the local attachment preview separate from the authoritative server record.
     createStudentApplication({
       jobId: item.id,
       jobTitle: item.title,
@@ -1152,15 +1163,6 @@ export function ApplyPage({ id = "ai-studio" }: { id?: string }) {
       supportingDocs,
       match: fit.matchPercent,
     });
-
-    try {
-      await api.applications.submit({
-        jobId: item.id,
-        jobTitle: item.title,
-        organization: item.organization,
-        statement,
-      });
-    } catch {}
 
     toast.success(`Application for ${item.title} submitted and saved to your placement season!`);
     setLocation(`/jobs/${item.id}/submitted`);
@@ -2553,7 +2555,7 @@ Date of Acceptance: ${placement.placedAt || "31 Aug 2026"}
 
 Placement Officer Verification:
 SIH Partner Institution University Placement Cell
-Verification Hash: PLACEMENT-VERIFIED-${Math.floor(10000 + Math.random() * 90000)}
+Reference: locally generated draft (institutional verification pending)
 ======================================================================`;
 
     const blob = new Blob([content], { type: "text/plain" });
@@ -2764,12 +2766,12 @@ function ProfileOverview() {
       return;
     }
     try {
+      await api.profile.update({ phone: `+91${phone}`, email });
       localStorage.setItem("sih-connect-profile-phone", phone);
       localStorage.setItem("sih-connect-profile-email", email);
-      await api.profile.update({ phone: `+91 ${phone}`, email });
       toast.success("Contact details updated and saved successfully!");
-    } catch {
-      toast.success("Contact details saved locally.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Contact details could not be saved.");
     }
   };
 
@@ -2787,16 +2789,16 @@ function ProfileOverview() {
       codeforces: sanitizeUrl(links.codeforces),
     };
 
-    saveDeclaredSkills(skills);
-    localStorage.setItem("sih-connect-professional-links", JSON.stringify(formattedLinks));
-    setLinks(formattedLinks);
-    setSkillsInput(skills.join(", "));
-
     try {
       await api.profile.update({ declaredSkills: skills });
-    } catch {}
-
-    toast.success("Professional links and declared skills saved to profile!");
+      saveDeclaredSkills(skills);
+      localStorage.setItem("sih-connect-professional-links", JSON.stringify(formattedLinks));
+      setLinks(formattedLinks);
+      setSkillsInput(skills.join(", "));
+      toast.success("Professional links and declared skills saved to profile!");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Profile changes could not be saved.");
+    }
   }
 
   return (
@@ -3022,29 +3024,32 @@ function ProfileDocuments() {
       fileName: uploadedFileName || `${newDocTitle.trim().replace(/\s+/g, "_")}.pdf`,
       fileSize: uploadedFileSize,
       fileDataUrl: uploadedFileData,
-      verified: true,
+      verified: false,
     });
-
-    setDocs(getProfileDocuments());
-    setNewDocTitle("");
-    setUploadedFileName("");
-    setUploadedFileData(undefined);
-    setShowUpload(false);
 
     try {
       await api.profile.addDocument(newDoc.title);
-    } catch {}
-
-    toast.success(`Uploaded and registered: ${newDoc.title}`);
+      setDocs(getProfileDocuments());
+      setNewDocTitle("");
+      setUploadedFileName("");
+      setUploadedFileData(undefined);
+      setShowUpload(false);
+      toast.success(`Document metadata registered; verification pending: ${newDoc.title}`);
+    } catch (error) {
+      deleteProfileDocument(newDoc.id);
+      toast.error(error instanceof Error ? error.message : "Document could not be registered.");
+    }
   };
 
   const handleDeleteDoc = async (id: string, title: string) => {
-    deleteProfileDocument(id);
-    setDocs(getProfileDocuments());
     try {
       await api.profile.deleteDocument(id);
-    } catch {}
-    toast.info(`Removed document "${title}".`);
+      deleteProfileDocument(id);
+      setDocs(getProfileDocuments());
+      toast.info(`Removed document "${title}".`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Document could not be removed.");
+    }
   };
 
   return (

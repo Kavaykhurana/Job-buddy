@@ -1,5 +1,6 @@
 // Scalable data models and persistent storage for Profile Documents, Resumes, and Settings
 import { getDeclaredSkills, saveDeclaredSkills } from "./assessmentData";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 
 export interface ProfileDocumentItem {
   id: string;

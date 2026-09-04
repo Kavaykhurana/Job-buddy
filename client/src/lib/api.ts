@@ -1,4 +1,5 @@
-// Type-safe REST API Client for all CRUD operations
+// Type-safe REST API client. All requests use the authenticated session client.
+import { apiRequest } from "./authApi";
 
 export interface Job {
   id: string;
@@ -99,20 +100,8 @@ export interface Initiative {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = endpoint.startsWith("/api") ? endpoint : `/api/v1${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
-  const headers = {
-    "Content-Type": "application/json",
-    ...(options.headers || {}),
-  };
-  const response = await fetch(url, { ...options, headers });
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`API Error ${response.status}: ${errorBody || response.statusText}`);
-  }
-  if (response.status === 204) {
-    return {} as T;
-  }
-  return response.json() as Promise<T>;
+  const path = endpoint.startsWith("/api/v1") ? endpoint.slice("/api/v1".length) : endpoint;
+  return apiRequest<T>(path.startsWith("/") ? path : `/${path}`, options);
 }
 
 export const api = {
@@ -131,7 +120,7 @@ export const api = {
   // Applications CRUD
   applications: {
     list: () => request<Application[]>("/applications"),
-    submit: (data: { jobId: string; jobTitle: string; organization: string; statement?: string }) =>
+    submit: (data: { jobId: string; statement: string }) =>
       request<Application>("/applications", { method: "POST", body: JSON.stringify(data) }),
     updateStage: (id: string, stage: string) =>
       request<Application>(`/applications/${id}`, { method: "PATCH", body: JSON.stringify({ stage }) }),

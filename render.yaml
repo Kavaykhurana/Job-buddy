@@ -11,3 +11,14 @@ services:
         value: production
       - key: PORT
         value: 10000
+      # Render prompts for these values during Blueprint setup; never commit secrets.
+      - key: APP_JWT_SECRET
+        sync: false
+      - key: ACCESS_TOKEN_TTL_SECONDS
+        value: "900"
+      - key: REFRESH_TOKEN_TTL_SECONDS
+        value: "604800"
+      - key: APP_BOOTSTRAP_ADMIN_EMAIL
+        sync: false
+      - key: APP_BOOTSTRAP_ADMIN_PASSWORD
+        sync: false

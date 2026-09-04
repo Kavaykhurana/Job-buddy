@@ -1,5 +1,6 @@
 // Scalable data models and persistent storage for Learning, Enrollments, Progress, and Certifications
 import { getDeclaredSkills, saveDeclaredSkills } from "./assessmentData";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 
 export interface LearningCourseLink {
   platform: string;

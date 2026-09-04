@@ -6,6 +6,7 @@ import { AppShell } from "@/components/AppShell";
 import { KeyValue, Notice, PageHeader, ProgressBar, SectionCard, StatusPill } from "@/components/Ui";
 import { deleteRecruiterJobDraft, getRecruiterJobDraft, type JobAttachment, type JobDraft, loadRecruiterJobDrafts, saveRecruiterJobDraft, saveRecruiterPostedJob } from "@/data/portalData";
 import { api } from "@/lib/api";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 import "./RecruitmentCompletionPages.css";
 import "./RecruiterPostJob.css";
 import "./RecruiterAssessmentScorecard.css";
@@ -143,20 +144,24 @@ export function RecruiterJobPublishPage() {
       postedAt: "Just now",
       location: draft.mode === "Hybrid" ? `Hybrid · ${draft.location || "Bengaluru"}` : draft.mode,
     };
-    saveRecruiterPostedJob(newJob);
-    if (draft.id) {
-      deleteRecruiterJobDraft(draft.id);
-    }
     try {
       await api.jobs.create({
         id: newJob.id,
         title: draft.title,
+        organization: draft.organization,
         location: newJob.location,
-        requiredSkills: draft.requiredSkills,
-        preferredSkills: draft.preferredSkills,
+        date: "Closes 30 Sep",
+        required: draft.requiredSkills.split(",").map((skill) => skill.trim()).filter(Boolean),
+        preferred: draft.preferredSkills.split(",").map((skill) => skill.trim()).filter(Boolean),
+        type: "Structured opportunity",
         summary: draft.eligibility || draft.qualification,
       });
-    } catch {}
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The opportunity could not be published.");
+      return;
+    }
+    saveRecruiterPostedJob(newJob);
+    if (draft.id) deleteRecruiterJobDraft(draft.id);
     toast.success(`${draft.title} is now posted and visible in Opportunity records.`);
     setLocation("/recruiter/opportunities");
   };
@@ -482,11 +487,14 @@ export function RecruiterInterviewScorecardPage() {
   }, {} as Record<RecruiterAssessmentCategory, number>);
   const overall = Math.round(recruiterAssessmentCategories.reduce((total, category) => total + categoryScores[category], 0) / recruiterAssessmentCategories.length);
   const saveAssessment = async () => {
-    localStorage.setItem("sih-connect-recruiter-scorecard-anaya", JSON.stringify({ categoryScores, overall, feedback, recommendation, savedAt: new Date().toISOString() }));
     try {
-      await api.candidates.saveScorecard("anaya-01", overall, recommendation);
-    } catch {}
-    toast.success(`Assessment saved: ${overall}% overall · ${recommendation}.`);
+      const stage = recommendation === "Recommend offer" ? "Offer" : recommendation === "Do not progress" ? "Rejected" : "Interview";
+      await api.candidates.saveScorecard("anaya-01", overall, stage);
+      localStorage.setItem("sih-connect-recruiter-scorecard", JSON.stringify({ categoryScores, overall, feedback, recommendation, savedAt: new Date().toISOString() }));
+      toast.success(`Assessment saved: ${overall}% overall · ${recommendation}.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The assessment could not be saved.");
+    }
   };
   return <RecruiterLayout><Link href="/recruiter/interviews" className="back-link">← Interviews</Link><PageHeader eyebrow="Interview assessment" title="Anaya Sharma · Applied AI Capability Studio" description="Use the same Technical, Soft skills, and Other skills structure as the current knowledge assessment, scored from observed interview responses." meta={<StatusPill>{overall}% overall signal</StatusPill>} /><div className="scorecard-layout"><section className="stack-lg"><SectionCard title="Assessment category signals" aside={<span className="date-meta">1–5 OBSERVED RESPONSE SCALE</span>}><div className="recruiter-assessment-summary">{recruiterAssessmentCategories.map((category) => <div key={category}><span>{category}</span><b>{categoryScores[category]}%</b><small>{recruiterScoreBand(categoryScores[category])}</small><ProgressBar value={categoryScores[category]} /></div>)}</div></SectionCard>{recruiterAssessmentCategories.map((category) => <SectionCard key={category} title={category} aside={<StatusPill tone={categoryScores[category] >= 70 ? "olive" : "ochre"}>{categoryScores[category]}% · {recruiterScoreBand(categoryScores[category])}</StatusPill>}><div className="assessment-score-dimensions">{recruiterAssessmentDimensions.filter((dimension) => dimension.category === category).map((dimension) => <div key={dimension.id}><div><b>{dimension.label}</b><span>{dimension.prompt}</span></div><div className="score-buttons">{[1, 2, 3, 4, 5].map((score) => <button type="button" key={score} aria-label={`${dimension.label}: ${score} out of 5`} className={scores[dimension.id] === score ? "selected-score" : ""} onClick={() => setScores((current) => ({ ...current, [dimension.id]: score }))}>{score}</button>)}</div><b className="assessment-score-value">{scores[dimension.id]} / 5</b></div>)}</div></SectionCard>)}<SectionCard title="Evaluator evidence note"><textarea rows={5} value={feedback} onChange={(event) => setFeedback(event.target.value)} placeholder="Record observed evidence, concerns, limitations, and a next action for the candidate." /><p className="assessment-evidence-note">Record observable evidence, rather than assumptions. The note is saved with the category signals and recommendation.</p></SectionCard></section><aside className="stack-lg"><SectionCard title="Assessment record"><KeyValue label="Assessment format" value="Technical · Soft · Other" /><KeyValue label="Candidate fit" value="84%" /><KeyValue label="Overall interview signal" value={`${overall}% · ${recruiterScoreBand(overall)}`} /><KeyValue label="Stage" value="Interview" /></SectionCard><SectionCard title="Recommendation"><div className="recommendation-options">{(["Recommend offer", "Keep in review", "Do not progress"] as const).map((option) => <button type="button" key={option} className={recommendation === option ? "recommendation-option selected-recommendation" : "recommendation-option"} onClick={() => setRecommendation(option)}>{option}</button>)}</div><button type="button" className="primary-button full-button" onClick={() => void saveAssessment()}><Save size={15} /> Save assessment</button></SectionCard><Notice title="Decision traceability" text="Technical, soft-skill, and other-skill signals are calculated from observed response scores. The evidence note, recommendation, total, and saved time remain together in the assessment record." /></aside></div></RecruiterLayout>;
 }

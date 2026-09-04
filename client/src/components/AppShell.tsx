@@ -9,6 +9,7 @@ import "./AppShell.css";
 import "./FieldNotesRefinement.css";
 
 const roleLabel: Record<UserRole, string> = { student: "Student view", recruiter: "Recruiter view", institution: "Institution view", academician: "Academician view" };
+const portalRoleFor: Record<UserRole, "STUDENT" | "RECRUITER" | "INSTITUTION" | "ACADEMICIAN"> = { student: "STUDENT", recruiter: "RECRUITER", institution: "INSTITUTION", academician: "ACADEMICIAN" };
 const extensionLabels: Record<UserRole, string[]> = {
   student: ["Events", "Calendar", "Schedule"],
   recruiter: ["Internships", "Assessments", "Collaboration", "Analytics", "Integrations"],
@@ -18,7 +19,7 @@ const extensionLabels: Record<UserRole, string[]> = {
 
 export function AppShell({ role = "student", children }: { role?: UserRole; children: ReactNode }) {
   const [location, setLocation] = useLocation();
-  const { user, signOut: endSession, login } = useAuth();
+  const { user, signOut: endSession } = useAuth();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -28,24 +29,20 @@ export function AppShell({ role = "student", children }: { role?: UserRole; chil
     setNotifications(loadStudentNotifications());
   }, [location, isNotificationsOpen]);
 
-  const handleRoleSelect = async (newRole: UserRole) => {
-    const defaultAccounts: Record<UserRole, { email: string }> = {
-      student: { email: "anaya.sharma@example.edu" },
-      recruiter: { email: "recruitment@quantum-systems.io" },
-      institution: { email: "dean.placements@apex-tech.edu" },
-      academician: { email: "prof.mehta@apex-tech.edu" },
-    };
-    try {
-      await login(defaultAccounts[newRole].email, "password", newRole);
-    } catch {}
-    setLocation(roleHome[newRole]);
-  };
+  const availableRoles = (Object.keys(portalRoleFor) as UserRole[]).filter((candidate) => user?.roles.includes(portalRoleFor[candidate]) || user?.roles.includes("ADMIN"));
+  const hasAccess = Boolean(user && (user.roles.includes(portalRoleFor[role]) || user.roles.includes("ADMIN")));
+
+  useEffect(() => {
+    if (user && !hasAccess) setLocation(roleHome[availableRoles[0] || "student"]);
+  }, [availableRoles, hasAccess, setLocation, user]);
 
   const nav = roleNavigation[role];
   const extensionNav = nav.filter((item) => extensionLabels[role].includes(item.label));
   const primaryNav = nav.filter((item) => !extensionLabels[role].includes(item.label));
   const roleInitials = role === "student" ? "AS" : role === "recruiter" ? "NP" : role === "institution" ? "IC" : "DR";
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  if (!hasAccess) return null;
 
   async function signOut() {
     await endSession();
@@ -83,8 +80,8 @@ export function AppShell({ role = "student", children }: { role?: UserRole; chil
           </nav>
           {extensionNav.length > 0 && <div className="more-nav more-nav-root"><button type="button" className={extensionNav.some((item) => location === item.href || location.startsWith(`${item.href}/`)) ? "more-nav-trigger nav-active" : "more-nav-trigger"} aria-expanded={isMoreOpen} aria-controls={`more-menu-${role}`} onClick={() => setIsMoreOpen((open) => !open)}>More <ChevronDown size={13} /></button>{isMoreOpen && <div id={`more-menu-${role}`} className="more-nav-menu">{extensionNav.map((item) => { const active = location === item.href || location.startsWith(`${item.href}/`); return <Link key={item.href} href={item.href} className={active ? "more-active" : ""} onClick={() => setIsMoreOpen(false)}>{item.label}</Link>; })}</div>}</div>}
           <div className="top-actions">
-            <select className="role-select" aria-label="Switch workspace" value={role} onChange={(event) => void handleRoleSelect(event.target.value as UserRole)}>
-              <option value="student">Student</option><option value="recruiter">Recruiter</option><option value="institution">Institution</option><option value="academician">Academician</option>
+            <select className="role-select" aria-label="Switch workspace" value={role} onChange={(event) => setLocation(roleHome[event.target.value as UserRole])} disabled={availableRoles.length < 2}>
+              {availableRoles.map((candidate) => <option key={candidate} value={candidate}>{roleLabel[candidate]}</option>)}
             </select>
             <div className="notification-menu" style={{ position: "relative" }}>
               <button

@@ -1,6 +1,7 @@
 // Scalable internship opportunities, dynamic fit calculation, persistent applications, engagement logs, and completion records
 import { getDeclaredSkills, isSkillMatched } from "./assessmentData";
 import { downloadAttachedFile, AttachedFile } from "./applicationData";
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 
 export interface InternshipMilestone {
   id: string;

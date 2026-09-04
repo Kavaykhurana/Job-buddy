@@ -1,628 +1,127 @@
 import { Router, json, urlencoded } from "express";
-import type { Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { z } from "zod";
+import { PORTAL_ROLES, type PortalRole, type RefreshSession, type StoredUser, clearRefreshCookie, createRefreshSession, hashOpaqueToken, hashPassword, isRefreshSessionActive, isValidPassword, issueAccessToken, newId, readCookie, refreshCookie, verifyAccessToken, verifyPassword } from "./auth.js";
 
 export const apiRouter = Router();
-apiRouter.use(json());
-apiRouter.use(urlencoded({ extended: true }));
+apiRouter.use(json({ limit: "100kb", strict: true }));
+apiRouter.use(urlencoded({ extended: false, limit: "20kb" }));
+apiRouter.use((_req, res, next) => { res.setHeader("X-Content-Type-Options", "nosniff"); res.setHeader("X-Frame-Options", "DENY"); res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin"); res.setHeader("Cache-Control", "no-store"); next(); });
 
-// Path to data store file for persistence
+type Profile = { displayName: string; email: string; phone?: string; program: string; declaredSkills: string[]; documents: { id: string; title: string; verified: boolean; uploadedAt: string }[] };
+type Job = { id: string; ownerId: string; title: string; organization: string; location: string; date: string; match: number; status: string; required: string[]; preferred: string[]; type: string; summary: string };
+type Internship = { id: string; ownerId: string; title: string; org: string; mode: string; match: number; status: string; close: string; interest: string; required: string[]; preferred: string[]; summary: string };
+type Experience = { id: string; ownerId: string; type: string; title: string; org: string; mode: string; match: number; duration: string; required: string[]; summary: string };
+type Application = { id: string; userId: string; jobId: string; jobTitle: string; organization: string; studentName: string; studentEmail: string; stage: string; appliedAt: string; statement: string };
+type Candidate = { id: string; name: string; program: string; score: number; eligibility: string; stage: string; skills: string[]; shortlisted: boolean };
+type Requirement = { skill: string; level: string; importance: string };
+type CompanyRequirement = { company: string; industry: string; roles: { title: string; demand: string; updated: string; eligible: string; requirements: Requirement[] }[] };
+type Database = { users: StoredUser[]; profiles: Record<string, Profile>; jobs: Job[]; internships: Internship[]; experiences: Experience[]; applications: Application[]; candidates: Candidate[]; companyRequirements: CompanyRequirement[]; curriculumNotes: { id: string; program: string; note: string; createdBy: string; createdAt: string }[]; initiatives: { id: string; kind: string; title: string; org: string; speaker?: string; mentor?: string; date?: string; status?: string; participants: number }[]; refreshSessions: RefreshSession[] };
+
 const DB_FILE = path.resolve(process.cwd(), "server", "data_store.json");
+const now = () => new Date().toISOString();
+const defaultProfile = (user: Pick<StoredUser, "displayName" | "email">): Profile => ({ displayName: user.displayName, email: user.email, program: "Computer Science · Batch 2028", declaredSkills: [], documents: [] });
+const randomPasswordHash = () => hashPassword(crypto.randomBytes(32).toString("base64url"));
+const seededUsers = (): StoredUser[] => [
+  { id: "usr_student", email: "anaya.sharma@example.edu", displayName: "Anaya Sharma", roles: ["STUDENT"], passwordHash: randomPasswordHash() },
+  { id: "usr_recruiter", email: "recruitment@quantum-systems.io", displayName: "Vikram Malhotra", roles: ["RECRUITER"], passwordHash: randomPasswordHash() },
+  { id: "usr_institution", email: "dean.placements@apex-tech.edu", displayName: "Dr. Sunita Rao", roles: ["INSTITUTION"], passwordHash: randomPasswordHash() },
+  { id: "usr_academician", email: "prof.mehta@apex-tech.edu", displayName: "Prof. Arvind Mehta", roles: ["ACADEMICIAN"], passwordHash: randomPasswordHash() },
+];
+const initialData = (): Database => { const users = seededUsers(); return { users, profiles: { usr_student: defaultProfile(users[0]) }, jobs: [{ id: "ai-studio", ownerId: "usr_recruiter", title: "Applied AI Capability Studio", organization: "Northstar Systems", location: "Hybrid · Bengaluru", date: "Closes 30 Aug", match: 84, status: "Open", required: ["Python", "Data Analysis", "Communication"], preferred: ["SQL", "Machine Learning"], type: "Structured opportunity", summary: "Support a cross-functional team by evaluating data-led workflows and presenting evidence-backed recommendations." }], internships: [], experiences: [], applications: [], candidates: [{ id: "anaya-01", name: "Anaya Sharma", program: "Computer Science · Batch 2028", score: 84, eligibility: "Eligible", stage: "Screening", skills: ["Python", "SQL", "Communication"], shortlisted: false }], companyRequirements: [], curriculumNotes: [], initiatives: [], refreshSessions: [] }; };
 
-// Initial Seed Data
-const initialData = {
-  users: [
-    { id: "usr_student", email: "anaya.sharma@example.edu", displayName: "Anaya Sharma", roles: ["STUDENT"] },
-    { id: "usr_recruiter", email: "recruitment@quantum-systems.io", displayName: "Vikram Malhotra", roles: ["RECRUITER"] },
-    { id: "usr_institution", email: "dean.placements@apex-tech.edu", displayName: "Dr. Sunita Rao", roles: ["INSTITUTION"] },
-    { id: "usr_academician", email: "prof.mehta@apex-tech.edu", displayName: "Prof. Arvind Mehta", roles: ["ACADEMICIAN"] },
-  ],
-  jobs: [
-    {
-      id: "ai-studio",
-      title: "Applied AI Capability Studio",
-      organization: "Northstar Systems",
-      location: "Hybrid · Bengaluru",
-      date: "Closes 30 Aug",
-      match: 84,
-      status: "Eligible",
-      required: ["Python", "Data Analysis", "Communication"],
-      preferred: ["SQL", "Machine Learning"],
-      type: "Structured opportunity",
-      summary: "Support a cross-functional team by evaluating data-led workflows and presenting evidence-backed recommendations.",
-    },
-    {
-      id: "research-analyst",
-      title: "Research Operations Associate",
-      organization: "Mosaic Health Labs",
-      location: "On campus · Chandigarh",
-      date: "Closes 02 Sep",
-      match: 72,
-      status: "Eligible",
-      required: ["Research", "Documentation", "Teamwork"],
-      preferred: ["Excel", "Presentation"],
-      type: "Structured opportunity",
-      summary: "Contribute to evidence review, structured documentation, and stakeholder-ready progress reports.",
-    },
-    {
-      id: "product-review",
-      title: "Digital Product Review Cohort",
-      organization: "Tern & Co.",
-      location: "Remote",
-      date: "Closes 06 Sep",
-      match: 61,
-      status: "Review profile",
-      required: ["Product Thinking", "Writing", "User Research"],
-      preferred: ["Figma", "Analytics"],
-      type: "Structured opportunity",
-      summary: "Review product briefs, map user needs, and prepare concise evidence notes for a product team.",
-    },
-  ],
-  internships: [
-    {
-      id: "data-practice",
-      title: "Data Practice Internship",
-      org: "Northstar Systems",
-      mode: "Hybrid · Bengaluru",
-      match: 84,
-      status: "Recommended",
-      close: "Closes 30 Aug",
-      interest: "Applied systems",
-      required: ["Python", "Data analysis", "Communication"],
-      preferred: ["SQL", "Data cleaning"],
-      summary: "Participate in data operations, practice evidence documentation, and work with an industry mentor.",
-    },
-    {
-      id: "clinical-support",
-      title: "Clinical Data Support Internship",
-      org: "Mosaic Health Labs",
-      mode: "On campus · Chandigarh",
-      match: 72,
-      status: "Eligible",
-      close: "Closes 02 Sep",
-      interest: "Research operations",
-      required: ["Documentation", "Research", "Data entry"],
-      preferred: ["Excel", "Presentation"],
-      summary: "Support health research records, verify entry accuracy, and prepare structured review notes.",
-    },
-    {
-      id: "product-observation",
-      title: "Product Observation Internship",
-      org: "Tern & Co.",
-      mode: "Remote",
-      match: 63,
-      status: "Build evidence",
-      close: "Closes 08 Sep",
-      interest: "Digital product",
-      required: ["User research", "Writing"],
-      preferred: ["Analytics"],
-      summary: "Observe product workflows, summarise user needs, and prepare a concise evidence-backed review.",
-    },
-  ],
-  experiences: [
-    {
-      id: "data-apprenticeship",
-      type: "Apprenticeship",
-      title: "Data Practice Apprenticeship",
-      org: "Northstar Systems",
-      mode: "Hybrid · Bengaluru",
-      match: 84,
-      duration: "12 weeks",
-      required: ["Python", "Data analysis", "Communication"],
-      summary: "A guided work-learning pathway with assigned industry supervisors, milestones, and feedback.",
-    },
-    {
-      id: "evidence-project",
-      type: "Industry project",
-      title: "Evidence Workflow Improvement Project",
-      org: "Tern & Co.",
-      mode: "Remote · Team project",
-      match: 71,
-      duration: "6 weeks",
-      required: ["Research writing", "Documentation", "User research"],
-      summary: "Work with an industry brief, team deliverables, review milestones, and a verified project outcome.",
-    },
-  ],
-  applications: [
-    {
-      id: "app-1",
-      jobId: "ai-studio",
-      jobTitle: "Applied AI Capability Studio",
-      organization: "Northstar Systems",
-      studentName: "Anaya Sharma",
-      studentEmail: "anaya.sharma@example.edu",
-      stage: "Screening",
-      appliedAt: "20 Aug · 10:42",
-      statement: "Strong analytical and python background suitable for applied systems evaluation.",
-    },
-    {
-      id: "app-2",
-      jobId: "research-analyst",
-      jobTitle: "Research Operations Associate",
-      organization: "Mosaic Health Labs",
-      studentName: "Anaya Sharma",
-      studentEmail: "anaya.sharma@example.edu",
-      stage: "Submitted",
-      appliedAt: "21 Aug · 14:15",
-      statement: "Demonstrated coursework in research methodology and documentation.",
-    },
-  ],
-  candidates: [
-    { id: "anaya-01", name: "Anaya Sharma", program: "Computer Science · Batch 2028", score: 84, eligibility: "Eligible", stage: "Screening", skills: ["Python", "SQL", "Communication"], shortlisted: false },
-    { id: "kabir-02", name: "Kabir Mehta", program: "Information Technology · Batch 2028", score: 79, eligibility: "Eligible", stage: "Screening", skills: ["Python", "Data Analysis", "Communication"], shortlisted: true },
-    { id: "rhea-03", name: "Rhea Nair", program: "Computer Science · Batch 2027", score: 74, eligibility: "Review", stage: "Screening", skills: ["SQL", "Documentation", "Teamwork"], shortlisted: false },
-  ],
-  companyRequirements: [
-    {
-      company: "Northstar Systems",
-      industry: "Applied systems and data operations",
-      roles: [
-        { title: "Applied AI Capability Studio", demand: "High", updated: "22 Aug 2026", eligible: "08", requirements: [{ skill: "Python", level: "Advanced", importance: "Required" }, { skill: "Data Analysis", level: "Intermediate", importance: "Required" }, { skill: "Communication", level: "Intermediate", importance: "Required" }, { skill: "SQL", level: "Intermediate", importance: "Preferred" }] },
-        { title: "Data Operations Associate", demand: "High", updated: "24 Aug 2026", eligible: "11", requirements: [{ skill: "SQL", level: "Intermediate", importance: "Required" }, { skill: "Spreadsheet analysis", level: "Advanced", importance: "Required" }, { skill: "Data quality review", level: "Intermediate", importance: "Required" }, { skill: "Python", level: "Developing", importance: "Preferred" }] },
-      ],
-    },
-    {
-      company: "Mosaic Health Labs",
-      industry: "Health research and operations",
-      roles: [
-        { title: "Research Operations Associate", demand: "Medium", updated: "23 Aug 2026", eligible: "06", requirements: [{ skill: "Research", level: "Intermediate", importance: "Required" }, { skill: "Documentation", level: "Advanced", importance: "Required" }, { skill: "Teamwork", level: "Intermediate", importance: "Required" }, { skill: "Presentation", level: "Developing", importance: "Preferred" }] },
-        { title: "Clinical Data Support Intern", demand: "Medium", updated: "23 Aug 2026", eligible: "09", requirements: [{ skill: "Data entry", level: "Intermediate", importance: "Required" }, { skill: "Excel", level: "Intermediate", importance: "Required" }, { skill: "Confidentiality awareness", level: "Intermediate", importance: "Required" }, { skill: "Research writing", level: "Developing", importance: "Preferred" }] },
-      ],
-    },
-  ],
-  profile: {
-    displayName: "Anaya Sharma",
-    email: "anaya.sharma@example.edu",
-    phone: "+91 98123 45510",
-    program: "Computer Science · Batch 2028",
-    declaredSkills: ["Python", "Data analysis", "Research writing", "SQL", "User research", "Presentation"],
-    documents: [
-      { id: "doc-1", title: "Semester 3 academic record", verified: true },
-      { id: "doc-2", title: "Semester 4 academic record", verified: false },
-      { id: "doc-3", title: "Identity proof", verified: true },
-      { id: "doc-4", title: "Skill evidence note", verified: true },
-    ],
-  },
-  curriculumNotes: [
-    { id: "curr-1", program: "Computer Science", note: "Add applied SQL evidence workshops to close current high-demand industry requirement gap.", createdBy: "Dean Office", createdAt: "24 Aug 2026" },
-  ],
-  initiatives: [
-    { id: "init-1", kind: "mentorship", title: "Applied systems mentorship circle", org: "Northstar Systems", mentor: "Neeraj Patel", participants: 18 },
-    { id: "init-2", kind: "guest", title: "From skill evidence to industry decisions", org: "Northstar Systems", speaker: "Vikram Malhotra", date: "03 Sep" },
-    { id: "init-3", kind: "challenge", title: "Transparent evidence for early-career readiness", org: "Industry Council", status: "Open", participants: 18 },
-  ],
-};
-
-function loadDatabase(): typeof initialData {
-  try {
-    if (fs.existsSync(DB_FILE)) {
-      const raw = fs.readFileSync(DB_FILE, "utf-8");
-      return JSON.parse(raw);
-    }
-  } catch {}
-  return JSON.parse(JSON.stringify(initialData));
+function validRoles(value: unknown): PortalRole[] { return Array.isArray(value) ? value.filter((role): role is PortalRole => typeof role === "string" && PORTAL_ROLES.includes(role as PortalRole)) : []; }
+function normalize(raw: unknown): Database {
+  const fallback = initialData(); const source = raw && typeof raw === "object" ? raw as Record<string, unknown> : {};
+  const users = Array.isArray(source.users) ? source.users.map((item): StoredUser | null => { if (!item || typeof item !== "object") return null; const user = item as Record<string, unknown>; if (typeof user.id !== "string" || typeof user.email !== "string" || typeof user.displayName !== "string") return null; const roles = validRoles(user.roles); return { id: user.id, email: user.email.toLowerCase(), displayName: user.displayName, roles: roles.length ? roles : ["STUDENT"], passwordHash: typeof user.passwordHash === "string" ? user.passwordHash : randomPasswordHash() }; }).filter((user): user is StoredUser => user !== null) : fallback.users;
+  const profiles = source.profiles && typeof source.profiles === "object" ? source.profiles as Record<string, Profile> : {};
+  if (source.profile && typeof source.profile === "object") profiles.usr_student ??= source.profile as Profile;
+  for (const user of users) profiles[user.id] ??= defaultProfile(user);
+  const recruiterId = users.find((user) => user.roles.includes("RECRUITER"))?.id ?? "";
+  const jobs = Array.isArray(source.jobs) ? source.jobs.map((item) => ({ ...(item as Omit<Job, "ownerId">), ownerId: typeof (item as Job).ownerId === "string" ? (item as Job).ownerId : recruiterId })) as Job[] : fallback.jobs;
+  const withOwner = <T extends { ownerId: string }>(value: unknown): T[] => Array.isArray(value) ? value.map((item) => ({ ...(item as Omit<T, "ownerId">), ownerId: typeof (item as T).ownerId === "string" ? (item as T).ownerId : recruiterId })) as T[] : [];
+  const applications = Array.isArray(source.applications) ? source.applications.map((item) => ({ ...(item as Omit<Application, "userId">), userId: typeof (item as Application).userId === "string" ? (item as Application).userId : "usr_student" })) as Application[] : [];
+  return { ...fallback, users: users.length ? users : fallback.users, profiles, jobs, internships: withOwner<Internship>(source.internships), experiences: withOwner<Experience>(source.experiences), applications, candidates: Array.isArray(source.candidates) ? source.candidates as Candidate[] : fallback.candidates, companyRequirements: Array.isArray(source.companyRequirements) ? source.companyRequirements as CompanyRequirement[] : [], curriculumNotes: Array.isArray(source.curriculumNotes) ? source.curriculumNotes as Database["curriculumNotes"] : [], initiatives: Array.isArray(source.initiatives) ? source.initiatives as Database["initiatives"] : [], refreshSessions: Array.isArray(source.refreshSessions) ? source.refreshSessions as RefreshSession[] : [] };
 }
-
-function saveDatabase(data: typeof initialData) {
-  try {
-    fs.mkdirSync(path.dirname(DB_FILE), { recursive: true });
-    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error saving data_store.json:", err);
+function loadDatabase(): Database {
+  let database: Database;
+  try { database = normalize(JSON.parse(fs.readFileSync(DB_FILE, "utf8"))); } catch { database = initialData(); }
+  const bootstrapEmail = process.env.APP_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
+  const bootstrapPassword = process.env.APP_BOOTSTRAP_ADMIN_PASSWORD;
+  if (bootstrapEmail && bootstrapPassword && isValidPassword(bootstrapPassword)) {
+    const existing = database.users.find((user) => user.email === bootstrapEmail);
+    if (existing) existing.roles = Array.from(new Set<PortalRole>([...existing.roles, "ADMIN"]));
+    else { const admin: StoredUser = { id: newId("usr"), email: bootstrapEmail, displayName: "Platform Administrator", roles: ["ADMIN"], passwordHash: hashPassword(bootstrapPassword) }; database.users.push(admin); database.profiles[admin.id] = defaultProfile(admin); }
   }
+  return database;
 }
-
+function saveDatabase(data: Database): void { const directory = path.dirname(DB_FILE); const temp = path.join(directory, `.data_store.${process.pid}.${crypto.randomUUID()}.tmp`); fs.mkdirSync(directory, { recursive: true }); fs.writeFileSync(temp, JSON.stringify(data, null, 2), { encoding: "utf8", mode: 0o600 }); fs.renameSync(temp, DB_FILE); }
 let db = loadDatabase();
+function updateDb<T>(update: (database: Database) => T): T { const result = update(db); saveDatabase(db); return result; }
+function publicUser(user: StoredUser) { return { id: user.id, email: user.email, displayName: user.displayName, roles: user.roles }; }
 
-// In-memory session store: maps access token to user ID for role-aware /auth/me and /auth/refresh.
-// Resets on server restart; tokens also embed userId so sessions survive server reloads.
-const sessions = new Map<string, string>();
+type AuthedRequest = Request & { auth?: { user: StoredUser; session: RefreshSession } };
+function requireAuth(req: AuthedRequest, res: Response, next: NextFunction) { const token = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1]; const claims = token ? verifyAccessToken(token) : null; if (!claims) return res.status(401).json({ detail: "Authentication required." }); const session = db.refreshSessions.find((item) => item.id === claims.sid); const user = db.users.find((item) => item.id === claims.sub); if (!session || !user || !isRefreshSessionActive(session) || session.userId !== user.id) return res.status(401).json({ detail: "Session is no longer active." }); req.auth = { user, session }; next(); }
+function requireRoles(...roles: PortalRole[]) { return (req: AuthedRequest, res: Response, next: NextFunction) => { if (!req.auth || !roles.some((role) => req.auth!.user.roles.includes(role))) return res.status(403).json({ detail: "You do not have permission to perform this action." }); next(); }; }
+function parse<T>(schema: z.ZodType<T>, body: unknown, res: Response): T | null { const result = schema.safeParse(body); if (!result.success) { res.status(400).json({ detail: "Invalid request.", errors: result.error.flatten().fieldErrors }); return null; } return result.data; }
+function owns(ownerId: string, req: AuthedRequest, res: Response): boolean { if (req.auth?.user.roles.includes("ADMIN") || ownerId === req.auth?.user.id) return true; res.status(403).json({ detail: "This record belongs to another organisation." }); return false; }
 
-function generateToken(prefix: string, userId: string): string {
-  return `${prefix}_${userId}_${Date.now()}`;
-}
+const attempts = new Map<string, { count: number; resetAt: number }>();
+function loginRateLimit(req: Request, res: Response, next: NextFunction) { const clientId = req.ip || "unknown"; const entry = attempts.get(clientId); const timestamp = Date.now(); if (!entry || entry.resetAt <= timestamp) { attempts.set(clientId, { count: 1, resetAt: timestamp + 15 * 60_000 }); return next(); } if (entry.count >= 8) return res.status(429).json({ detail: "Too many attempts. Try again later." }); entry.count += 1; next(); }
+function issueSession(user: StoredUser, res: Response) { const { token: refreshToken, session } = createRefreshSession(user.id); updateDb((state) => { state.refreshSessions = state.refreshSessions.filter((item) => item.userId !== user.id || isRefreshSessionActive(item)); state.refreshSessions.push(session); }); const access = issueAccessToken(user, session.id); res.setHeader("Set-Cookie", refreshCookie(refreshToken)); return { accessToken: access.token, accessTokenExpiresAt: access.expiresAt, user: publicUser(user) }; }
 
-function getSessionUser(req: Request): typeof db.users[0] | undefined {
-  const auth = req.headers.authorization;
-  if (auth?.startsWith("Bearer ")) {
-    const token = auth.slice(7);
-    const userId = sessions.get(token);
-    if (userId) {
-      const user = db.users.find((u) => u.id === userId);
-      if (user) return user;
-    }
-    // Also parse user id from token if present: jwt_token_<userId>_<timestamp> or jwt_refreshed_<userId>_<timestamp>
-    const match = token.match(/^jwt_(?:token|refreshed)_([a-zA-Z0-9_-]+)_\d+$/);
-    if (match) {
-      const idFromToken = match[1];
-      const user = db.users.find((u) => u.id === idFromToken);
-      if (user) {
-        sessions.set(token, user.id);
-        return user;
-      }
-    }
-  }
-  return undefined;
-}
+const credentials = z.object({ email: z.string().trim().email().max(254).transform((email) => email.toLowerCase()), password: z.string().max(256) });
+apiRouter.post("/auth/login", loginRateLimit, (req, res) => { const input = parse(credentials, req.body, res); if (!input) return; const user = db.users.find((item) => item.email === input.email); if (!user || !verifyPassword(input.password, user.passwordHash)) return res.status(401).json({ detail: "Invalid email or password." }); return res.json(issueSession(user, res)); });
+apiRouter.post("/auth/register", loginRateLimit, (req, res) => { const input = parse(credentials.extend({ displayName: z.string().trim().min(2).max(100) }), req.body, res); if (!input) return; if (!isValidPassword(input.password)) return res.status(400).json({ detail: "Password must have at least 12 characters and include a letter and number." }); if (db.users.some((user) => user.email === input.email)) return res.status(409).json({ detail: "An account already exists for this email." }); const user: StoredUser = { id: newId("usr"), email: input.email, displayName: input.displayName, roles: ["STUDENT"], passwordHash: hashPassword(input.password) }; updateDb((state) => { state.users.push(user); state.profiles[user.id] = defaultProfile(user); }); return res.status(201).json(issueSession(user, res)); });
+apiRouter.get("/auth/me", requireAuth, (req: AuthedRequest, res) => res.json(publicUser(req.auth!.user)));
+apiRouter.post("/auth/refresh", (req, res) => { const raw = readCookie(req.headers.cookie); const token = raw ? decodeURIComponent(raw) : undefined; const session = token ? db.refreshSessions.find((item) => item.tokenHash === hashOpaqueToken(token)) : undefined; const user = session ? db.users.find((item) => item.id === session.userId) : undefined; if (!session || !user || !isRefreshSessionActive(session)) { res.setHeader("Set-Cookie", clearRefreshCookie()); return res.status(401).json({ detail: "No active refresh session." }); } const replacement = createRefreshSession(user.id); updateDb((state) => { const old = state.refreshSessions.find((item) => item.id === session.id); if (old) { old.revokedAt = now(); old.replacedBy = replacement.session.id; } state.refreshSessions.push(replacement.session); }); const access = issueAccessToken(user, replacement.session.id); res.setHeader("Set-Cookie", refreshCookie(replacement.token)); return res.json({ accessToken: access.token, accessTokenExpiresAt: access.expiresAt, user: publicUser(user) }); });
+apiRouter.post("/auth/logout", (req, res) => { const raw = readCookie(req.headers.cookie); if (raw) updateDb((state) => { const session = state.refreshSessions.find((item) => item.tokenHash === hashOpaqueToken(decodeURIComponent(raw))); if (session) session.revokedAt = now(); }); res.setHeader("Set-Cookie", clearRefreshCookie()); return res.status(204).end(); });
 
-// Helper to persist on changes
-function updateDb<T>(updater: (current: typeof initialData) => T): T {
-  const result = updater(db);
-  saveDatabase(db);
-  return result;
-}
-
-// -----------------------------------------------------------------------------
-// 1. AUTH ENDPOINTS
-// -----------------------------------------------------------------------------
-apiRouter.post("/auth/login", (req: Request, res: Response) => {
-  const { email, password, role } = req.body;
-  const user = db.users.find((u) => u.email === email) || {
-    id: "usr_" + Math.random().toString(36).slice(2, 9),
-    email: email || "user@example.edu",
-    displayName: (email || "User").split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-    roles: role ? [role.toUpperCase()] : ["STUDENT"],
-  };
-  const token = generateToken("jwt_token", user.id);
-  sessions.set(token, user.id);
-  return res.json({
-    accessToken: token,
-    accessTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
-    user,
-  });
+apiRouter.post("/admin/users/:id/roles", requireAuth, requireRoles("ADMIN"), (req, res) => {
+  const input = parse(z.object({ roles: z.array(z.enum(PORTAL_ROLES)).min(1) }), req.body, res); if (!input) return;
+  const user = db.users.find((item) => item.id === req.params.id); if (!user) return res.status(404).json({ detail: "User not found." });
+  updateDb(() => { user.roles = Array.from(new Set(input.roles)); });
+  return res.json(publicUser(user));
 });
 
-apiRouter.post("/auth/register", (req: Request, res: Response) => {
-  const { displayName, email, password, role } = req.body;
-  const newUser = {
-    id: "usr_" + Math.random().toString(36).slice(2, 9),
-    email: email || "user@example.edu",
-    displayName: displayName || "User",
-    roles: role ? [role.toUpperCase()] : ["STUDENT"],
-  };
-  updateDb((state) => {
-    state.users.push(newUser);
-  });
-  const token = generateToken("jwt_token", newUser.id);
-  sessions.set(token, newUser.id);
-  return res.json({
-    accessToken: token,
-    accessTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
-    user: newUser,
-  });
-});
+const text = (min: number, max: number) => z.string().trim().min(min).max(max);
+const jobSchema = z.object({ id: text(1, 100).optional(), title: text(2, 160), organization: text(2, 160), location: text(2, 160), date: text(2, 80), required: z.array(text(1, 80)).min(1).max(30), preferred: z.array(text(1, 80)).max(30).default([]), type: text(2, 100), summary: text(10, 2_000) });
+apiRouter.get("/jobs", requireAuth, (_req, res) => res.json(db.jobs.map(({ ownerId: _ownerId, ...job }) => job)));
+apiRouter.get("/jobs/:id", requireAuth, (req, res) => { const job = db.jobs.find((item) => item.id === req.params.id); return job ? res.json((({ ownerId: _ownerId, ...rest }) => rest)(job)) : res.status(404).json({ detail: "Job opportunity not found." }); });
+apiRouter.post("/jobs", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req: AuthedRequest, res) => { const input = parse(jobSchema, req.body, res); if (!input) return; const id = input.id || newId("job"); if (db.jobs.some((job) => job.id === id)) return res.status(409).json({ detail: "A job with this id already exists." }); const job: Job = { ...input, id, ownerId: req.auth!.user.id, match: 0, status: "Open" }; updateDb((state) => { state.jobs.unshift(job); }); return res.status(201).json(job); });
+apiRouter.put("/jobs/:id", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req: AuthedRequest, res) => { const job = db.jobs.find((item) => item.id === req.params.id); if (!job) return res.status(404).json({ detail: "Job not found." }); if (!owns(job.ownerId, req, res)) return; const input = parse(jobSchema.omit({ id: true }).partial(), req.body, res); if (!input || Object.keys(input).length === 0) return; updateDb(() => Object.assign(job, input)); return res.json(job); });
+apiRouter.delete("/jobs/:id", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req: AuthedRequest, res) => { const job = db.jobs.find((item) => item.id === req.params.id); if (!job) return res.status(404).json({ detail: "Job not found." }); if (!owns(job.ownerId, req, res)) return; updateDb((state) => { state.jobs = state.jobs.filter((item) => item.id !== job.id); }); return res.status(204).end(); });
 
-apiRouter.get("/auth/me", (req: Request, res: Response) => {
-  const user = getSessionUser(req);
-  if (!user) {
-    return res.status(401).json({ detail: "Not authenticated" });
-  }
-  return res.json(user);
-});
+const applicationSchema = z.object({ jobId: text(1, 100), statement: text(20, 2_000) });
+apiRouter.get("/applications", requireAuth, (req: AuthedRequest, res) => { const user = req.auth!.user; if (user.roles.includes("STUDENT")) return res.json(db.applications.filter((item) => item.userId === user.id)); if (user.roles.includes("RECRUITER") || user.roles.includes("ADMIN")) return res.json(db.applications.filter((item) => db.jobs.some((job) => job.id === item.jobId && (user.roles.includes("ADMIN") || job.ownerId === user.id)))); return res.status(403).json({ detail: "You do not have permission to view applications." }); });
+apiRouter.post("/applications", requireAuth, requireRoles("STUDENT"), (req: AuthedRequest, res) => { const input = parse(applicationSchema, req.body, res); if (!input) return; const job = db.jobs.find((item) => item.id === input.jobId && item.status === "Open"); if (!job) return res.status(404).json({ detail: "Open job opportunity not found." }); if (db.applications.some((item) => item.userId === req.auth!.user.id && item.jobId === job.id)) return res.status(409).json({ detail: "You have already applied to this opportunity." }); const application: Application = { id: newId("app"), userId: req.auth!.user.id, jobId: job.id, jobTitle: job.title, organization: job.organization, studentName: req.auth!.user.displayName, studentEmail: req.auth!.user.email, stage: "Submitted", appliedAt: now(), statement: input.statement }; updateDb((state) => { state.applications.unshift(application); }); return res.status(201).json(application); });
+apiRouter.patch("/applications/:id", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req: AuthedRequest, res) => { const input = parse(z.object({ stage: z.enum(["Submitted", "Screening", "Interview", "Offer", "Rejected"]) }), req.body, res); if (!input) return; const application = db.applications.find((item) => item.id === req.params.id); const job = application && db.jobs.find((item) => item.id === application.jobId); if (!application || !job) return res.status(404).json({ detail: "Application not found." }); if (!owns(job.ownerId, req, res)) return; updateDb(() => { application.stage = input.stage; }); return res.json(application); });
 
-apiRouter.post("/auth/refresh", (req: Request, res: Response) => {
-  const user = getSessionUser(req);
-  if (!user) {
-    return res.status(401).json({ detail: "No active session to refresh" });
-  }
-  const token = generateToken("jwt_refreshed", user.id);
-  sessions.set(token, user.id);
-  return res.json({
-    accessToken: token,
-    accessTokenExpiresAt: new Date(Date.now() + 86400000).toISOString(),
-    user,
-  });
-});
+apiRouter.get("/internships", requireAuth, (_req, res) => res.json(db.internships.map(({ ownerId: _ownerId, ...item }) => item)));
+const internshipSchema = z.object({ id: text(1, 100).optional(), title: text(2, 160), org: text(2, 160), mode: text(2, 160), close: text(2, 80), interest: text(2, 120), required: z.array(text(1, 80)).min(1).max(30), preferred: z.array(text(1, 80)).max(30).default([]), summary: text(10, 2_000) });
+apiRouter.post("/internships", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req: AuthedRequest, res) => { const input = parse(internshipSchema, req.body, res); if (!input) return; const item: Internship = { ...input, id: input.id || newId("intern"), ownerId: req.auth!.user.id, match: 0, status: "Open" }; if (db.internships.some((existing) => existing.id === item.id)) return res.status(409).json({ detail: "An internship with this id already exists." }); updateDb((state) => { state.internships.unshift(item); }); return res.status(201).json(item); });
+apiRouter.delete("/internships/:id", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req: AuthedRequest, res) => { const item = db.internships.find((existing) => existing.id === req.params.id); if (!item) return res.status(404).json({ detail: "Internship not found." }); if (!owns(item.ownerId, req, res)) return; updateDb((state) => { state.internships = state.internships.filter((existing) => existing.id !== item.id); }); return res.status(204).end(); });
+apiRouter.get("/experiences", requireAuth, (_req, res) => res.json(db.experiences.map(({ ownerId: _ownerId, ...item }) => item)));
+const experienceSchema = z.object({ id: text(1, 100).optional(), type: text(2, 80), title: text(2, 160), org: text(2, 160), mode: text(2, 160), duration: text(2, 80), required: z.array(text(1, 80)).min(1).max(30), summary: text(10, 2_000) });
+apiRouter.post("/experiences", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req: AuthedRequest, res) => { const input = parse(experienceSchema, req.body, res); if (!input) return; const item: Experience = { ...input, id: input.id || newId("exp"), ownerId: req.auth!.user.id, match: 0 }; updateDb((state) => { state.experiences.unshift(item); }); return res.status(201).json(item); });
+apiRouter.get("/candidates", requireAuth, requireRoles("RECRUITER", "ADMIN"), (_req, res) => res.json(db.candidates));
+apiRouter.post("/candidates/:id/shortlist", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req, res) => { const input = parse(z.object({ shortlisted: z.boolean() }), req.body, res); if (!input) return; const candidate = db.candidates.find((item) => item.id === req.params.id); if (!candidate) return res.status(404).json({ detail: "Candidate not found." }); updateDb(() => { candidate.shortlisted = input.shortlisted; }); return res.json({ success: true, candidate }); });
+apiRouter.post("/candidates/:id/scorecard", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req, res) => { const input = parse(z.object({ score: z.number().min(0).max(100), stage: z.enum(["Screening", "Interview", "Offer", "Rejected"]) }), req.body, res); if (!input) return; const candidate = db.candidates.find((item) => item.id === req.params.id); if (!candidate) return res.status(404).json({ detail: "Candidate not found." }); updateDb(() => { candidate.score = input.score; candidate.stage = input.stage; }); return res.json({ success: true, candidate }); });
 
-apiRouter.post("/auth/logout", (_req: Request, res: Response) => {
-  return res.status(204).end();
-});
+const profileSchema = z.object({ displayName: text(2, 100).optional(), email: z.string().trim().email().max(254).transform((email) => email.toLowerCase()).optional(), phone: z.string().trim().regex(/^\+?[1-9]\d{7,14}$/).optional(), program: text(2, 160).optional(), declaredSkills: z.array(text(1, 80)).max(50).optional() });
+apiRouter.get("/profile", requireAuth, requireRoles("STUDENT"), (req: AuthedRequest, res) => res.json(db.profiles[req.auth!.user.id]));
+apiRouter.put("/profile", requireAuth, requireRoles("STUDENT"), (req: AuthedRequest, res) => { const input = parse(profileSchema, req.body, res); if (!input || Object.keys(input).length === 0) return; const user = req.auth!.user; const profile = db.profiles[user.id]; if (input.email && db.users.some((item) => item.email === input.email && item.id !== user.id)) return res.status(409).json({ detail: "Email is already in use." }); updateDb(() => { Object.assign(profile, input); if (input.displayName) user.displayName = input.displayName; if (input.email) user.email = input.email; if (input.declaredSkills) profile.declaredSkills = Array.from(new Set(input.declaredSkills.map((skill) => skill.trim()))); }); return res.json(profile); });
+apiRouter.post("/profile/skills", requireAuth, requireRoles("STUDENT"), (req: AuthedRequest, res) => { const input = parse(z.object({ skill: text(1, 80) }), req.body, res); if (!input) return; const profile = db.profiles[req.auth!.user.id]; updateDb(() => { if (!profile.declaredSkills.some((skill) => skill.toLocaleLowerCase() === input.skill.toLocaleLowerCase())) profile.declaredSkills.push(input.skill); }); return res.json(profile.declaredSkills); });
+apiRouter.delete("/profile/skills/:skill", requireAuth, requireRoles("STUDENT"), (req: AuthedRequest, res) => { const profile = db.profiles[req.auth!.user.id]; const requestedSkill = String(req.params.skill); updateDb(() => { profile.declaredSkills = profile.declaredSkills.filter((skill) => skill.toLocaleLowerCase() !== decodeURIComponent(requestedSkill).toLocaleLowerCase()); }); return res.status(204).end(); });
+apiRouter.post("/profile/documents", requireAuth, requireRoles("STUDENT"), (req: AuthedRequest, res) => { const input = parse(z.object({ title: text(2, 140) }), req.body, res); if (!input) return; const document = { id: newId("doc"), title: input.title, verified: false, uploadedAt: now() }; updateDb(() => { db.profiles[req.auth!.user.id].documents.push(document); }); return res.status(201).json(document); });
+apiRouter.delete("/profile/documents/:id", requireAuth, requireRoles("STUDENT"), (req: AuthedRequest, res) => { const profile = db.profiles[req.auth!.user.id]; if (!profile.documents.some((document) => document.id === req.params.id)) return res.status(404).json({ detail: "Document not found." }); updateDb(() => { profile.documents = profile.documents.filter((document) => document.id !== req.params.id); }); return res.status(204).end(); });
 
-// -----------------------------------------------------------------------------
-// 2. JOBS / OPPORTUNITIES (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/jobs", (_req: Request, res: Response) => {
-  return res.json(db.jobs);
-});
-
-apiRouter.get("/jobs/:id", (req: Request, res: Response) => {
-  const job = db.jobs.find((j) => j.id === req.params.id);
-  if (!job) return res.status(404).json({ detail: "Job opportunity not found" });
-  return res.json(job);
-});
-
-apiRouter.post("/jobs", (req: Request, res: Response) => {
-  const newJob = {
-    id: req.body.id || `job-${Date.now()}`,
-    title: req.body.title || "Untitled Opportunity",
-    organization: req.body.organization || "Company Partner",
-    location: req.body.location || req.body.mode || "Hybrid",
-    date: req.body.date || "Closes 30 Sep",
-    match: req.body.match || 75,
-    status: req.body.status || "Open",
-    required: Array.isArray(req.body.required) ? req.body.required : (req.body.requiredSkills || "Python, Communication").split(",").map((s: string) => s.trim()),
-    preferred: Array.isArray(req.body.preferred) ? req.body.preferred : (req.body.preferredSkills || "SQL").split(",").map((s: string) => s.trim()),
-    type: req.body.type || "Structured opportunity",
-    summary: req.body.summary || req.body.eligibility || "Role requirements published.",
-  };
-  updateDb((state) => {
-    state.jobs.unshift(newJob);
-  });
-  return res.status(201).json(newJob);
-});
-
-apiRouter.put("/jobs/:id", (req: Request, res: Response) => {
-  const updated = updateDb((state) => {
-    const idx = state.jobs.findIndex((j) => j.id === req.params.id);
-    if (idx !== -1) {
-      state.jobs[idx] = { ...state.jobs[idx], ...req.body };
-      return state.jobs[idx];
-    }
-    return null;
-  });
-  if (!updated) return res.status(404).json({ detail: "Job not found" });
-  return res.json(updated);
-});
-
-apiRouter.delete("/jobs/:id", (req: Request, res: Response) => {
-  const deleted = updateDb((state) => {
-    const idx = state.jobs.findIndex((j) => j.id === req.params.id);
-    if (idx !== -1) {
-      return state.jobs.splice(idx, 1)[0];
-    }
-    return null;
-  });
-  if (!deleted) return res.status(404).json({ detail: "Job not found" });
-  return res.json({ success: true, deleted });
-});
-
-// -----------------------------------------------------------------------------
-// 3. APPLICATIONS (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/applications", (_req: Request, res: Response) => {
-  return res.json(db.applications);
-});
-
-apiRouter.post("/applications", (req: Request, res: Response) => {
-  const newApp = {
-    id: `app-${Date.now()}`,
-    jobId: req.body.jobId || "ai-studio",
-    jobTitle: req.body.jobTitle || "Applied AI Capability Studio",
-    organization: req.body.organization || "Northstar Systems",
-    studentName: req.body.studentName || db.profile.displayName,
-    studentEmail: req.body.studentEmail || db.profile.email,
-    stage: "Submitted",
-    appliedAt: "Just now",
-    statement: req.body.statement || "",
-  };
-  updateDb((state) => {
-    state.applications.unshift(newApp);
-  });
-  return res.status(201).json(newApp);
-});
-
-apiRouter.patch("/applications/:id", (req: Request, res: Response) => {
-  const updated = updateDb((state) => {
-    const app = state.applications.find((a) => a.id === req.params.id);
-    if (app) {
-      if (req.body.stage) app.stage = req.body.stage;
-      return app;
-    }
-    return null;
-  });
-  if (!updated) return res.status(404).json({ detail: "Application not found" });
-  return res.json(updated);
-});
-
-// -----------------------------------------------------------------------------
-// 4. INTERNSHIPS (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/internships", (_req: Request, res: Response) => {
-  return res.json(db.internships);
-});
-
-apiRouter.post("/internships", (req: Request, res: Response) => {
-  const newInternship = {
-    id: req.body.id || `internship-${Date.now()}`,
-    title: req.body.title || "New Internship Opportunity",
-    org: req.body.org || "Industry Partner",
-    mode: req.body.mode || "Hybrid",
-    match: req.body.match || 75,
-    status: req.body.status || "Open",
-    close: req.body.close || "Closes 30 Sep",
-    interest: req.body.interest || "Applied systems",
-    required: Array.isArray(req.body.required) ? req.body.required : ["Python", "Communication"],
-    preferred: Array.isArray(req.body.preferred) ? req.body.preferred : ["SQL"],
-    summary: req.body.summary || "Internship requirements published.",
-  };
-  updateDb((state) => {
-    state.internships.unshift(newInternship);
-  });
-  return res.status(201).json(newInternship);
-});
-
-apiRouter.delete("/internships/:id", (req: Request, res: Response) => {
-  const deleted = updateDb((state) => {
-    const idx = state.internships.findIndex((i) => i.id === req.params.id);
-    if (idx !== -1) return state.internships.splice(idx, 1)[0];
-    return null;
-  });
-  if (!deleted) return res.status(404).json({ detail: "Internship not found" });
-  return res.json({ success: true, deleted });
-});
-
-// -----------------------------------------------------------------------------
-// 5. EXPERIENCES (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/experiences", (_req: Request, res: Response) => {
-  return res.json(db.experiences);
-});
-
-apiRouter.post("/experiences", (req: Request, res: Response) => {
-  const newExp = {
-    id: req.body.id || `exp-${Date.now()}`,
-    type: req.body.type || "Industry project",
-    title: req.body.title || "New Experience Project",
-    org: req.body.org || "Partner Organisation",
-    mode: req.body.mode || "Remote",
-    match: req.body.match || 75,
-    duration: req.body.duration || "8 weeks",
-    required: Array.isArray(req.body.required) ? req.body.required : ["Research", "Documentation"],
-    summary: req.body.summary || "Structured industry experience brief.",
-  };
-  updateDb((state) => {
-    state.experiences.unshift(newExp);
-  });
-  return res.status(201).json(newExp);
-});
-
-// -----------------------------------------------------------------------------
-// 6. CANDIDATES & SHORTLISTS (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/candidates", (_req: Request, res: Response) => {
-  return res.json(db.candidates);
-});
-
-apiRouter.post("/candidates/:id/shortlist", (req: Request, res: Response) => {
-  const candidate = updateDb((state) => {
-    const c = state.candidates.find((item) => item.id === req.params.id);
-    if (c) {
-      c.shortlisted = req.body.shortlisted !== undefined ? req.body.shortlisted : !c.shortlisted;
-      return c;
-    }
-    return null;
-  });
-  if (!candidate) return res.status(404).json({ detail: "Candidate not found" });
-  return res.json({ success: true, candidate });
-});
-
-apiRouter.post("/candidates/:id/scorecard", (req: Request, res: Response) => {
-  const candidate = updateDb((state) => {
-    const c = state.candidates.find((item) => item.id === req.params.id);
-    if (c) {
-      c.score = req.body.score || c.score;
-      c.stage = req.body.stage || "Interviewed";
-      return c;
-    }
-    return null;
-  });
-  if (!candidate) return res.status(404).json({ detail: "Candidate not found" });
-  return res.json({ success: true, candidate, scorecard: req.body });
-});
-
-// -----------------------------------------------------------------------------
-// 7. COMPANY SKILL REQUIREMENTS (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/requirements", (_req: Request, res: Response) => {
-  return res.json(db.companyRequirements);
-});
-
-apiRouter.put("/requirements", (req: Request, res: Response) => {
-  const { companyIndex = 0, roleIndex = 0, requirement } = req.body;
-  updateDb((state) => {
-    if (state.companyRequirements[companyIndex]?.roles[roleIndex]) {
-      if (requirement && requirement.skill) {
-        state.companyRequirements[companyIndex].roles[roleIndex].requirements.push(requirement);
-      }
-    }
-  });
-  return res.json(db.companyRequirements);
-});
-
-// -----------------------------------------------------------------------------
-// 8. PROFILE, SKILLS & DOCUMENTS (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/profile", (_req: Request, res: Response) => {
-  return res.json(db.profile);
-});
-
-apiRouter.put("/profile", (req: Request, res: Response) => {
-  const updated = updateDb((state) => {
-    state.profile = { ...state.profile, ...req.body };
-    return state.profile;
-  });
-  return res.json(updated);
-});
-
-apiRouter.post("/profile/skills", (req: Request, res: Response) => {
-  const { skill } = req.body;
-  if (!skill || typeof skill !== "string") return res.status(400).json({ detail: "Skill name is required" });
-  updateDb((state) => {
-    if (!state.profile.declaredSkills.includes(skill.trim())) {
-      state.profile.declaredSkills.push(skill.trim());
-    }
-  });
-  return res.json(db.profile.declaredSkills);
-});
-
-apiRouter.delete("/profile/skills/:skill", (req: Request, res: Response) => {
-  const skillToDelete = decodeURIComponent(req.params.skill);
-  updateDb((state) => {
-    state.profile.declaredSkills = state.profile.declaredSkills.filter(
-      (s) => s.toLowerCase() !== skillToDelete.toLowerCase()
-    );
-  });
-  return res.json(db.profile.declaredSkills);
-});
-
-apiRouter.post("/profile/documents", (req: Request, res: Response) => {
-  const newDoc = {
-    id: `doc-${Date.now()}`,
-    title: req.body.title || "Attached Document",
-    verified: false,
-  };
-  updateDb((state) => {
-    state.profile.documents.push(newDoc);
-  });
-  return res.status(201).json(newDoc);
-});
-
-apiRouter.delete("/profile/documents/:id", (req: Request, res: Response) => {
-  updateDb((state) => {
-    state.profile.documents = state.profile.documents.filter((d) => d.id !== req.params.id);
-  });
-  return res.json({ success: true });
-});
-
-// -----------------------------------------------------------------------------
-// 9. CURRICULUM NOTES & COLLABORATION INITIATIVES (CRUD)
-// -----------------------------------------------------------------------------
-apiRouter.get("/curriculum/notes", (_req: Request, res: Response) => {
-  return res.json(db.curriculumNotes);
-});
-
-apiRouter.post("/curriculum/notes", (req: Request, res: Response) => {
-  const note = {
-    id: `curr-${Date.now()}`,
-    program: req.body.program || "Computer Science",
-    note: req.body.note || "Curriculum review note recorded.",
-    createdBy: req.body.createdBy || "Academic Reviewer",
-    createdAt: "Just now",
-  };
-  updateDb((state) => {
-    state.curriculumNotes.unshift(note);
-  });
-  return res.status(201).json(note);
-});
-
-apiRouter.get("/initiatives", (_req: Request, res: Response) => {
-  return res.json(db.initiatives);
-});
-
-apiRouter.post("/initiatives", (req: Request, res: Response) => {
-  const initiative = {
-    id: `init-${Date.now()}`,
-    kind: req.body.kind || "workshop",
-    title: req.body.title || "New Collaboration Initiative",
-    org: req.body.org || "Northstar Systems",
-    speaker: req.body.speaker || "Industry Lead",
-    date: req.body.date || "Upcoming",
-    status: "Published",
-    participants: 1,
-  };
-  updateDb((state) => {
-    state.initiatives.unshift(initiative);
-  });
-  return res.status(201).json(initiative);
-});
+apiRouter.get("/requirements", requireAuth, (_req, res) => res.json(db.companyRequirements));
+apiRouter.put("/requirements", requireAuth, requireRoles("RECRUITER", "ADMIN"), (req, res) => { const input = parse(z.object({ companyIndex: z.number().int().min(0), roleIndex: z.number().int().min(0), requirement: z.object({ skill: text(1, 80), level: text(1, 50), importance: z.enum(["Required", "Preferred"]) }) }), req.body, res); if (!input) return; const role = db.companyRequirements[input.companyIndex]?.roles[input.roleIndex]; if (!role) return res.status(404).json({ detail: "Company role not found." }); updateDb(() => { role.requirements.push(input.requirement); role.updated = now(); }); return res.json(db.companyRequirements); });
+apiRouter.get("/curriculum/notes", requireAuth, requireRoles("INSTITUTION", "ACADEMICIAN", "ADMIN"), (_req, res) => res.json(db.curriculumNotes));
+apiRouter.post("/curriculum/notes", requireAuth, requireRoles("INSTITUTION", "ACADEMICIAN", "ADMIN"), (req: AuthedRequest, res) => { const input = parse(z.object({ program: text(2, 160), note: text(5, 2_000) }), req.body, res); if (!input) return; const note = { id: newId("curr"), ...input, createdBy: req.auth!.user.displayName, createdAt: now() }; updateDb((state) => { state.curriculumNotes.unshift(note); }); return res.status(201).json(note); });
+apiRouter.get("/initiatives", requireAuth, (_req, res) => res.json(db.initiatives));
+apiRouter.post("/initiatives", requireAuth, requireRoles("RECRUITER", "ACADEMICIAN", "INSTITUTION", "ADMIN"), (req, res) => { const input = parse(z.object({ kind: text(2, 80), title: text(2, 160), org: text(2, 160) }), req.body, res); if (!input) return; const initiative = { id: newId("init"), ...input, status: "Published", participants: 0 }; updateDb((state) => { state.initiatives.unshift(initiative); }); return res.status(201).json(initiative); });

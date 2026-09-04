@@ -29,38 +29,47 @@
 > 
 > Explore the live application with any of the pre-configured role workspaces below:
 
-### 🔑 Demo Accounts for Instant Review
+### 🔐 Account access
 
-| Role Workspace | Email | Password | Primary Workflow |
+| Role Workspace | Access | Primary Workflow |
 | :--- | :--- | :--- | :--- |
-| 🎓 **Student** | `anaya.sharma@example.edu` | `password12345` | Skill map, Quiz assessment, Job/Internship apply, 10-digit mobile profile & documents |
-| 🏢 **Recruiter** | `recruitment@quantum-systems.io` | `password12345` | Job/Internship publisher, Candidate scorecards, Skill requirement editor |
-| 🏛️ **Institution** | `dean.placements@apex-tech.edu` | `password12345` | Readiness baseline, Curriculum alignment review notes, Cohort analytics |
-| 🧑‍🏫 **Academician** | `prof.mehta@apex-tech.edu` | `password12345` | Faculty immersion, Industrial training & FDP enrollment, Mentorship circles |
+| 🎓 **Student** | Register from the sign-in page | Skill map, quiz assessment, opportunities, profile & documents |
+| 🏢 **Recruiter** | Invited by an administrator | Opportunities, candidates, scorecards, requirements |
+| 🏛️ **Institution** | Invited by an administrator | Readiness, curriculum alignment, analytics |
+| 🧑‍🏫 **Academician** | Invited by an administrator | Training, research, mentorship and collaboration |
 
 ---
 
 ## 📑 Table of Contents
-- [Executive Overview](#-executive-overview)
-- [Key Features by Role](#-key-features-by-role)
-  - [1. Student Workspace](#1-student-workspace-)
-  - [2. Industry & Recruiter Workspace](#2-industry--recruiter-workspace-)
-  - [3. Institution & Placement Cell Workspace](#3-institution--placement-cell-workspace-)
-  - [4. Academician & Faculty Workspace](#4-academician--faculty-workspace-)
-  - [5. Policy & Governance Analytics](#5-policy--governance-analytics-)
-- [System Architecture](#-system-architecture)
-- [REST API Specification](#-rest-api-specification)
-- [Project Directory Structure](#-project-directory-structure)
-- [Quick Start Guide](#-quick-start-guide)
-  - [Prerequisites](#prerequisites)
-  - [Installation & Local Execution](#installation--local-execution)
-  - [Building for Production](#building-for-production)
-  - [Deploying to Render](#-deploying-to-render)
-  - [Java Backend & Docker Deployment](#java-backend--docker-deployment)
-- [Data Models & Persistence](#-data-models--persistence)
-- [Security, Privacy & Input Validation](#-security-privacy--input-validation)
-- [Quality Assurance & Verification](#-quality-assurance--verification)
-- [License](#-license)
+- [SIH Connect — Academia-Industry Skill \& Placement Portal](#sih-connect--academia-industry-skill--placement-portal)
+    - [🔑 Demo Accounts for Instant Review](#-demo-accounts-for-instant-review)
+  - [📑 Table of Contents](#-table-of-contents)
+  - [🌟 Executive Overview](#-executive-overview)
+  - [🎯 Key Features by Role](#-key-features-by-role)
+    - [1. Student Workspace 🎓](#1-student-workspace-)
+    - [2. Industry \& Recruiter Workspace 🏢](#2-industry--recruiter-workspace-)
+    - [3. Institution \& Placement Cell Workspace 🏛️](#3-institution--placement-cell-workspace-️)
+    - [4. Academician \& Faculty Workspace 🧑‍🏫](#4-academician--faculty-workspace-)
+    - [5. Policy \& Governance Analytics 📊](#5-policy--governance-analytics-)
+  - [🏗️ System Architecture](#️-system-architecture)
+  - [📡 REST API Specification](#-rest-api-specification)
+    - [🔐 Authentication \& Session](#-authentication--session)
+    - [💼 Opportunities \& Jobs (CRUD)](#-opportunities--jobs-crud)
+    - [📝 Applications \& Tracking](#-applications--tracking)
+    - [👥 Candidates \& Shortlisting](#-candidates--shortlisting)
+    - [👤 Profile, Skills \& Documents (CRUD)](#-profile-skills--documents-crud)
+    - [📚 Curriculum \& Collaboration](#-curriculum--collaboration)
+  - [📂 Project Directory Structure](#-project-directory-structure)
+  - [⚡ Quick Start Guide](#-quick-start-guide)
+    - [Prerequisites](#prerequisites)
+    - [Installation \& Local Execution](#installation--local-execution)
+    - [Building for Production](#building-for-production)
+    - [🚀 Deploying to Render](#-deploying-to-render)
+    - [Java Backend \& Docker Deployment](#java-backend--docker-deployment)
+  - [💾 Data Models \& Persistence](#-data-models--persistence)
+  - [🔒 Security, Privacy \& Input Validation](#-security-privacy--input-validation)
+  - [🧪 Quality Assurance \& Verification](#-quality-assurance--verification)
+  - [📄 License](#-license)
 
 ---
 
@@ -80,13 +89,13 @@ The platform provides:
 ## 🎯 Key Features by Role
 
 ### 1. Student Workspace 🎓
-- **Placement & Opportunity Feed (`/jobs`)**: Browse verified opportunities with real-time skill-fit scores and direct application submissions.
-- **Knowledge & Readiness Assessments (`/assessment`)**: Take timed, categorized quizzes that produce verifiable technical and soft-skill signals.
+- **Placement & Opportunity Feed (`/jobs`)**: Browse authenticated opportunity records with skill-fit scores and direct application submissions.
+- **Knowledge & Readiness Assessments (`/assessment`)**: Take timed, categorized practice quizzes. Scores are browser-calculated and are not verified credentials.
 - **Dynamic Skill Mapping (`/skill-map/industries`, `/skill-map/roles`)**: Explore market alignment across multiple career tracks and pinpoint actionable skill gaps.
 - **Student Profile & Document Center (`/profile`)**:
   - **10-Digit Mobile Number Validation & Persistence**: Validated contact details ensuring compliance with national mobile formatting.
   - **Declared & Calculated Skills**: Manage declared skills with real-time sync to backend APIs.
-  - **Document Vault**: Upload, verify, and delete transcripts, certificates, and identity evidence.
+  - **Document Vault**: Register document metadata, track review status, and delete records. Binary storage and institutional verification require a configured storage/verification provider.
 - **Season Application Tracker (`/season`, `/applications/:id`)**: Step-by-step audit trail from submission through screening, interviews, and offers.
 - **Digital Portfolio (`/portfolio`)**: Public or recruiter-visible showcase of projects, verified credentials, and achievements.
 
@@ -124,7 +133,7 @@ The platform provides:
 
 ## 🏗️ System Architecture
 
-SIH Connect is engineered as a **hybrid multi-tier application** supporting both rapid development/prototyping and enterprise microservices deployment.
+SIH Connect is currently deployed as a single Node.js/Express service serving the React application and its API. The `backend/` directory is a future Java design scaffold and is not part of the active Render deployment.
 
 ```mermaid
 graph TD
@@ -165,7 +174,7 @@ graph TD
 
 ## 📡 REST API Specification
 
-All primary endpoints are exposed under `/api/v1` and are active in both the embedded Node backend and enterprise Spring service.
+The active endpoints are exposed under `/api/v1` by the Node backend. Non-authenticated business requests are rejected, and role/ownership checks are applied by the API.
 
 ### 🔐 Authentication & Session
 | Method | Endpoint | Description | Access |
@@ -205,7 +214,7 @@ All primary endpoints are exposed under `/api/v1` and are active in both the emb
 | `PUT` | `/api/v1/profile` | Update contact (phone, email) or details | `{ phone, email, declaredSkills }` |
 | `POST` | `/api/v1/profile/skills` | Add a new declared skill | `{ skill: string }` |
 | `DELETE`| `/api/v1/profile/skills/:skill`| Delete a declared skill | — |
-| `POST` | `/api/v1/profile/documents` | Register/upload verified document | `{ title: string }` |
+| `POST` | `/api/v1/profile/documents` | Register document metadata for review | `{ title: string }` |
 | `DELETE`| `/api/v1/profile/documents/:id` | Remove document record | — |
 
 ### 📚 Curriculum & Collaboration
@@ -316,9 +325,9 @@ You can deploy SIH Connect to [Render](https://render.com) with 1-click using th
      - `NODE_ENV`: `production`
      - `PORT`: `10000` (Render default)
 
-### Java Backend & Docker Deployment
+### Java Backend scaffold
 
-To launch the enterprise Spring Boot backend with PostgreSQL via Docker:
+The Java/PostgreSQL files are not currently buildable or deployed. Do not use them as a production deployment path until the service source, migrations, and reverse-proxy configuration are added.
 ```bash
 cd backend
 docker compose up --build -d

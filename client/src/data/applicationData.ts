@@ -1,5 +1,5 @@
 // Scalable application repository, document management, withdrawal lifecycle, and file downloads.
-import { saveCandidate } from "./portalData";
+import { readUserStorage, writeUserStorage } from "@/lib/userStorage";
 
 export interface AttachedFile {
   id?: string;
@@ -119,14 +119,14 @@ const STORAGE_KEY = "sih-connect-student-applications";
 
 export function getStudentApplications(): StudentApplication[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = readUserStorage(STORAGE_KEY);
     if (!raw) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_APPLICATIONS));
+      writeUserStorage(STORAGE_KEY, JSON.stringify(DEFAULT_APPLICATIONS));
       return DEFAULT_APPLICATIONS;
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_APPLICATIONS));
+    writeUserStorage(STORAGE_KEY, JSON.stringify(DEFAULT_APPLICATIONS));
     return DEFAULT_APPLICATIONS;
   } catch {
     return DEFAULT_APPLICATIONS;
@@ -190,21 +190,7 @@ export function createStudentApplication(data: {
   }
 
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    saveCandidate({
-      id: "anaya-01",
-      name: "Anaya Sharma",
-      email: "anaya.sharma@example.edu",
-      program: "Computer Science · Batch 2028",
-      score: data.match,
-      eligibility: data.match >= 70 ? "Eligible" : "Needs review",
-      stage: "Screening",
-      skills: ["Python", "SQL", "Communication", "Data Analysis"],
-      opportunityTitle: data.jobTitle,
-      appliedDate: nowFormatted,
-      avatar: "AS",
-      shortlisted: false,
-    });
+    writeUserStorage(STORAGE_KEY, JSON.stringify(updated));
   } catch {}
 
   return newApp;
@@ -241,12 +227,13 @@ export function withdrawStudentApplication(id: string): boolean {
 
   apps[index] = updatedApp;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
+    writeUserStorage(STORAGE_KEY, JSON.stringify(apps));
   } catch {}
   return true;
 }
 
-// Download helper: downloads attached file bytes or creates a generated plain-text document blob if dataUrl is empty
+// Download helper: downloads attached file bytes when they exist. Metadata-only records are
+// exported as a clearly labelled receipt; they are not presented as the original document.
 export function downloadAttachedFile(file: AttachedFile) {
   try {
     if (file.dataUrl && file.dataUrl.startsWith("data:")) {
@@ -259,8 +246,7 @@ export function downloadAttachedFile(file: AttachedFile) {
       return;
     }
 
-    // Generate downloadable placeholder blob
-    const content = `SIH CONNECT VERIFIED DOCUMENT RECORD\n===================================\nDocument Name: ${file.name}\nSize: ${file.size}\nType: ${file.type}\nTimestamp: ${file.uploadedAt}\nIntegrity Hash: SHA-256 Verified\n\n[This verified document was registered and uploaded through SIH Connect placement portal.]`;
+    const content = `SIH CONNECT DOCUMENT RECEIPT\n============================\nDocument name: ${file.name}\nSize: ${file.size}\nType: ${file.type}\nRegistered at: ${file.uploadedAt}\nVerification status: Pending review\n\nThe original file bytes are not available in this browser session. This receipt is metadata only and is not the document itself.`;
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

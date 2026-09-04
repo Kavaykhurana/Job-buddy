@@ -1,4 +1,5 @@
 // Scalable data models and persistent store for Student Offers and Placement Records
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 export interface JobOffer {
   id: string;
   applicationId?: string;

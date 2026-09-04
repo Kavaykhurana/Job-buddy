@@ -1,4 +1,5 @@
 // Scalable assessment definitions, question pools, and matching engine.
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 
 export type SkillCategory = "Technical" | "Soft skills" | "Other skills";
 
@@ -937,4 +938,3 @@ export function loadAssessmentResult(assessmentId?: string): AssessmentSnapshot 
     return null;
   }
 }
-

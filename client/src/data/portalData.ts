@@ -1,4 +1,5 @@
 // Field Notes Institutional Workspace: scoped client-side data for static UI demonstration only.
+import { userLocalStorage as localStorage } from "@/lib/userStorage";
 export type UserRole = "student" | "recruiter" | "institution" | "academician";
 
 export const roleHome: Record<UserRole, string> = {

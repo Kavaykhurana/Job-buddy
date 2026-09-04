@@ -5,8 +5,8 @@ import * as authApi from "@/lib/authApi";
 
 type AuthState = { user: authApi.AuthenticatedUser | null; loading: boolean };
 type AuthContextValue = AuthState & {
-  login: (email: string, password?: string, rolePreference?: string) => Promise<authApi.AuthenticatedUser>;
-  register: (displayName: string, email: string, password?: string, rolePreference?: string) => Promise<authApi.AuthenticatedUser>;
+  login: (email: string, password: string) => Promise<authApi.AuthenticatedUser>;
+  register: (displayName: string, email: string, password: string) => Promise<authApi.AuthenticatedUser>;
   signOut: () => Promise<void>;
 };
 
@@ -24,8 +24,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AuthContextValue>(() => ({
     ...state,
-    login: async (email, password, rolePreference) => { const session = await authApi.login(email, password, rolePreference); setState({ user: session.user, loading: false }); return session.user; },
-    register: async (displayName, email, password, rolePreference) => { const session = await authApi.register(displayName, email, password, rolePreference); setState({ user: session.user, loading: false }); return session.user; },
+    login: async (email, password) => { const session = await authApi.login(email, password); setState({ user: session.user, loading: false }); return session.user; },
+    register: async (displayName, email, password) => { const session = await authApi.register(displayName, email, password); setState({ user: session.user, loading: false }); return session.user; },
     signOut: async () => { await authApi.logout(); setState({ user: null, loading: false }); },
   }), [state]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
