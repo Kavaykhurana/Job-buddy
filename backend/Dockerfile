@@ -7,7 +7,7 @@ RUN pnpm install --frozen-lockfile
 COPY client ./client
 COPY attached_assets ./attached_assets
 COPY shared ./shared
-COPY vite.config.ts tsconfig.json postcss.config.js ./
+COPY vite.config.ts tsconfig.json ./
 RUN pnpm exec vite build
 
 FROM maven:3.9-eclipse-temurin-21 AS build
