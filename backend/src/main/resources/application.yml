@@ -16,6 +16,13 @@ spring:
       - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
       - org.springframework.boot.flyway.autoconfigure.FlywayAutoConfiguration
       - org.springframework.boot.data.redis.autoconfigure.RedisAutoConfiguration
+  data:
+    jpa:
+      repositories:
+        enabled: false
+    redis:
+      repositories:
+        enabled: false
 
 management:
   endpoints:
