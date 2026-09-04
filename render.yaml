@@ -1,16 +1,17 @@
 services:
   - type: web
     name: sih-connect-portal
-    runtime: node
+    runtime: docker
     plan: free
     region: oregon
-    buildCommand: corepack enable && pnpm install && pnpm build
-    startCommand: node dist/index.js
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: PORT
         value: 10000
+      - key: SPRING_PROFILES_ACTIVE
+        value: default
       # Render prompts for these values during Blueprint setup; never commit secrets.
       - key: APP_JWT_SECRET
         sync: false
