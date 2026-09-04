@@ -9,6 +9,8 @@ import in.sihconnect.repository.UserRepository;
 import in.sihconnect.repository.JobRepository;
 import in.sihconnect.repository.ProfileRepository;
 import in.sihconnect.repository.ApplicationRepository;
+import in.sihconnect.repository.DocumentRepository;
+import in.sihconnect.domain.DocumentEntity;
 import in.sihconnect.domain.ProfileEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ public class PortalController {
     @Autowired(required = false) private JobRepository jobRepository;
     @Autowired(required = false) private ProfileRepository profileRepository;
     @Autowired(required = false) private ApplicationRepository applicationRepository;
+    @Autowired(required = false) private DocumentRepository documentRepository;
 
     public PortalController(PasswordEncoder encoder) {
         this.encoder = encoder;
@@ -101,9 +104,9 @@ public class PortalController {
     @DeleteMapping("/profile/skills/{skill}")
     public ResponseEntity<?> removeSkill(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String skill) { User user = authenticated(auth); if (user == null) return unauthorized(); @SuppressWarnings("unchecked") List<String> skills = (List<String>) profiles.get(user.id()).get("declaredSkills"); skills.removeIf(item -> item.equalsIgnoreCase(skill)); return ResponseEntity.noContent().build(); }
     @PostMapping("/profile/documents")
-    public ResponseEntity<?> addDocument(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); String title = text(body, "title"); if (title == null || title.isBlank()) return ResponseEntity.badRequest().body(Map.of("detail", "title is required.")); Map<String, Object> document = new LinkedHashMap<>(body); document.put("id", UUID.randomUUID().toString()); document.put("verified", false); document.put("uploadedAt", Instant.now().toString()); @SuppressWarnings("unchecked") List<Map<String, Object>> documents = (List<Map<String, Object>>) profiles.get(user.id()).get("documents"); documents.add(document); return ResponseEntity.status(HttpStatus.CREATED).body(document); }
+    public ResponseEntity<?> addDocument(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); String title = text(body, "title"); if (title == null || title.isBlank()) return ResponseEntity.badRequest().body(Map.of("detail", "title is required.")); if (documentRepository != null) { DocumentEntity saved = documentRepository.save(new DocumentEntity(UUID.randomUUID(), UUID.fromString(user.id()), title)); return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("id", saved.getId(), "title", saved.getTitle(), "verified", saved.isVerified(), "uploadedAt", saved.getUploadedAt())); } Map<String, Object> document = new LinkedHashMap<>(body); document.put("id", UUID.randomUUID().toString()); document.put("verified", false); document.put("uploadedAt", Instant.now().toString()); @SuppressWarnings("unchecked") List<Map<String, Object>> documents = (List<Map<String, Object>>) profiles.get(user.id()).get("documents"); documents.add(document); return ResponseEntity.status(HttpStatus.CREATED).body(document); }
     @DeleteMapping("/profile/documents/{id}")
-    public ResponseEntity<?> removeDocument(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id) { User user = authenticated(auth); if (user == null) return unauthorized(); @SuppressWarnings("unchecked") List<Map<String, Object>> documents = (List<Map<String, Object>>) profiles.get(user.id()).get("documents"); documents.removeIf(item -> id.equals(item.get("id"))); return ResponseEntity.noContent().build(); }
+    public ResponseEntity<?> removeDocument(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id) { User user = authenticated(auth); if (user == null) return unauthorized(); if (documentRepository != null) { documentRepository.findById(UUID.fromString(id)).filter(item -> item.getUserId().equals(UUID.fromString(user.id()))).ifPresent(documentRepository::delete); return ResponseEntity.noContent().build(); } @SuppressWarnings("unchecked") List<Map<String, Object>> documents = (List<Map<String, Object>>) profiles.get(user.id()).get("documents"); documents.removeIf(item -> id.equals(item.get("id"))); return ResponseEntity.noContent().build(); }
 
     @PostMapping("/candidates/{id}/shortlist")
     public ResponseEntity<?> shortlist(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id, @RequestBody Map<String, Object> body) { if (authenticated(auth) == null) return unauthorized(); return mutateCandidate(id, "shortlisted", body.get("shortlisted")); }
