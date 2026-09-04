@@ -9,7 +9,7 @@
     "start": "NODE_ENV=production node dist/index.js",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
-    "test": "vitest run --config vitest.config.ts",
+    "test": "vitest run --config vitest.config.ts --no-file-parallelism --maxWorkers=1 --minWorkers=1",
     "format": "prettier --write ."
   },
   "dependencies": {
