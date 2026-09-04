@@ -3,6 +3,11 @@ package in.sihconnect.api;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import in.sihconnect.domain.UserEntity;
+import in.sihconnect.domain.JobEntity;
+import in.sihconnect.repository.UserRepository;
+import in.sihconnect.repository.JobRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +27,8 @@ public class PortalController {
     private final List<Map<String, Object>> candidates = Collections.synchronizedList(new ArrayList<>());
     private final List<Map<String, Object>> initiatives = Collections.synchronizedList(new ArrayList<>());
     private final List<Map<String, Object>> curriculumNotes = Collections.synchronizedList(new ArrayList<>());
+    @Autowired(required = false) private UserRepository userRepository;
+    @Autowired(required = false) private JobRepository jobRepository;
 
     public PortalController(PasswordEncoder encoder) {
         this.encoder = encoder;
@@ -36,8 +43,10 @@ public class PortalController {
     public ResponseEntity<?> register(@RequestBody Credentials input) {
         if (input.email() == null || input.password() == null || input.password().length() < 12 || input.displayName() == null) return ResponseEntity.badRequest().body(Map.of("detail", "Display name, email, and a 12-character password are required."));
         String email = input.email().trim().toLowerCase(Locale.ROOT);
+        if (userRepository != null && userRepository.findByEmailIgnoreCase(email).isPresent()) return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("detail", "An account with this email already exists."));
         if (users.containsKey(email)) return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("detail", "An account with this email already exists."));
         User user = new User(UUID.randomUUID().toString(), email, input.displayName().trim(), encoder.encode(input.password()), List.of("STUDENT"));
+        if (userRepository != null) userRepository.save(new UserEntity(UUID.fromString(user.id()), user.email(), user.displayName(), user.passwordHash(), String.join(",", user.roles())));
         users.put(email, user); profiles.put(user.id(), defaultProfile(user));
         return ResponseEntity.status(HttpStatus.CREATED).body(issue(user));
     }
@@ -45,6 +54,7 @@ public class PortalController {
     @PostMapping("/auth/login")
     public ResponseEntity<?> login(@RequestBody Credentials input) {
         User user = input.email() == null ? null : users.get(input.email().trim().toLowerCase(Locale.ROOT));
+        if (user == null && userRepository != null && input.email() != null) user = userRepository.findByEmailIgnoreCase(input.email().trim()).map(item -> new User(item.getId().toString(), item.getEmail(), item.getDisplayName(), item.getPasswordHash(), List.of(item.getRoles().split(",")))).orElse(null);
         if (user == null || input.password() == null || !encoder.matches(input.password(), user.passwordHash())) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("detail", "Invalid email or password."));
         return ResponseEntity.ok(issue(user));
     }
