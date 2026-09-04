@@ -13,4 +13,7 @@ public class ProfileEntity {
     protected ProfileEntity() {}
     public ProfileEntity(UUID userId, String program) { this.userId = userId; this.program = program; }
     public UUID getUserId() { return userId; } public String getPhone() { return phone; } public String getProgram() { return program; } public String getDeclaredSkills() { return declaredSkills; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setProgram(String program) { this.program = program; }
+    public void setDeclaredSkills(String declaredSkills) { this.declaredSkills = declaredSkills; }
 }

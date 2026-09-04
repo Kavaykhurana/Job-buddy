@@ -7,6 +7,9 @@ import in.sihconnect.domain.UserEntity;
 import in.sihconnect.domain.JobEntity;
 import in.sihconnect.repository.UserRepository;
 import in.sihconnect.repository.JobRepository;
+import in.sihconnect.repository.ProfileRepository;
+import in.sihconnect.repository.ApplicationRepository;
+import in.sihconnect.domain.ProfileEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,6 +32,8 @@ public class PortalController {
     private final List<Map<String, Object>> curriculumNotes = Collections.synchronizedList(new ArrayList<>());
     @Autowired(required = false) private UserRepository userRepository;
     @Autowired(required = false) private JobRepository jobRepository;
+    @Autowired(required = false) private ProfileRepository profileRepository;
+    @Autowired(required = false) private ApplicationRepository applicationRepository;
 
     public PortalController(PasswordEncoder encoder) {
         this.encoder = encoder;
@@ -87,7 +92,7 @@ public class PortalController {
     }
 
     @GetMapping("/profile")
-    public ResponseEntity<?> profile(@RequestHeader(value = "Authorization", required = false) String auth) { User user = authenticated(auth); return user == null ? unauthorized() : ResponseEntity.ok(profiles.get(user.id())); }
+    public ResponseEntity<?> profile(@RequestHeader(value = "Authorization", required = false) String auth) { User user = authenticated(auth); if (user == null) return unauthorized(); if (profileRepository != null) return ResponseEntity.ok(profileRepository.findById(UUID.fromString(user.id())).orElseGet(() -> profileRepository.save(new ProfileEntity(UUID.fromString(user.id()), "Computer Science · Batch 2028")))); return ResponseEntity.ok(profiles.get(user.id())); }
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); Map<String, Object> profile = profiles.get(user.id()); body.forEach((key, value) -> { if (Set.of("displayName", "phone", "program", "declaredSkills").contains(key)) profile.put(key, value); }); return ResponseEntity.ok(profile); }
@@ -107,7 +112,7 @@ public class PortalController {
     private ResponseEntity<?> mutateCandidate(String id, String key, Object value) { return ResponseEntity.ok(Map.of("id", id, key, value)); }
 
     @GetMapping("/applications")
-    public ResponseEntity<?> listApplications(@RequestHeader(value = "Authorization", required = false) String auth) { User user = authenticated(auth); if (user == null) return unauthorized(); return ResponseEntity.ok(applications.stream().filter(item -> user.id().equals(item.get("userId"))).toList()); }
+    public ResponseEntity<?> listApplications(@RequestHeader(value = "Authorization", required = false) String auth) { User user = authenticated(auth); if (user == null) return unauthorized(); if (applicationRepository != null) return ResponseEntity.ok(applicationRepository.findByUserId(UUID.fromString(user.id()))); return ResponseEntity.ok(applications.stream().filter(item -> user.id().equals(item.get("userId"))).toList()); }
 
     @PostMapping("/applications")
     public ResponseEntity<?> createApplication(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); String jobId = text(body, "jobId"); if (jobId == null) return ResponseEntity.badRequest().body(Map.of("detail", "jobId is required.")); Map<String, Object> application = new LinkedHashMap<>(body); application.put("id", UUID.randomUUID().toString()); application.put("userId", user.id()); application.put("studentName", user.displayName()); application.put("studentEmail", user.email()); application.put("stage", "Submitted"); application.put("appliedAt", Instant.now().toString()); applications.add(application); return ResponseEntity.status(HttpStatus.CREATED).body(application); }
