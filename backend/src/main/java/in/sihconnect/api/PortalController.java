@@ -16,6 +16,12 @@ public class PortalController {
     private final Map<String, String> sessions = new ConcurrentHashMap<>();
     private final Map<String, Map<String, Object>> profiles = new ConcurrentHashMap<>();
     private final List<Map<String, Object>> jobs = Collections.synchronizedList(new ArrayList<>());
+    private final List<Map<String, Object>> applications = Collections.synchronizedList(new ArrayList<>());
+    private final List<Map<String, Object>> internships = Collections.synchronizedList(new ArrayList<>());
+    private final List<Map<String, Object>> experiences = Collections.synchronizedList(new ArrayList<>());
+    private final List<Map<String, Object>> candidates = Collections.synchronizedList(new ArrayList<>());
+    private final List<Map<String, Object>> initiatives = Collections.synchronizedList(new ArrayList<>());
+    private final List<Map<String, Object>> curriculumNotes = Collections.synchronizedList(new ArrayList<>());
 
     public PortalController(PasswordEncoder encoder) {
         this.encoder = encoder;
@@ -57,6 +63,32 @@ public class PortalController {
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); Map<String, Object> profile = profiles.get(user.id()); body.forEach((key, value) -> { if (Set.of("displayName", "phone", "program", "declaredSkills").contains(key)) profile.put(key, value); }); return ResponseEntity.ok(profile); }
+
+    @GetMapping("/applications")
+    public ResponseEntity<?> listApplications(@RequestHeader(value = "Authorization", required = false) String auth) { User user = authenticated(auth); if (user == null) return unauthorized(); return ResponseEntity.ok(applications.stream().filter(item -> user.id().equals(item.get("userId"))).toList()); }
+
+    @PostMapping("/applications")
+    public ResponseEntity<?> createApplication(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); String jobId = text(body, "jobId"); if (jobId == null) return ResponseEntity.badRequest().body(Map.of("detail", "jobId is required.")); Map<String, Object> application = new LinkedHashMap<>(body); application.put("id", UUID.randomUUID().toString()); application.put("userId", user.id()); application.put("studentName", user.displayName()); application.put("studentEmail", user.email()); application.put("stage", "Submitted"); application.put("appliedAt", Instant.now().toString()); applications.add(application); return ResponseEntity.status(HttpStatus.CREATED).body(application); }
+
+    @GetMapping("/internships")
+    public ResponseEntity<?> listInternships(@RequestHeader(value = "Authorization", required = false) String auth) { return authenticated(auth) == null ? unauthorized() : ResponseEntity.ok(internships); }
+    @GetMapping("/experiences")
+    public ResponseEntity<?> listExperiences(@RequestHeader(value = "Authorization", required = false) String auth) { return authenticated(auth) == null ? unauthorized() : ResponseEntity.ok(experiences); }
+    @GetMapping("/candidates")
+    public ResponseEntity<?> listCandidates(@RequestHeader(value = "Authorization", required = false) String auth) { return authenticated(auth) == null ? unauthorized() : ResponseEntity.ok(candidates); }
+    @GetMapping("/requirements")
+    public ResponseEntity<?> listRequirements(@RequestHeader(value = "Authorization", required = false) String auth) { return authenticated(auth) == null ? unauthorized() : ResponseEntity.ok(List.of()); }
+    @GetMapping("/initiatives")
+    public ResponseEntity<?> listInitiatives(@RequestHeader(value = "Authorization", required = false) String auth) { return authenticated(auth) == null ? unauthorized() : ResponseEntity.ok(initiatives); }
+    @GetMapping("/curriculum/notes")
+    public ResponseEntity<?> listCurriculumNotes(@RequestHeader(value = "Authorization", required = false) String auth) { return authenticated(auth) == null ? unauthorized() : ResponseEntity.ok(curriculumNotes); }
+
+    @PostMapping("/initiatives")
+    public ResponseEntity<?> createInitiative(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); Map<String, Object> item = new LinkedHashMap<>(body); item.put("id", UUID.randomUUID().toString()); item.put("participants", 0); initiatives.add(item); return ResponseEntity.status(HttpStatus.CREATED).body(item); }
+    @PostMapping("/curriculum/notes")
+    public ResponseEntity<?> createCurriculumNote(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); Map<String, Object> item = new LinkedHashMap<>(body); item.put("id", UUID.randomUUID().toString()); item.put("createdBy", user.id()); item.put("createdAt", Instant.now().toString()); curriculumNotes.add(item); return ResponseEntity.status(HttpStatus.CREATED).body(item); }
+
+    private String text(Map<String, Object> body, String key) { Object value = body.get(key); return value == null ? null : value.toString().trim(); }
 
     private User authenticated(String auth) { return auth == null ? null : users.values().stream().filter(user -> user.id().equals(sessions.get(auth.replaceFirst("^Bearer ", "")))).findFirst().orElse(null); }
     private ResponseEntity<Map<String, String>> unauthorized() { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("detail", "Authentication required.")); }
