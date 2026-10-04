@@ -184,8 +184,8 @@ export const internshipOpportunities: InternshipOpportunity[] = [
   },
 ];
 
-const INTERNSHIP_APPS_KEY = "sih-connect-internship-applications";
-const INTERNSHIP_ENGAGEMENT_KEY = "sih-connect-internship-engagement";
+const INTERNSHIP_APPS_KEY = "job-buddy-internship-applications";
+const INTERNSHIP_ENGAGEMENT_KEY = "job-buddy-internship-engagement";
 
 /**
  * Calculates a dynamic, weighted profile skill fit percentage for an internship.

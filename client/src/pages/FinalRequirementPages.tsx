@@ -116,7 +116,7 @@ const academicianCollabInitiatives: Record<string, CollabInitiativeItem> = {
   },
 };
 
-const COLLAB_NOTES_PREFIX = "sih_acad_collab_notes_";
+const COLLAB_NOTES_PREFIX = "job_buddy_acad_collab_notes_";
 
 export function CompleteAcademicianCollaborationPage() {
   const [activeInitiative, setActiveInitiative] = useState<CollabInitiativeItem | null>(null);

@@ -1,4 +1,4 @@
-# SIH Connect — Final UI Compliance Review
+# Job Buddy — Final UI Compliance Review
 
 ## Review scope and result
 

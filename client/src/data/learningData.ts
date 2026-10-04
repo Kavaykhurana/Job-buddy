@@ -165,8 +165,8 @@ export const initialLearningPrograms: LearningProgram[] = [
   },
 ];
 
-const ENROLLMENTS_STORAGE_KEY = "sih-connect-learning-enrollments";
-const CERTIFICATES_STORAGE_KEY = "sih-connect-certifications";
+const ENROLLMENTS_STORAGE_KEY = "job-buddy-learning-enrollments";
+const CERTIFICATES_STORAGE_KEY = "job-buddy-certifications";
 
 export function getStoredEnrollments(): Record<string, CourseEnrollment> {
   try {

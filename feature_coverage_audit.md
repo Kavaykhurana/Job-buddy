@@ -1,4 +1,4 @@
-# SIH Connect Frontend — Strict Final-Scope Audit
+# Job Buddy Frontend — Strict Final-Scope Audit
 
 ## Audit result
 

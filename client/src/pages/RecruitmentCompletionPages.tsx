@@ -490,7 +490,7 @@ export function RecruiterInterviewScorecardPage() {
     try {
       const stage = recommendation === "Recommend offer" ? "Offer" : recommendation === "Do not progress" ? "Rejected" : "Interview";
       await api.candidates.saveScorecard("anaya-01", overall, stage);
-      localStorage.setItem("sih-connect-recruiter-scorecard", JSON.stringify({ categoryScores, overall, feedback, recommendation, savedAt: new Date().toISOString() }));
+      localStorage.setItem("job-buddy-recruiter-scorecard", JSON.stringify({ categoryScores, overall, feedback, recommendation, savedAt: new Date().toISOString() }));
       toast.success(`Assessment saved: ${overall}% overall · ${recommendation}.`);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The assessment could not be saved.");

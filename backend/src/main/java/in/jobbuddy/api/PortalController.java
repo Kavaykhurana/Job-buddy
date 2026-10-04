@@ -1,17 +1,17 @@
-package in.sihconnect.api;
+package in.jobbuddy.api;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import in.sihconnect.domain.UserEntity;
-import in.sihconnect.domain.JobEntity;
-import in.sihconnect.repository.UserRepository;
-import in.sihconnect.repository.JobRepository;
-import in.sihconnect.repository.ProfileRepository;
-import in.sihconnect.repository.ApplicationRepository;
-import in.sihconnect.repository.DocumentRepository;
-import in.sihconnect.domain.DocumentEntity;
-import in.sihconnect.domain.ProfileEntity;
+import in.jobbuddy.domain.UserEntity;
+import in.jobbuddy.domain.JobEntity;
+import in.jobbuddy.repository.UserRepository;
+import in.jobbuddy.repository.JobRepository;
+import in.jobbuddy.repository.ProfileRepository;
+import in.jobbuddy.repository.ApplicationRepository;
+import in.jobbuddy.repository.DocumentRepository;
+import in.jobbuddy.domain.DocumentEntity;
+import in.jobbuddy.domain.ProfileEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -81,10 +81,10 @@ public class PortalController {
     }
 
     @GetMapping("/jobs/{id}")
-    public ResponseEntity<?> getJob(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable UUID id) {
+    public ResponseEntity<?> getJob(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id) {
         if (authenticated(auth) == null) return unauthorized();
-        if (jobRepository != null) return jobRepository.findById(id).<ResponseEntity<?>>map(job -> ResponseEntity.ok(jobView(job))).orElseGet(() -> ResponseEntity.notFound().build());
-        return jobs.stream().filter(item -> id.toString().equals(item.get("id"))).findFirst().<ResponseEntity<?>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        if (jobRepository != null) return parseUuid(id).flatMap(jobRepository::findById).<ResponseEntity<?>>map(job -> ResponseEntity.ok(jobView(job))).orElseGet(() -> ResponseEntity.notFound().build());
+        return jobs.stream().filter(item -> id.equals(item.get("id"))).findFirst().<ResponseEntity<?>>map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     private Map<String, Object> jobView(JobEntity job) {
@@ -100,7 +100,7 @@ public class PortalController {
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); Map<String, Object> profile = profiles.get(user.id()); body.forEach((key, value) -> { if (Set.of("displayName", "phone", "program", "declaredSkills").contains(key)) profile.put(key, value); }); return ResponseEntity.ok(profile); }
     @PostMapping("/profile/skills")
-    public ResponseEntity<?> addSkill(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); String skill = text(body, "skill"); if (skill == null || skill.isBlank()) return ResponseEntity.badRequest().body(Map.of("detail", "skill is required.")); Map<String, Object> profile = profiles.get(user.id()); @SuppressWarnings("unchecked") List<String> skills = (List<String>) profile.get("declaredSkills"); if (!skills.contains(skill)) skills.add(skill); return ResponseEntity.ok(profile); }
+    public ResponseEntity<?> addSkill(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); String skill = text(body, "skill"); if (skill == null || skill.isBlank()) return ResponseEntity.badRequest().body(Map.of("detail", "skill is required.")); Map<String, Object> profile = profiles.get(user.id()); @SuppressWarnings("unchecked") List<String> skills = (List<String>) profile.get("declaredSkills"); if (skills.stream().noneMatch(item -> item.equalsIgnoreCase(skill))) skills.add(skill); return ResponseEntity.ok(skills); }
     @DeleteMapping("/profile/skills/{skill}")
     public ResponseEntity<?> removeSkill(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String skill) { User user = authenticated(auth); if (user == null) return unauthorized(); @SuppressWarnings("unchecked") List<String> skills = (List<String>) profiles.get(user.id()).get("declaredSkills"); skills.removeIf(item -> item.equalsIgnoreCase(skill)); return ResponseEntity.noContent().build(); }
     @PostMapping("/profile/documents")
@@ -109,7 +109,7 @@ public class PortalController {
     public ResponseEntity<?> removeDocument(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id) { User user = authenticated(auth); if (user == null) return unauthorized(); if (documentRepository != null) { documentRepository.findById(UUID.fromString(id)).filter(item -> item.getUserId().equals(UUID.fromString(user.id()))).ifPresent(documentRepository::delete); return ResponseEntity.noContent().build(); } @SuppressWarnings("unchecked") List<Map<String, Object>> documents = (List<Map<String, Object>>) profiles.get(user.id()).get("documents"); documents.removeIf(item -> id.equals(item.get("id"))); return ResponseEntity.noContent().build(); }
 
     @PostMapping("/candidates/{id}/shortlist")
-    public ResponseEntity<?> shortlist(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id, @RequestBody Map<String, Object> body) { if (authenticated(auth) == null) return unauthorized(); return mutateCandidate(id, "shortlisted", body.get("shortlisted")); }
+    public ResponseEntity<?> shortlist(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id, @RequestBody Map<String, Object> body) { if (authenticated(auth) == null) return unauthorized(); if (!(body.get("shortlisted") instanceof Boolean shortlisted)) return ResponseEntity.badRequest().body(Map.of("detail", "shortlisted must be true or false.")); return mutateCandidate(id, "shortlisted", shortlisted); }
     @PostMapping("/candidates/{id}/scorecard")
     public ResponseEntity<?> scorecard(@RequestHeader(value = "Authorization", required = false) String auth, @PathVariable String id, @RequestBody Map<String, Object> body) { if (authenticated(auth) == null) return unauthorized(); Map<String, Object> result = new LinkedHashMap<>(body); result.put("id", id); return ResponseEntity.ok(result); }
     private ResponseEntity<?> mutateCandidate(String id, String key, Object value) { return ResponseEntity.ok(Map.of("id", id, key, value)); }
@@ -138,13 +138,15 @@ public class PortalController {
     @PostMapping("/curriculum/notes")
     public ResponseEntity<?> createCurriculumNote(@RequestHeader(value = "Authorization", required = false) String auth, @RequestBody Map<String, Object> body) { User user = authenticated(auth); if (user == null) return unauthorized(); Map<String, Object> item = new LinkedHashMap<>(body); item.put("id", UUID.randomUUID().toString()); item.put("createdBy", user.id()); item.put("createdAt", Instant.now().toString()); curriculumNotes.add(item); return ResponseEntity.status(HttpStatus.CREATED).body(item); }
 
+    private Optional<UUID> parseUuid(String value) { try { return Optional.of(UUID.fromString(value)); } catch (IllegalArgumentException e) { return Optional.empty(); } }
+
     private String text(Map<String, Object> body, String key) { Object value = body.get(key); return value == null ? null : value.toString().trim(); }
 
     private User authenticated(String auth) { return auth == null ? null : users.values().stream().filter(user -> user.id().equals(sessions.get(auth.replaceFirst("^Bearer ", "")))).findFirst().orElse(null); }
     private ResponseEntity<Map<String, String>> unauthorized() { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("detail", "Authentication required.")); }
     private Map<String, Object> issue(User user) { String token = UUID.randomUUID().toString(); sessions.put(token, user.id()); Map<String, Object> result = new LinkedHashMap<>(publicUser(user)); result.put("accessToken", token); return result; }
     private Map<String, Object> publicUser(User user) { return Map.of("id", user.id(), "email", user.email(), "displayName", user.displayName(), "roles", user.roles()); }
-    private Map<String, Object> defaultProfile(User user) { return new LinkedHashMap<>(Map.of("displayName", user.displayName(), "email", user.email(), "program", "Computer Science · Batch 2028", "declaredSkills", List.of(), "documents", List.of())); }
+    private Map<String, Object> defaultProfile(User user) { return new LinkedHashMap<>(Map.of("displayName", user.displayName(), "email", user.email(), "program", "Computer Science · Batch 2028", "declaredSkills", new ArrayList<>(), "documents", new ArrayList<>())); }
 
     public record Credentials(String email, String password, String displayName) {}
     private record User(String id, String email, String displayName, String passwordHash, List<String> roles) {}

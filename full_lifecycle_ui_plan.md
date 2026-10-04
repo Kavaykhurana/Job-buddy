@@ -1,4 +1,4 @@
-# SIH Connect — Full Lifecycle UI Extension Plan
+# Job Buddy — Full Lifecycle UI Extension Plan
 
 ## Preservation contract
 

@@ -1,6 +1,6 @@
-package in.sihconnect.repository;
+package in.jobbuddy.repository;
 
-import in.sihconnect.domain.DocumentEntity;
+import in.jobbuddy.domain.DocumentEntity;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;

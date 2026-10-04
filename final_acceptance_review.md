@@ -1,4 +1,4 @@
-# SIH Connect — Final Acceptance Review
+# Job Buddy — Final Acceptance Review
 
 ## Decision
 
@@ -36,4 +36,4 @@ The current build should be described as a **fully scoped, presentation-ready fr
 
 ## Source
 
-This review is based on `/home/ubuntu/upload/pasted_content_4.txt` and the current SIH Connect prototype.
+This review is based on `/home/ubuntu/upload/pasted_content_4.txt` and the current Job Buddy prototype.

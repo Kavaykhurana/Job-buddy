@@ -1,4 +1,4 @@
-# SIH Connect — Answer-Driven Skill Assessment
+# Job Buddy — Answer-Driven Skill Assessment
 
 ## Quiz design
 

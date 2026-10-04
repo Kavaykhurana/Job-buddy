@@ -20,7 +20,7 @@ export interface ScheduleEvent {
   isAddedToMyCalendar?: boolean;
 }
 
-const SCHEDULE_STORAGE_KEY = "sih-connect-student-schedule-events";
+const SCHEDULE_STORAGE_KEY = "job-buddy-student-schedule-events";
 
 export const initialScheduleEvents: ScheduleEvent[] = [
   {
@@ -44,7 +44,7 @@ export const initialScheduleEvents: ScheduleEvent[] = [
     ],
     preparationTips:
       "Have your latest project repo link, profile declared skills, and resume ready for live feedback.",
-    meetingLink: "https://meet.google.com/sih-skill-clinic",
+    meetingLink: "https://meet.google.com/job-buddy-skill-clinic",
     status: "Scheduled",
     isAddedToMyCalendar: true,
   },
@@ -133,7 +133,7 @@ export const initialScheduleEvents: ScheduleEvent[] = [
     month: "SEP",
     time: "23:59",
     duration: "Deadline",
-    location: "SIH-Connect Portal Submission",
+    location: "Job-buddy Portal Submission",
     organizer: "University Central Placement Cell",
     description:
       "Final deadline for applying to Phase-1 enterprise placement drives and early-access internship opportunities across partner recruiters.",
@@ -280,7 +280,7 @@ export function scheduleInterviewForCandidate(params: {
       "Candidate questions and next steps",
     ],
     preparationTips: params.notes || "Ensure your resume and declared skill projects are accessible for live discussion.",
-    meetingLink: params.meetingLink || (mode === "Online" ? "https://meet.google.com/sih-interview-room" : undefined),
+    meetingLink: params.meetingLink || (mode === "Online" ? "https://meet.google.com/job-buddy-interview-room" : undefined),
     status: "Scheduled",
     isAddedToMyCalendar: true,
   };
@@ -313,13 +313,13 @@ export function scheduleInterviewForCandidate(params: {
 export function downloadCalendarEvent(event: ScheduleEvent): void {
   const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//SIH Connect//Student Schedule//EN
+PRODID:-//Job Buddy//Student Schedule//EN
 BEGIN:VEVENT
-UID:${event.id}@sih-connect.edu
+UID:${event.id}@job-buddy.edu
 SUMMARY:${event.title}
 DESCRIPTION:${event.description.replace(/\n/g, "\\n")}
 LOCATION:${event.location}
-ORGANIZER;CN="${event.organizer}":mailto:placement@sih-connect.edu
+ORGANIZER;CN="${event.organizer}":mailto:placement@job-buddy.edu
 STATUS:CONFIRMED
 END:VEVENT
 END:VCALENDAR`;

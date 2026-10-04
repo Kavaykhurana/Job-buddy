@@ -27,7 +27,7 @@ type AccessClaims = {
   roles: PortalRole[];
   iat: number;
   exp: number;
-  iss: "sih-connect";
+  iss: "job-buddy";
 };
 
 const ACCESS_TOKEN_TTL_SECONDS = Number(process.env.ACCESS_TOKEN_TTL_SECONDS || 15 * 60);
@@ -38,7 +38,7 @@ function getSigningKey(): Buffer {
   const configured = process.env.APP_JWT_SECRET;
   if (!configured) {
     if (isProduction) throw new Error("APP_JWT_SECRET must be configured in production.");
-    return crypto.createHash("sha256").update("sih-connect-development-only-secret").digest();
+    return crypto.createHash("sha256").update("job-buddy-development-only-secret").digest();
   }
 
   const key = Buffer.from(configured, "base64");
@@ -109,7 +109,7 @@ export function issueAccessToken(user: StoredUser, sessionId: string): { token: 
     roles: user.roles,
     iat: now,
     exp: now + ACCESS_TOKEN_TTL_SECONDS,
-    iss: "sih-connect",
+    iss: "job-buddy",
   };
   const header = base64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = base64Url(JSON.stringify(claims));
@@ -124,7 +124,7 @@ export function verifyAccessToken(token: string): AccessClaims | null {
   const [header, payload, signature, ...extra] = token.split(".");
   if (!header || !payload || !signature || extra.length > 0 || !safeEqual(signature, sign(`${header}.${payload}`))) return null;
   const claims = fromBase64Url<AccessClaims>(payload);
-  if (!claims || claims.iss !== "sih-connect" || !claims.sub || !claims.sid || !Array.isArray(claims.roles)) return null;
+  if (!claims || claims.iss !== "job-buddy" || !claims.sub || !claims.sid || !Array.isArray(claims.roles)) return null;
   if (!claims.roles.every((role) => PORTAL_ROLES.includes(role))) return null;
   if (!Number.isFinite(claims.exp) || claims.exp <= Math.floor(Date.now() / 1000)) return null;
   return claims;
@@ -155,7 +155,7 @@ export function isRefreshSessionActive(session: RefreshSession): boolean {
 
 export function refreshCookie(token: string): string {
   const attributes = [
-    `sih_connect_refresh=${encodeURIComponent(token)}`,
+    `job_buddy_refresh=${encodeURIComponent(token)}`,
     "HttpOnly",
     "Path=/api",
     "SameSite=Strict",
@@ -166,14 +166,14 @@ export function refreshCookie(token: string): string {
 }
 
 export function clearRefreshCookie(): string {
-  const attributes = ["sih_connect_refresh=", "HttpOnly", "Path=/api", "SameSite=Strict", "Max-Age=0"];
+  const attributes = ["job_buddy_refresh=", "HttpOnly", "Path=/api", "SameSite=Strict", "Max-Age=0"];
   if (isProduction) attributes.push("Secure");
   return attributes.join("; ");
 }
 
 export function readCookie(header?: string): string | undefined {
   if (!header) return undefined;
-  return header.split(";").map((value) => value.trim()).find((value) => value.startsWith("sih_connect_refresh="))?.slice("sih_connect_refresh=".length);
+  return header.split(";").map((value) => value.trim()).find((value) => value.startsWith("job_buddy_refresh="))?.slice("job_buddy_refresh=".length);
 }
 
 export function isValidPassword(password: string): boolean {

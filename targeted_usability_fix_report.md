@@ -1,4 +1,4 @@
-# SIH Connect — Targeted Usability Fix Report
+# Job Buddy — Targeted Usability Fix Report
 
 ## Completed targeted fixes
 

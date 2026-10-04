@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: sih-connect-api
+    name: job-buddy-api
   main:
     banner-mode: "off"
   # The in-memory migration slice is self-contained until the PostgreSQL

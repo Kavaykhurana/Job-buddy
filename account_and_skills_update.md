@@ -1,4 +1,4 @@
-# SIH Connect — Account Access and Declared Skills Update
+# Job Buddy — Account Access and Declared Skills Update
 
 ## Added user-facing capabilities
 

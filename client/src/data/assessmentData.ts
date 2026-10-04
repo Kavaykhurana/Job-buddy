@@ -715,7 +715,7 @@ export const assessmentCatalog: AssessmentDefinition[] = [
 // Helper: read declared skills from localStorage or default
 export function getDeclaredSkills(): string[] {
   try {
-    const raw = localStorage.getItem("sih-connect-declared-skills");
+    const raw = localStorage.getItem("job-buddy-declared-skills");
     if (!raw) return ["Python", "Data analysis", "Research writing", "Communication"];
     try {
       const parsed = JSON.parse(raw);
@@ -739,7 +739,7 @@ export function saveDeclaredSkills(skills: string[]): void {
     const cleanSkills = Array.from(
       new Set(skills.map((s) => s.trim()).filter(Boolean))
     );
-    localStorage.setItem("sih-connect-declared-skills", JSON.stringify(cleanSkills));
+    localStorage.setItem("job-buddy-declared-skills", JSON.stringify(cleanSkills));
   } catch (err) {
     console.error("Failed to save declared skills:", err);
   }
@@ -850,7 +850,7 @@ export interface AssessmentHistoryRecord {
 
 export function getAssessmentHistories(): Record<string, AssessmentHistoryRecord> {
   try {
-    const raw = localStorage.getItem("sih-connect-assessment-histories");
+    const raw = localStorage.getItem("job-buddy-assessment-histories");
     if (raw) return JSON.parse(raw);
   } catch {}
   return {};
@@ -877,8 +877,8 @@ export function getAssessmentHistory(assessmentId: string): AssessmentHistoryRec
 
 export function saveAssessmentAttempt(result: AssessmentSnapshot) {
   try {
-    localStorage.setItem("sih-connect-assessment-result", JSON.stringify(result));
-    localStorage.setItem(`sih-connect-assessment-result-${result.assessmentId}`, JSON.stringify(result));
+    localStorage.setItem("job-buddy-assessment-result", JSON.stringify(result));
+    localStorage.setItem(`job-buddy-assessment-result-${result.assessmentId}`, JSON.stringify(result));
 
     const histories = getAssessmentHistories();
     const existing = histories[result.assessmentId];
@@ -904,14 +904,14 @@ export function saveAssessmentAttempt(result: AssessmentSnapshot) {
       lastAttemptAt: result.submittedAt,
     };
 
-    localStorage.setItem("sih-connect-assessment-histories", JSON.stringify(histories));
-    localStorage.setItem(`sih-connect-assessment-best-${result.assessmentId}`, JSON.stringify(bestResult));
+    localStorage.setItem("job-buddy-assessment-histories", JSON.stringify(histories));
+    localStorage.setItem(`job-buddy-assessment-best-${result.assessmentId}`, JSON.stringify(bestResult));
   } catch {}
 }
 
 export function loadBestAssessmentResult(assessmentId: string): AssessmentSnapshot | null {
   try {
-    const specific = localStorage.getItem(`sih-connect-assessment-best-${assessmentId}`);
+    const specific = localStorage.getItem(`job-buddy-assessment-best-${assessmentId}`);
     if (specific) return JSON.parse(specific) as AssessmentSnapshot;
     const history = getAssessmentHistory(assessmentId);
     if (history?.bestResult) return history.bestResult;
@@ -923,14 +923,14 @@ export function loadBestAssessmentResult(assessmentId: string): AssessmentSnapsh
 export function loadAssessmentResult(assessmentId?: string): AssessmentSnapshot | null {
   try {
     if (assessmentId) {
-      const specific = localStorage.getItem(`sih-connect-assessment-result-${assessmentId}`);
+      const specific = localStorage.getItem(`job-buddy-assessment-result-${assessmentId}`);
       if (specific) return JSON.parse(specific) as AssessmentSnapshot;
     }
-    const stored = localStorage.getItem("sih-connect-assessment-result");
+    const stored = localStorage.getItem("job-buddy-assessment-result");
     if (!stored) return null;
     const parsed = JSON.parse(stored) as AssessmentSnapshot;
     if (assessmentId && parsed.assessmentId !== assessmentId) {
-      const specific = localStorage.getItem(`sih-connect-assessment-result-${assessmentId}`);
+      const specific = localStorage.getItem(`job-buddy-assessment-result-${assessmentId}`);
       return specific ? (JSON.parse(specific) as AssessmentSnapshot) : null;
     }
     return parsed;

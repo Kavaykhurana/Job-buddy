@@ -1,4 +1,4 @@
-# SIH Connect — Full Solution Frontend Traceability
+# Job Buddy — Full Solution Frontend Traceability
 
 ## Compliance status
 

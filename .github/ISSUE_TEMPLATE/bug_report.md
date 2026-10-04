@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us improve SIH Connect
+about: Create a report to help us improve Job Buddy
 title: '[BUG] '
 labels: bug
 assignees: ''

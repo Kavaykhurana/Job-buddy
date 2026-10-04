@@ -1,4 +1,4 @@
-package in.sihconnect.domain;
+package in.jobbuddy.domain;
 
 import jakarta.persistence.*;
 import java.util.UUID;

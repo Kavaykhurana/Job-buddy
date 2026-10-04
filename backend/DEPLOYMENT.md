@@ -5,7 +5,7 @@ This directory is a future Java backend scaffold. It is not the service used by 
 | Component | Runtime | Responsibility |
 |---|---|---|
 | React portal | Static files behind Nginx | User interface and short-lived in-memory access token. |
-| SIH Connect API | Java 21, Spring Boot 4.1.1, Maven | REST API, JWT issuance, authorization, validation, and workflow enforcement. |
+| Job Buddy API | Java 21, Spring Boot 4.1.1, Maven | REST API, JWT issuance, authorization, validation, and workflow enforcement. |
 | PostgreSQL | PostgreSQL 16 or later | Durable system-of-record data and Flyway migration history. |
 | Redis | Redis 7 or compatible | Distributed login/register rate limit counter in production. |
 | Nginx | Nginx with TLS termination | Static delivery, reverse proxy, security headers, and same-origin API routing. |
@@ -20,7 +20,7 @@ Set the variables named in `deployment.env.template` in your deployment platform
 
 The Java service cannot currently be built because its `src/` tree and migrations are not present. Do not advertise this module as a production API until those artifacts and their tests are committed.
 
-For an OCI deployment, build `backend/Dockerfile` from the `backend` directory. The supplied `compose.yaml` starts the API with PostgreSQL and Redis; inject its environment variables from your secret manager rather than committing a local secrets file. For a static frontend container, build from the repository root with `docker build -f backend/Dockerfile.frontend -t sih-connect-web .`. Adapt `backend/deployment/nginx.conf` if the API runs in another container or host; its `/api/` target must reach the Java API.
+For an OCI deployment, build `backend/Dockerfile` from the `backend` directory. The supplied `compose.yaml` starts the API with PostgreSQL and Redis; inject its environment variables from your secret manager rather than committing a local secrets file. For a static frontend container, build from the repository root with `docker build -f backend/Dockerfile.frontend -t job-buddy-web .`. Adapt `backend/deployment/nginx.conf` if the API runs in another container or host; its `/api/` target must reach the Java API.
 
 ## Operations checklist
 

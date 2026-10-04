@@ -4,7 +4,7 @@ import { Bell, CheckCheck, ChevronDown, ExternalLink, LogOut, UserRound } from "
 import { Link, useLocation } from "wouter";
 import { loadStudentNotifications, markAllNotificationsAsRead, markNotificationAsRead, roleHome, roleNavigation, type StudentNotification, type UserRole } from "@/data/portalData";
 import { useAuth } from "@/contexts/AuthContext";
-import sihConnectMark from "@/assets/sih-connect-mark.svg";
+import jobBuddyMark from "@/assets/job-buddy-mark.svg";
 import "./AppShell.css";
 import "./FieldNotesRefinement.css";
 
@@ -68,9 +68,9 @@ export function AppShell({ role = "student", children }: { role?: UserRole; chil
     <div className="app-shell">
       <header className="topbar">
         <div className="topbar-inner">
-          <Link href={roleHome[role]} className="brand-lockup" aria-label="SIH Connect home">
-            <img src={sihConnectMark} alt="SIH Connect mark" className="brand-mark" />
-            <span>SIH <em>Connect</em></span>
+          <Link href={roleHome[role]} className="brand-lockup" aria-label="Job Buddy home">
+            <img src={jobBuddyMark} alt="Job Buddy mark" className="brand-mark" />
+            <span>Job <em>Buddy</em></span>
           </Link>
           <nav className="topnav" aria-label="Primary navigation">
             {primaryNav.map((item) => {

@@ -4,7 +4,7 @@ import { currentUserId } from "./authApi";
 export function userStorageKey(key: string): string {
   const userId = currentUserId();
   if (!userId) throw new Error("No authenticated user is available for browser storage.");
-  return `sih-connect:${userId}:${key}`;
+  return `job-buddy:${userId}:${key}`;
 }
 
 export function readUserStorage(key: string): string | null { return localStorage.getItem(userStorageKey(key)); }

@@ -20,6 +20,6 @@ RUN mvn -q -DskipTests package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
-COPY --from=build /workspace/target/sih-connect-api-1.0.0.jar app.jar
+COPY --from=build /workspace/target/job-buddy-api-1.0.0.jar app.jar
 EXPOSE 10000
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+UseG1GC", "-jar", "app.jar"]

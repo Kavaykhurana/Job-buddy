@@ -205,9 +205,9 @@ const INITIAL_DRAFTS: JobDraft[] = [
 
 export function loadRecruiterJobDrafts(): JobDraft[] {
   try {
-    const stored = localStorage.getItem("sih-connect-recruiter-job-drafts");
+    const stored = localStorage.getItem("job-buddy-recruiter-job-drafts");
     if (!stored) {
-      localStorage.setItem("sih-connect-recruiter-job-drafts", JSON.stringify(INITIAL_DRAFTS));
+      localStorage.setItem("job-buddy-recruiter-job-drafts", JSON.stringify(INITIAL_DRAFTS));
       return INITIAL_DRAFTS;
     }
     return JSON.parse(stored) as JobDraft[];
@@ -226,14 +226,14 @@ export function saveRecruiterJobDraft(draft: JobDraft): JobDraft[] {
   } else {
     next = [{ ...draft, updatedAt: new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) }, ...current];
   }
-  localStorage.setItem("sih-connect-recruiter-job-drafts", JSON.stringify(next));
+  localStorage.setItem("job-buddy-recruiter-job-drafts", JSON.stringify(next));
   return next;
 }
 
 export function deleteRecruiterJobDraft(id: string): JobDraft[] {
   const current = loadRecruiterJobDrafts();
   const next = current.filter((d) => d.id !== id);
-  localStorage.setItem("sih-connect-recruiter-job-drafts", JSON.stringify(next));
+  localStorage.setItem("job-buddy-recruiter-job-drafts", JSON.stringify(next));
   return next;
 }
 
@@ -244,7 +244,7 @@ export function getRecruiterJobDraft(id: string): JobDraft | undefined {
 
 export function loadRecruiterPostedJobs(): RecruiterPostedJob[] {
   try {
-    const stored = localStorage.getItem("sih-connect-recruiter-posted-jobs");
+    const stored = localStorage.getItem("job-buddy-recruiter-posted-jobs");
     return stored ? (JSON.parse(stored) as RecruiterPostedJob[]) : [];
   } catch {
     return [];
@@ -253,7 +253,7 @@ export function loadRecruiterPostedJobs(): RecruiterPostedJob[] {
 
 export function saveRecruiterPostedJob(job: RecruiterPostedJob): RecruiterPostedJob[] {
   const jobs = [job, ...loadRecruiterPostedJobs().filter((j) => j.id !== job.id)];
-  localStorage.setItem("sih-connect-recruiter-posted-jobs", JSON.stringify(jobs));
+  localStorage.setItem("job-buddy-recruiter-posted-jobs", JSON.stringify(jobs));
   return jobs;
 }
 
@@ -326,7 +326,7 @@ export const initialCandidates: CandidateRecord[] = [
   },
 ];
 
-const CANDIDATES_STORAGE_KEY = "sih-connect-candidates-register";
+const CANDIDATES_STORAGE_KEY = "job-buddy-candidates-register";
 
 export function loadCandidates(): CandidateRecord[] {
   try {
@@ -395,7 +395,7 @@ export interface ScreeningNote {
   createdAt: string;
 }
 
-const SCREENING_NOTES_KEY = "sih-connect-recruiter-screening-notes";
+const SCREENING_NOTES_KEY = "job-buddy-recruiter-screening-notes";
 
 export function loadScreeningNotes(candidateId?: string): ScreeningNote[] {
   try {
@@ -435,7 +435,7 @@ export interface StudentNotification {
   read: boolean;
 }
 
-const STUDENT_NOTIFICATIONS_KEY = "sih-connect-student-notifications";
+const STUDENT_NOTIFICATIONS_KEY = "job-buddy-student-notifications";
 
 const INITIAL_STUDENT_NOTIFICATIONS: StudentNotification[] = [
   {
@@ -547,7 +547,7 @@ export const initialCompanyRoleRequirements = [
 
 export const companyRoleRequirements = initialCompanyRoleRequirements;
 
-const COMPANY_ROLE_REQUIREMENTS_KEY = "sih-connect-company-role-requirements";
+const COMPANY_ROLE_REQUIREMENTS_KEY = "job-buddy-company-role-requirements";
 
 export function loadCompanyRoleRequirements(): typeof initialCompanyRoleRequirements {
   try {

@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea or capability for SIH Connect
+about: Suggest an idea or capability for Job Buddy
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''

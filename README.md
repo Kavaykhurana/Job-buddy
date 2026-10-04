@@ -1,4 +1,4 @@
-# SIH Connect — Academia-Industry Skill & Placement Portal
+# Job Buddy — Academia-Industry Skill & Placement Portal
 
 <p align="center">
   <b>A unified, evidence-led ecosystem connecting Students, Industry Recruiters, Educational Institutions, and Academicians for skill alignment, career opportunities, and curriculum governance.</b>
@@ -11,8 +11,8 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kavaykhurana/SIH-Connect/actions/workflows/ci.yml">
-    <img src="https://github.com/Kavaykhurana/SIH-Connect/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
+  <a href="https://github.com/Kavaykhurana/Job-buddy/actions/workflows/ci.yml">
+    <img src="https://github.com/Kavaykhurana/Job-buddy/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
   </a>
   <img src="https://img.shields.io/badge/Deployment-Render_Live-success?logo=render&logoColor=white" alt="Render Status" />
   <img src="https://img.shields.io/badge/React-18.3.1-61DAFB?logo=react&logoColor=black" alt="React" />
@@ -41,7 +41,7 @@
 ---
 
 ## 📑 Table of Contents
-- [SIH Connect — Academia-Industry Skill \& Placement Portal](#sih-connect--academia-industry-skill--placement-portal)
+- [Job Buddy — Academia-Industry Skill \& Placement Portal](#job-buddy--academia-industry-skill--placement-portal)
     - [🔑 Demo Accounts for Instant Review](#-demo-accounts-for-instant-review)
   - [📑 Table of Contents](#-table-of-contents)
   - [🌟 Executive Overview](#-executive-overview)
@@ -75,7 +75,7 @@
 
 ## 🌟 Executive Overview
 
-**SIH Connect** solves the critical disconnect between academic curriculum outcomes and rapidly evolving industrial skill requirements. Rather than relying solely on self-reported resumes or unverified credentials, SIH Connect implements a **transparent, evidence-led placement and development lifecycle**.
+**Job Buddy** solves the critical disconnect between academic curriculum outcomes and rapidly evolving industrial skill requirements. Rather than relying solely on self-reported resumes or unverified credentials, Job Buddy implements a **transparent, evidence-led placement and development lifecycle**.
 
 The platform provides:
 1. **Objective Skill Scoring & Gap Mapping**: Adaptive assessments that score technical, soft, and domain-specific capabilities.
@@ -133,7 +133,7 @@ The platform provides:
 
 ## 🏗️ System Architecture
 
-SIH Connect is currently deployed as a single Node.js/Express service serving the React application and its API. The `backend/` directory is a future Java design scaffold and is not part of the active Render deployment.
+Job Buddy is currently deployed as a single Node.js/Express service serving the React application and its API. The `backend/` directory is a future Java design scaffold and is not part of the active Render deployment.
 
 ```mermaid
 graph TD
@@ -232,7 +232,7 @@ The active endpoints are exposed under `/api/v1` by the Node backend. Non-authen
 ## 📂 Project Directory Structure
 
 ```plaintext
-sih-academia-industry-portal/
+job-buddy/
 ├── client/                     # Frontend Application Root
 │   ├── index.html              # HTML5 Entry Point & Metadata
 │   ├── src/
@@ -257,7 +257,7 @@ sih-academia-industry-portal/
 │   ├── data_store.json         # File-Persisted Database Store
 │   └── index.ts                # Production Server Bootstrapper
 ├── backend/                    # Enterprise Java 21 Spring Boot Service
-│   ├── src/main/java/com/sih/  # Spring Boot Microservice Source Code
+│   ├── src/main/java/in/jobbuddy/  # Spring Boot Microservice Source Code
 │   ├── pom.xml                 # Maven Dependencies & Plugins
 │   ├── Dockerfile              # Containerization for Java Backend
 │   └── compose.yaml            # Docker Compose Multi-Container Definition
@@ -280,8 +280,8 @@ sih-academia-industry-portal/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-org/sih-academia-industry-portal.git
-   cd sih-academia-industry-portal
+   git clone https://github.com/your-org/job-buddy.git
+   cd job-buddy
    ```
 
 2. **Install frontend and backend dependencies**:
@@ -311,11 +311,11 @@ pnpm start
 
 ### 🚀 Deploying to Render
 
-You can deploy SIH Connect to [Render](https://render.com) with 1-click using the included [`render.yaml`](file:///Users/kavaykhurana/Downloads/sih-academia-industry-portal/render.yaml) blueprint:
+You can deploy Job Buddy to [Render](https://render.com) with 1-click using the included [`render.yaml`](./render.yaml) blueprint:
 
 1. **Via Render Dashboard**:
    - Go to [dashboard.render.com](https://dashboard.render.com) and click **New +** → **Blueprint** (or **Web Service**).
-   - Connect your GitHub repository `Kavaykhurana/SIH-Connect`.
+   - Connect your GitHub repository `Kavaykhurana/Job-buddy`.
    - Render will auto-detect `render.yaml`.
 2. **Manual Web Service Configuration** (if not using Blueprint):
    - **Environment**: `Node`

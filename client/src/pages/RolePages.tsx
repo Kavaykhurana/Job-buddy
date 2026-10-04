@@ -670,7 +670,7 @@ export function CandidateReviewPage({ id: propId }: { id?: string }) {
     mode: "Online",
     location: "Online (Google Meet · Interview Room)",
     evaluators: "Vikram Malhotra (Lead Recruiter), N. Patel",
-    meetingLink: "https://meet.google.com/sih-interview-room",
+    meetingLink: "https://meet.google.com/job-buddy-interview-room",
     notes: "Please review your Python and SQL data pipeline evidence beforehand.",
   });
 
@@ -1026,7 +1026,7 @@ export function CandidateReviewPage({ id: propId }: { id?: string }) {
               <input
                 value={interviewForm.meetingLink}
                 onChange={(e) => setInterviewForm({ ...interviewForm, meetingLink: e.target.value })}
-                placeholder="https://meet.google.com/sih-interview-room"
+                placeholder="https://meet.google.com/job-buddy-interview-room"
               />
             </label>
 
@@ -1481,7 +1481,7 @@ export function InstitutionDashboard() {
   );
 }
 
-const INST_READINESS_NOTES_PREFIX = "sih_inst_readiness_notes_";
+const INST_READINESS_NOTES_PREFIX = "job_buddy_inst_readiness_notes_";
 
 export function InstitutionReadiness() {
   const [candidatesList] = useState<CandidateRecord[]>(defaultCandidates);
@@ -1715,7 +1715,7 @@ export function InstitutionReadiness() {
   );
 }
 
-const INST_APP_NOTES_PREFIX = "sih_inst_app_notes_";
+const INST_APP_NOTES_PREFIX = "job_buddy_inst_app_notes_";
 
 export function InstitutionApplications() {
   const [candidatesList] = useState<CandidateRecord[]>(defaultCandidates);
@@ -1881,7 +1881,7 @@ export function InstitutionApplications() {
                   </div>
                   <div>
                     <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Application Tracking</span>
-                    <span style={{ color: "var(--ink)" }}>Managed via SIH Connect Recruiter Portal</span>
+                    <span style={{ color: "var(--ink)" }}>Managed via Job Buddy Recruiter Portal</span>
                   </div>
                   <div>
                     <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Recruiter Reviewer</span>
@@ -1940,7 +1940,7 @@ export function InstitutionApplications() {
   );
 }
 
-const INST_INTERVIEW_NOTES_PREFIX = "sih_inst_interview_notes_";
+const INST_INTERVIEW_NOTES_PREFIX = "job_buddy_inst_interview_notes_";
 
 interface InstitutionInterviewItem {
   id: string;
@@ -2250,7 +2250,7 @@ export function InstitutionInterviews() {
   );
 }
 
-const PLACEMENT_EXPORT_LOG_KEY = "sih_inst_placement_exports";
+const PLACEMENT_EXPORT_LOG_KEY = "job_buddy_inst_placement_exports";
 
 interface PlacementOfferItem {
   id: string;
@@ -2330,7 +2330,7 @@ export function InstitutionPlacement() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `SIH_Connect_Placement_Report_${exportScope}_Batch2028.csv`);
+      link.setAttribute("download", `Job_Buddy_Placement_Report_${exportScope}_Batch2028.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2338,7 +2338,7 @@ export function InstitutionPlacement() {
     } else {
       // "summary" format: generate detailed audit summary text report
       let summaryText = `================================================================================
-SIH CONNECT — INSTITUTIONAL PLACEMENT AUDIT SUMMARY REPORT
+JOB BUDDY — INSTITUTIONAL PLACEMENT AUDIT SUMMARY REPORT
 Governed Institutional Placement Office · Batch 2028
 ================================================================================
 
@@ -2347,7 +2347,7 @@ Export Timestamp     : ${timestamp}
 Selected Data Scope  : ${exportScope === "all" ? "All (Applications, Shortlists & Offers)" : exportScope === "offers" ? "Offers" : "Shortlists"}
 Reporting Window     : Active · Batch 2028 Academic Cycle
 Authorisation Level  : Institution Authorised Audit Log
-File Name            : SIH_Connect_Placement_Audit_Summary_${exportScope}_Batch2028.txt
+File Name            : Job_Buddy_Placement_Audit_Summary_${exportScope}_Batch2028.txt
 
 --------------------------------------------------------------------------------
 1. SCOPE & COHORT OVERVIEW
@@ -2438,7 +2438,7 @@ ${samplePlacementShortlists.map((s, idx) => `[Shortlist ${idx + 1}] ${s.studentN
 --------------------------------------------------------------------------------
 4. GOVERNANCE & AUDIT COMPLIANCE
 --------------------------------------------------------------------------------
-- Exported under Institutional Authority for SIH Connect Placement Governance.
+- Exported under Institutional Authority for Job Buddy Placement Governance.
 - Records reflect verified candidate credentials and authorised offer details.
 - Logged in localStorage [${PLACEMENT_EXPORT_LOG_KEY}].
 - Sign-off: University Placement Cell Directorate · Batch 2028.
@@ -2451,7 +2451,7 @@ END OF AUDIT SUMMARY
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.setAttribute("href", url);
-      link.setAttribute("download", `SIH_Connect_Placement_Audit_Summary_${exportScope}_Batch2028.txt`);
+      link.setAttribute("download", `Job_Buddy_Placement_Audit_Summary_${exportScope}_Batch2028.txt`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -2800,7 +2800,7 @@ export function InstitutionAlignment() {
   );
 }
 
-const ACAD_PREFS_KEY = "sih_acad_prefs";
+const ACAD_PREFS_KEY = "job_buddy_acad_prefs";
 export function loadAcadPrefs(): { evidenceUpdates: boolean; eventUpdates: boolean } {
   try {
     const raw = localStorage.getItem(ACAD_PREFS_KEY);
@@ -2942,7 +2942,7 @@ export function AcademicianStudentMaps() {
   useEffect(() => {
     if (selectedStudent) {
       try {
-        const savedNote = localStorage.getItem(`sih_acad_note_${selectedStudent.id}`);
+        const savedNote = localStorage.getItem(`job_buddy_acad_note_${selectedStudent.id}`);
         setStudentNote(savedNote || "");
       } catch {
         setStudentNote("");
@@ -2954,7 +2954,7 @@ export function AcademicianStudentMaps() {
   const handleSaveNote = () => {
     if (!selectedStudent) return;
     try {
-      localStorage.setItem(`sih_acad_note_${selectedStudent.id}`, studentNote);
+      localStorage.setItem(`job_buddy_acad_note_${selectedStudent.id}`, studentNote);
       toast.success(`Academic observation saved for ${selectedStudent.name}`);
     } catch {
       toast.error("Unable to save note to local storage");
@@ -3307,7 +3307,7 @@ export function AcademicianLearningAlignment() {
   const [programNote, setProgramNote] = useState("");
   const [endorsedPrograms, setEndorsedPrograms] = useState<Record<string, boolean>>(() => {
     try {
-      const stored = localStorage.getItem("sih_acad_learning_endorsements");
+      const stored = localStorage.getItem("job_buddy_acad_learning_endorsements");
       return stored ? JSON.parse(stored) : {};
     } catch {
       return {};
@@ -3318,7 +3318,7 @@ export function AcademicianLearningAlignment() {
   useEffect(() => {
     if (selectedProgram) {
       try {
-        const saved = localStorage.getItem(`sih_acad_learning_note_${selectedProgram.id}`);
+        const saved = localStorage.getItem(`job_buddy_acad_learning_note_${selectedProgram.id}`);
         setProgramNote(saved || "");
       } catch {
         setProgramNote("");
@@ -3330,7 +3330,7 @@ export function AcademicianLearningAlignment() {
   const handleSaveNote = () => {
     if (!selectedProgram) return;
     try {
-      localStorage.setItem(`sih_acad_learning_note_${selectedProgram.id}`, programNote);
+      localStorage.setItem(`job_buddy_acad_learning_note_${selectedProgram.id}`, programNote);
       toast.success(`Curriculum note saved for ${selectedProgram.title}`);
     } catch {
       toast.error("Unable to save note to local storage");
@@ -3344,7 +3344,7 @@ export function AcademicianLearningAlignment() {
     const updated = { ...endorsedPrograms, [selectedProgram.id]: nextState };
     setEndorsedPrograms(updated);
     try {
-      localStorage.setItem("sih_acad_learning_endorsements", JSON.stringify(updated));
+      localStorage.setItem("job_buddy_acad_learning_endorsements", JSON.stringify(updated));
     } catch {}
     if (nextState) {
       toast.success(`Endorsed '${selectedProgram.title}' for Computer Science Batch 2028 scope.`);
@@ -3634,7 +3634,7 @@ const academicianEventList: AcademicianEventItem[] = [
     location: "Google Meet Virtual Session",
     description: "Faculty advisory session helping Batch 2028 Computer Science students structure their GitHub repositories, technical blogs, and portfolio evidence for recruiter visibility.",
     agenda: ["Repository documentation standards", "Evaluating student portfolio submissions", "Q&A with student candidates"],
-    meetingLink: "https://meet.google.com/sih-faculty-clinic",
+    meetingLink: "https://meet.google.com/job-buddy-faculty-clinic",
   },
   {
     id: "acad-ev-02",
@@ -3645,7 +3645,7 @@ const academicianEventList: AcademicianEventItem[] = [
     location: "Placement Office · Seminar Room 4 (Hybrid)",
     description: "Coordination briefing between faculty advisors and the campus recruitment committee regarding technical screening benchmarks for Applied AI and Data roles.",
     agenda: ["Review of recruiter technical scorecard criteria", "Faculty input on student academic standing", "Scheduling interview slot allocations"],
-    meetingLink: "https://meet.google.com/sih-eval-briefing",
+    meetingLink: "https://meet.google.com/job-buddy-eval-briefing",
   },
   {
     id: "acad-ev-03",
@@ -3656,11 +3656,11 @@ const academicianEventList: AcademicianEventItem[] = [
     location: "Virtual Auditorium · Live Webinar",
     description: "Open Q&A for prospective graduates addressing company requirements, institutional sponsorship clearance, and interview etiquette.",
     agenda: ["Key placement calendar dates", "Company eligibility criteria breakdown", "Open floor student questions"],
-    meetingLink: "https://meet.google.com/sih-recruitment-qa",
+    meetingLink: "https://meet.google.com/job-buddy-recruitment-qa",
   },
 ];
 
-const ACAD_CALENDAR_KEY = "sih_acad_calendar_events";
+const ACAD_CALENDAR_KEY = "job_buddy_acad_calendar_events";
 
 export function AcademicianEvents() {
   const [selectedEvent, setSelectedEvent] = useState<AcademicianEventItem | null>(null);

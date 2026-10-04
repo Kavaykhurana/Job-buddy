@@ -100,7 +100,7 @@ export function RecruiterAnalyticsPage() { return <RecruiterLayout><PageHeader e
 
 export function RecruiterIntegrationsPage() { return <RecruiterLayout><PageHeader eyebrow="Integrations" title="Provider connections" description="Review approved learning, certification, and record-service connections used by industry workflows." /><IntegrationPanel role="industry" /></RecruiterLayout>; }
 
-const ACAD_OPP_STORAGE_KEY = "sih_acad_opp_submissions";
+const ACAD_OPP_STORAGE_KEY = "job_buddy_acad_opp_submissions";
 
 interface AcademicOpportunityItem {
   id: string;
@@ -285,7 +285,7 @@ export function AcademicianOpportunitiesPage() {
   );
 }
 
-const ACAD_TRAINING_STORAGE_KEY = "sih_acad_training_enrolled";
+const ACAD_TRAINING_STORAGE_KEY = "job_buddy_acad_training_enrolled";
 
 interface TrainingModuleItem {
   id: string;
@@ -538,7 +538,7 @@ const defaultIntegrationRows: IntegrationRowItem[] = [
 ];
 
 function IntegrationPanel({ role }: { role: "industry" | "institution" }) {
-  const storageKey = `sih_integrations_list_${role}`;
+  const storageKey = `job_buddy_integrations_list_${role}`;
   const [integrations, setIntegrations] = useState<IntegrationRowItem[]>(() => {
     try {
       const saved = localStorage.getItem(storageKey);

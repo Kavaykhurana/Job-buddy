@@ -874,7 +874,7 @@ export function CertificationsPage() {
       document.body.removeChild(a);
     } else {
       // Generate official verification blob
-      const content = `SIH CONNECT VERIFIED CREDENTIAL CERTIFICATE\n\nTitle: ${cert.title}\nIssuer: ${cert.issuer}\nIssue Date: ${cert.issueDate}\nCredential ID: ${cert.credentialId}\nVerified Skills: ${cert.skills.join(", ")}\nVerification Hash: ${Math.random().toString(36).substring(2, 15)}\nStatus: Official Verified Record`;
+      const content = `JOB BUDDY VERIFIED CREDENTIAL CERTIFICATE\n\nTitle: ${cert.title}\nIssuer: ${cert.issuer}\nIssue Date: ${cert.issueDate}\nCredential ID: ${cert.credentialId}\nVerified Skills: ${cert.skills.join(", ")}\nVerification Hash: ${Math.random().toString(36).substring(2, 15)}\nStatus: Official Verified Record`;
       const blob = new Blob([content], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1276,12 +1276,12 @@ export function PortfolioSettingsPage() {
         </section>
         <aside className="stack-lg">
           <SectionCard title="Shareable link">
-            <KeyValue label="Portfolio ID" value="sih-connect/anaya-sharma" />
+            <KeyValue label="Portfolio ID" value="job-buddy/anaya-sharma" />
             <button
               type="button"
               className="small-outline full-button"
               onClick={() => {
-                navigator.clipboard?.writeText("https://sih-connect.edu/portfolio/anaya-sharma");
+                navigator.clipboard?.writeText("https://job-buddy.edu/portfolio/anaya-sharma");
                 toast.success("Shareable portfolio link copied to clipboard!");
               }}
             >

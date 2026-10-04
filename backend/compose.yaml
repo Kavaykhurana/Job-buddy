@@ -3,13 +3,13 @@ services:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-sih_connect}
-      POSTGRES_USER: ${POSTGRES_USER:-sih_connect}
+      POSTGRES_DB: ${POSTGRES_DB:-job_buddy}
+      POSTGRES_USER: ${POSTGRES_USER:-job_buddy}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sih_connect} -d ${POSTGRES_DB:-sih_connect}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-job_buddy} -d ${POSTGRES_DB:-job_buddy}"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -40,8 +40,8 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       DB_HOST: postgres
       DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB:-sih_connect}
-      DB_USERNAME: ${POSTGRES_USER:-sih_connect}
+      DB_NAME: ${POSTGRES_DB:-job_buddy}
+      DB_USERNAME: ${POSTGRES_USER:-job_buddy}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       APP_JWT_SECRET: ${APP_JWT_SECRET:?Set a 32+ byte Base64 JWT secret in .env}
       APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:?Set the deployed frontend origin in .env}

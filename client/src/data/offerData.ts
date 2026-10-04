@@ -33,8 +33,8 @@ export interface PlacementStatusRecord {
   placedAt?: string;
 }
 
-const OFFERS_STORAGE_KEY = "sih-connect-student-offers";
-const PLACEMENT_STATUS_KEY = "sih-connect-placement-status";
+const OFFERS_STORAGE_KEY = "job-buddy-student-offers";
+const PLACEMENT_STATUS_KEY = "job-buddy-placement-status";
 
 export function getStudentOffers(): JobOffer[] {
   try {
@@ -186,7 +186,7 @@ export function declineJobOffer(offerId: string): { success: boolean; offer?: Jo
 
 export function downloadOfferLetter(offer: JobOffer): void {
   const content = `======================================================================
-               SIH CONNECT OFFICIAL LETTER OF INTENT & EMPLOYMENT OFFER
+               JOB BUDDY OFFICIAL LETTER OF INTENT & EMPLOYMENT OFFER
 ======================================================================
 
 Date: ${offer.issuedDate}

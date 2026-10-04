@@ -1,4 +1,4 @@
-# SIH Connect API Architecture
+# Job Buddy API Architecture
 
 ## Technology baseline
 

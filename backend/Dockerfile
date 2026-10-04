@@ -24,7 +24,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --system --create-home --uid 10001 appuser
 WORKDIR /app
-COPY --from=build /workspace/target/sih-connect-api-1.0.0.jar app.jar
+COPY --from=build /workspace/target/job-buddy-api-1.0.0.jar app.jar
 USER 10001
 EXPOSE 10000
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-XX:+UseG1GC", "-jar", "app.jar"]

@@ -433,7 +433,7 @@ export function AssessmentSessionPage({ id = "industry-readiness" }: { id?: stri
   // Load or sample randomized questions for this specific assessment attempt
   const [questions] = useState<QuizQuestion[]>(() => {
     try {
-      const sessionKey = `sih-connect-quiz-questions-${item.id}`;
+      const sessionKey = `job-buddy-quiz-questions-${item.id}`;
       const existing = sessionStorage.getItem(sessionKey);
       if (existing) {
         const parsed = JSON.parse(existing);
@@ -471,7 +471,7 @@ export function AssessmentSessionPage({ id = "industry-readiness" }: { id?: stri
     const result = calculateQuizResult(item.id, answers, questions, timeSpentSeconds);
     saveAssessmentAttempt(result);
     try {
-      sessionStorage.removeItem(`sih-connect-quiz-questions-${item.id}`);
+      sessionStorage.removeItem(`job-buddy-quiz-questions-${item.id}`);
     } catch {}
 
     if (isAllAnswered) {

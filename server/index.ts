@@ -9,11 +9,13 @@ const __dirname = path.dirname(__filename);
 async function startServer() {
   const app = express();
   app.disable("x-powered-by");
+  // Behind a reverse proxy (Render etc.) req.ip is the proxy, which would put every user in one login rate-limit bucket.
+  if (process.env.NODE_ENV === "production") app.set("trust proxy", 1);
   app.use((_req, res, next) => {
     res.setHeader("X-Content-Type-Options", "nosniff");
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");
+    res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'");
     next();
   });
   const server = createServer(app);
@@ -49,4 +51,5 @@ async function startServer() {
   });
 }
 
-startServer().catch(console.error);
+// Exit on startup failure (e.g. missing APP_JWT_SECRET) instead of idling with no listener, which hides the error from the host.
+startServer().catch((error) => { console.error(error); process.exit(1); });

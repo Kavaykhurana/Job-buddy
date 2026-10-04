@@ -1,4 +1,4 @@
-package in.sihconnect.security;
+package in.jobbuddy.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

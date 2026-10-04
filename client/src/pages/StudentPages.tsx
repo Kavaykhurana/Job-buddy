@@ -2716,7 +2716,7 @@ function professionalLinksFromStorage(): ProfessionalLinks {
     codeforces: "",
   };
   try {
-    const stored = localStorage.getItem("sih-connect-professional-links");
+    const stored = localStorage.getItem("job-buddy-professional-links");
     return stored ? { ...defaults, ...(JSON.parse(stored) as Partial<ProfessionalLinks>) } : defaults;
   } catch {
     return defaults;
@@ -2735,7 +2735,7 @@ function ProfileOverview() {
   const [links, setLinks] = useState<ProfessionalLinks>(professionalLinksFromStorage);
   const [phone, setPhone] = useState(() => {
     try {
-      const stored = localStorage.getItem("sih-connect-profile-phone");
+      const stored = localStorage.getItem("job-buddy-profile-phone");
       return stored ? stored.replace(/\D/g, "").slice(-10) : "9812345510";
     } catch {
       return "9812345510";
@@ -2743,7 +2743,7 @@ function ProfileOverview() {
   });
   const [email, setEmail] = useState(() => {
     try {
-      return localStorage.getItem("sih-connect-profile-email") || "anaya.sharma@example.edu";
+      return localStorage.getItem("job-buddy-profile-email") || "anaya.sharma@example.edu";
     } catch {
       return "anaya.sharma@example.edu";
     }
@@ -2767,8 +2767,8 @@ function ProfileOverview() {
     }
     try {
       await api.profile.update({ phone: `+91${phone}`, email });
-      localStorage.setItem("sih-connect-profile-phone", phone);
-      localStorage.setItem("sih-connect-profile-email", email);
+      localStorage.setItem("job-buddy-profile-phone", phone);
+      localStorage.setItem("job-buddy-profile-email", email);
       toast.success("Contact details updated and saved successfully!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Contact details could not be saved.");
@@ -2792,7 +2792,7 @@ function ProfileOverview() {
     try {
       await api.profile.update({ declaredSkills: skills });
       saveDeclaredSkills(skills);
-      localStorage.setItem("sih-connect-professional-links", JSON.stringify(formattedLinks));
+      localStorage.setItem("job-buddy-professional-links", JSON.stringify(formattedLinks));
       setLinks(formattedLinks);
       setSkillsInput(skills.join(", "));
       toast.success("Professional links and declared skills saved to profile!");
@@ -3403,9 +3403,9 @@ function ProfileSettings() {
       cgpa: "8.14",
       declaredSkills: getDeclaredSkills(),
       contact: {
-        phone: localStorage.getItem("sih-connect-profile-phone") || "9812345510",
-        email: localStorage.getItem("sih-connect-profile-email") || "anaya.sharma@example.edu",
-        links: JSON.parse(localStorage.getItem("sih-connect-professional-links") || "{}"),
+        phone: localStorage.getItem("job-buddy-profile-phone") || "9812345510",
+        email: localStorage.getItem("job-buddy-profile-email") || "anaya.sharma@example.edu",
+        links: JSON.parse(localStorage.getItem("job-buddy-professional-links") || "{}"),
       },
       documents: getProfileDocuments(),
       resumes: getProfileResumes(),
@@ -3419,7 +3419,7 @@ function ProfileSettings() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `SIH_Connect_Student_Profile_Export_Anaya_Sharma.json`;
+    a.download = `Job_Buddy_Student_Profile_Export_Anaya_Sharma.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);

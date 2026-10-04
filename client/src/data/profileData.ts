@@ -33,9 +33,9 @@ export interface ProfileSettingsState {
   placementStatusConsent: boolean;
 }
 
-const PROFILE_DOCS_KEY = "sih-connect-profile-documents";
-const PROFILE_RESUMES_KEY = "sih-connect-profile-resumes";
-const PROFILE_SETTINGS_KEY = "sih-connect-profile-settings";
+const PROFILE_DOCS_KEY = "job-buddy-profile-documents";
+const PROFILE_RESUMES_KEY = "job-buddy-profile-resumes";
+const PROFILE_SETTINGS_KEY = "job-buddy-profile-settings";
 
 export function getProfileDocuments(): ProfileDocumentItem[] {
   try {
@@ -126,7 +126,7 @@ export function downloadProfileDocument(doc: ProfileDocumentItem): void {
     a.click();
     document.body.removeChild(a);
   } else {
-    const content = `SIH CONNECT VERIFIED PROFILE DOCUMENT\n\nTitle: ${doc.title}\nCategory: ${doc.category}\nFile: ${doc.fileName}\nUploaded: ${doc.uploadedAt}\nVerification Status: ${doc.verified ? "VERIFIED" : "PENDING REVIEW"}\nStudent: Anaya Sharma (STU-102417)`;
+    const content = `JOB BUDDY VERIFIED PROFILE DOCUMENT\n\nTitle: ${doc.title}\nCategory: ${doc.category}\nFile: ${doc.fileName}\nUploaded: ${doc.uploadedAt}\nVerification Status: ${doc.verified ? "VERIFIED" : "PENDING REVIEW"}\nStudent: Anaya Sharma (STU-102417)`;
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

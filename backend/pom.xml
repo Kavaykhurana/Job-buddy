@@ -11,11 +11,11 @@
         <relativePath/>
     </parent>
 
-    <groupId>in.sihconnect</groupId>
-    <artifactId>sih-connect-api</artifactId>
+    <groupId>in.jobbuddy</groupId>
+    <artifactId>job-buddy-api</artifactId>
     <version>1.0.0</version>
-    <name>SIH Connect API</name>
-    <description>Secure Java 21 API for SIH Connect academia-industry workflows.</description>
+    <name>Job Buddy API</name>
+    <description>Secure Java 21 API for Job Buddy academia-industry workflows.</description>
 
     <properties>
         <java.version>21</java.version>
