@@ -27,16 +27,18 @@
 
 > 🌐 **Live Production URL**: [https://job-buddy-hs1e.onrender.com](https://job-buddy-hs1e.onrender.com)
 > 
-> Explore the live application with any of the pre-configured role workspaces below:
+> Explore the live application in one click: the sign-in page has **Explore as Student / Recruiter / Institution / Academician** buttons that open each workspace with a sample account. No sign-up needed; demo data resets periodically.
 
 ### 🔐 Account access
 
-| Role Workspace | Access | Primary Workflow |
-| :--- | :--- | :--- | :--- |
-| 🎓 **Student** | Register from the sign-in page | Skill map, quiz assessment, opportunities, profile & documents |
-| 🏢 **Recruiter** | Invited by an administrator | Opportunities, candidates, scorecards, requirements |
-| 🏛️ **Institution** | Invited by an administrator | Readiness, curriculum alignment, analytics |
-| 🧑‍🏫 **Academician** | Invited by an administrator | Training, research, mentorship and collaboration |
+| Role Workspace | Demo access | Primary Workflow |
+| :--- | :--- | :--- |
+| 🎓 **Student** | *Explore as Student* (or register) | Skill map, quiz assessment, opportunities, profile & documents |
+| 🏢 **Recruiter** | *Explore as Recruiter* | Opportunities, candidates, scorecards, requirements |
+| 🏛️ **Institution** | *Explore as Institution* | Readiness, curriculum alignment, analytics |
+| 🧑‍🏫 **Academician** | *Explore as Academician* | Training, research, mentorship and collaboration |
+
+Demo sign-in is enabled with `DEMO_LOGINS=true`; without it, only registered students and admin-assigned roles can sign in.
 
 ---
 

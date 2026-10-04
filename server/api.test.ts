@@ -49,7 +49,7 @@ test("validation errors name the failing field", async () => {
 });
 
 test("every job the client lists exists in the server seed, so students can apply", async () => {
-  const clientIds = [...fs.readFileSync(path.join(import.meta.dirname, "../client/src/data/jobData.ts"), "utf8").matchAll(/^\s+id: "([^"]+)"/gm)].map((m) => m[1]);
+  const clientIds = Array.from(fs.readFileSync(path.join(import.meta.dirname, "../client/src/data/jobData.ts"), "utf8").matchAll(/^\s+id: "([^"]+)"/gm), (m) => m[1]);
   expect(clientIds.length).toBeGreaterThan(0);
   for (const jobId of clientIds) {
     const res = await call("POST", "/applications", student, { jobId, statement: "I built three data pipelines in Python for coursework." });
@@ -74,6 +74,21 @@ test("an admin can use every workspace, including student-only endpoints", async
 test("a student still cannot use another workspace's endpoints", async () => {
   expect((await call("GET", "/candidates", student)).status).toBe(403);
   expect((await call("GET", "/curriculum/notes", student)).status).toBe(403);
+});
+
+test("demo sign-in is off by default and never yields an admin", async () => {
+  const demo = (role: string) => fetch(`${base}/auth/demo`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ role }) });
+  delete process.env.DEMO_LOGINS;
+  expect((await demo("RECRUITER")).status).toBe(404);
+  process.env.DEMO_LOGINS = "true";
+  try {
+    for (const role of ["STUDENT", "RECRUITER", "INSTITUTION", "ACADEMICIAN"]) {
+      const res = await demo(role);
+      expect(res.status).toBe(200);
+      expect((await res.json()).user.roles).toEqual([role]);
+    }
+    expect((await demo("ADMIN")).status).toBe(400);
+  } finally { delete process.env.DEMO_LOGINS; }
 });
 
 test("deleting a document that only exists in the browser succeeds", async () => {

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useLocation } from "wouter";
 import { roleHome, type UserRole } from "@/data/portalData";
 import { useAuth } from "@/contexts/AuthContext";
+import { demoEnabled } from "@/lib/authApi";
 import jobBuddyMark from "@/assets/job-buddy-mark.svg";
 import "./AuthPages.css";
 
@@ -13,9 +14,18 @@ function homeFor(roles: string[]): UserRole {
   return "student";
 }
 
+const demoWorkspaces = [
+  { role: "STUDENT", label: "Student", home: "student" },
+  { role: "RECRUITER", label: "Recruiter", home: "recruiter" },
+  { role: "INSTITUTION", label: "Institution", home: "institution" },
+  { role: "ACADEMICIAN", label: "Academician", home: "academician" },
+] as const;
+
 export default function SignInPage() {
   const [, setLocation] = useLocation();
-  const { login, register } = useAuth();
+  const { login, register, demoLogin } = useAuth();
+  const [demoOn, setDemoOn] = useState(false);
+  useEffect(() => { demoEnabled().then(setDemoOn).catch(() => setDemoOn(false)); }, []);
   const [email, setEmail] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
@@ -33,5 +43,15 @@ export default function SignInPage() {
     } finally { setSubmitting(false); }
   }
 
-  return <main className="auth-page"><section className="auth-intro"><div className="auth-brand"><img src={jobBuddyMark} alt="Job-buddy" /><span>Job-<em>buddy</em></span></div><div className="auth-copy"><p className="eyebrow">Placement evidence register</p><h1>Access your assigned workspace.</h1><p>Review verified skill evidence, active opportunities, and accountable next steps.</p></div><div className="auth-benefits"><span><CheckCircle2 size={15} /> Secure account access</span><span><CheckCircle2 size={15} /> Short-lived access sessions</span><span><ShieldCheck size={15} /> Server-enforced permissions</span></div></section><section className="auth-panel"><div><p className="eyebrow">{mode === "login" ? "Sign in" : "Student registration"}</p><h2>{mode === "login" ? "Enter your workspace" : "Create your student account"}</h2><p className="auth-muted">Only an authorised administrator can assign staff and recruiter roles.</p></div>{mode === "register" && <label className="auth-label">Full name<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" required /></label>}<label className="auth-label">Email or institutional ID<input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@institution.edu" autoComplete="username" required /></label><label className="auth-label">Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12+ characters, including a letter and number" autoComplete={mode === "login" ? "current-password" : "new-password"} required /></label>{error && <p className="auth-error" role="alert">{error}</p>}<button type="button" className="auth-submit" disabled={submitting} onClick={() => void enterWorkspace()}>{submitting ? "Verifying…" : mode === "login" ? "Sign in" : "Create student account"} <ArrowRight size={16} /></button><button type="button" className="auth-mode-switch" onClick={() => { setMode((current) => current === "login" ? "register" : "login"); setError(""); }}>{mode === "login" ? "Need a student account? Register" : "Already have an account? Sign in"}</button></section></main>;
+  async function enterDemo(workspace: (typeof demoWorkspaces)[number]) {
+    setError(""); setSubmitting(true);
+    try {
+      await demoLogin(workspace.role);
+      setLocation(roleHome[workspace.home]);
+    } catch (exception) {
+      setError(exception instanceof Error ? exception.message : "The demo could not be opened.");
+    } finally { setSubmitting(false); }
+  }
+
+  return <main className="auth-page"><section className="auth-intro"><div className="auth-brand"><img src={jobBuddyMark} alt="Job-buddy" /><span>Job-<em>buddy</em></span></div><div className="auth-copy"><p className="eyebrow">Placement evidence register</p><h1>Access your assigned workspace.</h1><p>Review verified skill evidence, active opportunities, and accountable next steps.</p></div><div className="auth-benefits"><span><CheckCircle2 size={15} /> Secure account access</span><span><CheckCircle2 size={15} /> Short-lived access sessions</span><span><ShieldCheck size={15} /> Server-enforced permissions</span></div></section><section className="auth-panel">{demoOn && mode === "login" && <div className="auth-demo"><p className="eyebrow">Live demo</p><p className="auth-muted">Explore any workspace instantly with a sample account. No sign-up needed; demo data resets periodically.</p><div className="auth-demo-grid">{demoWorkspaces.map((workspace) => <button key={workspace.role} type="button" className="auth-demo-button" disabled={submitting} onClick={() => void enterDemo(workspace)}>Explore as {workspace.label} <ArrowRight size={14} /></button>)}</div></div>}<div><p className="eyebrow">{mode === "login" ? "Sign in" : "Student registration"}</p><h2>{mode === "login" ? "Enter your workspace" : "Create your student account"}</h2><p className="auth-muted">Only an authorised administrator can assign staff and recruiter roles.</p></div>{mode === "register" && <label className="auth-label">Full name<input value={displayName} onChange={(event) => setDisplayName(event.target.value)} autoComplete="name" required /></label>}<label className="auth-label">Email or institutional ID<input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@institution.edu" autoComplete="username" required /></label><label className="auth-label">Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="12+ characters, including a letter and number" autoComplete={mode === "login" ? "current-password" : "new-password"} required /></label>{error && <p className="auth-error" role="alert">{error}</p>}<button type="button" className="auth-submit" disabled={submitting} onClick={() => void enterWorkspace()}>{submitting ? "Verifying…" : mode === "login" ? "Sign in" : "Create student account"} <ArrowRight size={16} /></button><button type="button" className="auth-mode-switch" onClick={() => { setMode((current) => current === "login" ? "register" : "login"); setError(""); }}>{mode === "login" ? "Need a student account? Register" : "Already have an account? Sign in"}</button></section></main>;
 }

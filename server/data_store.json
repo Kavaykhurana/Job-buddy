@@ -31,34 +31,9 @@
       "roles": [
         "ACADEMICIAN"
       ]
-    },
-    {
-      "id": "usr_rlaff0m",
-      "email": "anaya.sharma@example.edu",
-      "displayName": "Anaya Sharma",
-      "roles": [
-        "STUDENT"
-      ]
     }
   ],
   "jobs": [
-    {
-      "id": "posted-job-1788333475753",
-      "title": "joo",
-      "organization": "Company Partner",
-      "location": "Hybrid · Bengaluru",
-      "date": "Closes 30 Sep",
-      "match": 75,
-      "status": "Open",
-      "required": [
-        "Python"
-      ],
-      "preferred": [
-        "SQL"
-      ],
-      "type": "Structured opportunity",
-      "summary": "70%"
-    },
     {
       "id": "posted-research-ops",
       "title": "Research Operations Associate",

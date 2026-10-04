@@ -37,6 +37,14 @@ export async function register(displayName: string, email: string, password: str
   return acceptSession(await request<AuthResponse>("/auth/register", { method: "POST", body: JSON.stringify({ displayName, email, password }) }, false));
 }
 
+export async function demoEnabled() {
+  return (await request<{ enabled: boolean }>("/auth/demo", {}, false)).enabled;
+}
+
+export async function demoLogin(role: Exclude<PortalRole, "ADMIN">) {
+  return acceptSession(await request<AuthResponse>("/auth/demo", { method: "POST", body: JSON.stringify({ role }) }, false));
+}
+
 export async function refresh() {
   return acceptSession(await request<AuthResponse>("/auth/refresh", { method: "POST" }, false));
 }

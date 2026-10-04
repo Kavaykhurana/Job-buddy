@@ -7,6 +7,7 @@ type AuthState = { user: authApi.AuthenticatedUser | null; loading: boolean };
 type AuthContextValue = AuthState & {
   login: (email: string, password: string) => Promise<authApi.AuthenticatedUser>;
   register: (displayName: string, email: string, password: string) => Promise<authApi.AuthenticatedUser>;
+  demoLogin: (role: Parameters<typeof authApi.demoLogin>[0]) => Promise<authApi.AuthenticatedUser>;
   signOut: () => Promise<void>;
 };
 
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ...state,
     login: async (email, password) => { const session = await authApi.login(email, password); setState({ user: session.user, loading: false }); return session.user; },
     register: async (displayName, email, password) => { const session = await authApi.register(displayName, email, password); setState({ user: session.user, loading: false }); return session.user; },
+    demoLogin: async (role) => { const session = await authApi.demoLogin(role); setState({ user: session.user, loading: false }); return session.user; },
     signOut: async () => { await authApi.logout(); setState({ user: null, loading: false }); },
   }), [state]);
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
