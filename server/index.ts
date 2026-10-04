@@ -21,7 +21,8 @@ async function startServer() {
   const server = createServer(app);
 
   // API Router
-  const { apiRouter } = await import("./api.js");
+  const { apiRouter, initDatabase } = await import("./api.js");
+  await initDatabase();
   const { assertAuthConfiguration } = await import("./auth.js");
   assertAuthConfiguration();
   app.use("/api/v1", apiRouter);

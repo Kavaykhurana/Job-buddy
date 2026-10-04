@@ -49,6 +49,9 @@ function normalize(raw: unknown): Database {
 function loadDatabase(): Database {
   let database: Database;
   try { database = normalize(JSON.parse(fs.readFileSync(DB_FILE, "utf8"))); } catch { database = initialData(); }
+  return withBootstrapAdmin(database);
+}
+function withBootstrapAdmin(database: Database): Database {
   const bootstrapEmail = process.env.APP_BOOTSTRAP_ADMIN_EMAIL?.trim().toLowerCase();
   const bootstrapPassword = process.env.APP_BOOTSTRAP_ADMIN_PASSWORD;
   if (bootstrapEmail && bootstrapPassword && isValidPassword(bootstrapPassword)) {
@@ -58,7 +61,35 @@ function loadDatabase(): Database {
   }
   return database;
 }
-function saveDatabase(data: Database): void { const directory = path.dirname(DB_FILE); const temp = path.join(directory, `.data_store.${process.pid}.${crypto.randomUUID()}.tmp`); fs.mkdirSync(directory, { recursive: true }); fs.writeFileSync(temp, JSON.stringify(data, null, 2), { encoding: "utf8", mode: 0o600 }); fs.renameSync(temp, DB_FILE); }
+// Render's disk is wiped on every deploy and restart, so production keeps the state as one JSON row in Supabase.
+// The data file stays the local/dev store and the seed for an empty remote table.
+const remote = process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY ? { url: `${process.env.SUPABASE_URL.replace(/\/$/, "")}/rest/v1/app_state`, key: process.env.SUPABASE_SECRET_KEY } : null;
+const remoteHeaders = (key: string) => ({ apikey: key, "Content-Type": "application/json", ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}) });
+let remoteReady = false;
+let pendingSave: Promise<void> = Promise.resolve();
+export async function initDatabase(): Promise<void> {
+  if (!remote) return;
+  const res = await fetch(`${remote.url}?id=eq.main&select=data`, { headers: remoteHeaders(remote.key) });
+  if (!res.ok) throw new Error(`Could not load app state from Supabase (${res.status}): ${await res.text()}`);
+  const rows = (await res.json()) as { data: unknown }[];
+  if (rows.length) db = withBootstrapAdmin(normalize(rows[0].data));
+  remoteReady = true; // only now may writes go remote, so a dev run can never overwrite production with its local file
+  if (!rows.length) saveDatabase(db);
+  await pendingSave;
+}
+export function flushDatabase(): Promise<void> { return pendingSave; }
+function saveDatabase(data: Database): void {
+  if (remote && remoteReady) {
+    const { key, url } = remote;
+    const body = JSON.stringify({ id: "main", data, updated_at: new Date().toISOString() });
+    // ponytail: whole-document upsert, queued in order; responses don't wait for it, so a crash can drop the last write. Await it in updateDb if that matters.
+    pendingSave = pendingSave
+      .then(() => fetch(url, { method: "POST", headers: { ...remoteHeaders(key), Prefer: "resolution=merge-duplicates,return=minimal" }, body }))
+      .then(async (res) => { if (!res.ok) console.error(`Saving app state to Supabase failed (${res.status}): ${await res.text()}`); })
+      .catch((error) => console.error("Saving app state to Supabase failed:", error));
+    return;
+  }
+  const directory = path.dirname(DB_FILE); const temp = path.join(directory, `.data_store.${process.pid}.${crypto.randomUUID()}.tmp`); fs.mkdirSync(directory, { recursive: true }); fs.writeFileSync(temp, JSON.stringify(data, null, 2), { encoding: "utf8", mode: 0o600 }); fs.renameSync(temp, DB_FILE); }
 let db = loadDatabase();
 function updateDb<T>(update: (database: Database) => T): T { const result = update(db); saveDatabase(db); return result; }
 function publicUser(user: StoredUser) { return { id: user.id, email: user.email, displayName: user.displayName, roles: user.roles }; }
