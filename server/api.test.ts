@@ -65,6 +65,17 @@ test("a role added in the UI can then take requirements", async () => {
   expect(added.status).toBe(200);
 });
 
+test("an admin can use every workspace, including student-only endpoints", async () => {
+  expect((await call("GET", "/profile", admin)).status).toBe(200);
+  expect((await call("GET", "/curriculum/notes", admin)).status).toBe(200);
+  expect((await call("GET", "/candidates", admin)).status).toBe(200);
+});
+
+test("a student still cannot use another workspace's endpoints", async () => {
+  expect((await call("GET", "/candidates", student)).status).toBe(403);
+  expect((await call("GET", "/curriculum/notes", student)).status).toBe(403);
+});
+
 test("deleting a document that only exists in the browser succeeds", async () => {
   expect((await call("DELETE", "/profile/documents/doc-1", student)).status).toBe(204);
 });

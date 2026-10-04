@@ -52,8 +52,10 @@ function PrivateRouter() {
 function RoleGuard({ requiredRole, children }: { requiredRole: string; children: ReactNode }) {
   const { user } = useAuth();
   const [, setLocation] = useLocation();
-  useEffect(() => { if (user && !(user.roles as string[]).includes(requiredRole)) setLocation("/"); }, [user, requiredRole, setLocation]);
-  if (user && !(user.roles as string[]).includes(requiredRole)) return null;
+  // Admins may open every workspace, matching the workspace switcher in AppShell.
+  const allowed = !user || user.roles.includes("ADMIN") || (user.roles as string[]).includes(requiredRole);
+  useEffect(() => { if (!allowed) setLocation("/"); }, [allowed, setLocation]);
+  if (!allowed) return null;
   return <>{children}</>;
 }
 
