@@ -1199,9 +1199,15 @@ export function RecruiterSkillRequirements() {
     toast.success(`Removed requirement "${removed[0]?.skill}".`);
   };
 
-  const handleAddRole = (e: React.FormEvent) => {
+  const handleAddRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newRoleTitle.trim()) return;
+    try {
+      await api.requirements.addRole(companyIndex, newRoleTitle.trim(), newRoleDemand);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "The role could not be added.");
+      return;
+    }
     const newRoleObj = {
       title: newRoleTitle.trim(),
       demand: newRoleDemand,

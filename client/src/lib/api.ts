@@ -176,6 +176,11 @@ export const api = {
         method: "PUT",
         body: JSON.stringify({ companyIndex, roleIndex, requirement }),
       }),
+    addRole: (companyIndex: number, title: string, demand: string) =>
+      request<CompanyRoleRequirement[]>("/requirements/roles", {
+        method: "POST",
+        body: JSON.stringify({ companyIndex, title, demand }),
+      }),
   },
 
   // Curriculum Notes CRUD

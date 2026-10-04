@@ -39,7 +39,7 @@ export function AppShell({ role = "student", children }: { role?: UserRole; chil
   const nav = roleNavigation[role];
   const extensionNav = nav.filter((item) => extensionLabels[role].includes(item.label));
   const primaryNav = nav.filter((item) => !extensionLabels[role].includes(item.label));
-  const roleInitials = role === "student" ? "AS" : role === "recruiter" ? "NP" : role === "institution" ? "IC" : "DR";
+  const roleInitials = user?.displayName.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join("") || (role === "student" ? "AS" : role === "recruiter" ? "NP" : role === "institution" ? "IC" : "DR");
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (!hasAccess) return null;

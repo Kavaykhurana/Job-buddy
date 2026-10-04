@@ -96,11 +96,11 @@ export function saveProfileDocuments(docs: ProfileDocumentItem[]): void {
   }
 }
 
-export function addProfileDocument(doc: Omit<ProfileDocumentItem, "id" | "uploadedAt">): ProfileDocumentItem {
+export function addProfileDocument(doc: Omit<ProfileDocumentItem, "id" | "uploadedAt"> & { id?: string }): ProfileDocumentItem {
   const docs = getProfileDocuments();
   const newDoc: ProfileDocumentItem = {
     ...doc,
-    id: `doc-${Date.now()}`,
+    id: doc.id ?? `doc-${Date.now()}`,
     uploadedAt: new Date().toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",

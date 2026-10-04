@@ -86,7 +86,7 @@
       "location": "Hybrid · Bengaluru",
       "date": "Closes 30 Aug",
       "match": 84,
-      "status": "Eligible",
+      "status": "Open",
       "required": [
         "Python",
         "Data Analysis",
@@ -106,7 +106,7 @@
       "location": "On campus · Chandigarh",
       "date": "Closes 02 Sep",
       "match": 72,
-      "status": "Eligible",
+      "status": "Open",
       "required": [
         "Research",
         "Documentation",
@@ -126,7 +126,7 @@
       "location": "Remote",
       "date": "Closes 06 Sep",
       "match": 61,
-      "status": "Review profile",
+      "status": "Open",
       "required": [
         "Product Thinking",
         "Writing",
@@ -138,6 +138,50 @@
       ],
       "type": "Structured opportunity",
       "summary": "Review product briefs, map user needs, and prepare concise evidence notes for a product team."
+    },
+    {
+      "id": "software-systems-eng",
+      "title": "Software Systems & Cloud Engineer",
+      "organization": "Apex Cloud Technologies",
+      "location": "Hybrid · Hyderabad",
+      "date": "Closes 12 Sep 2026",
+      "match": 0,
+      "status": "Open",
+      "required": [
+        "Python",
+        "JavaScript",
+        "React",
+        "Git"
+      ],
+      "preferred": [
+        "Docker",
+        "SQL",
+        "Linux",
+        "System Design"
+      ],
+      "type": "Full-time placement",
+      "summary": "Build resilient microservices, scale event-driven API workflows, implement modern React frontend dashboards, and maintain containerized cloud architectures."
+    },
+    {
+      "id": "data-infrastructure-assoc",
+      "title": "Data Infrastructure & Analytics Engineer",
+      "organization": "Quant Data Labs",
+      "location": "On campus · Pune",
+      "date": "Closes 03 Sep 2026",
+      "match": 0,
+      "status": "Open",
+      "required": [
+        "SQL",
+        "Data Analysis",
+        "Python"
+      ],
+      "preferred": [
+        "Statistics",
+        "Docker",
+        "Critical Thinking"
+      ],
+      "type": "Full-time placement",
+      "summary": "Develop analytical query models, optimize ETL transformations across relational and distributed warehouses, and build automated verification checks for high-throughput metrics."
     }
   ],
   "internships": [

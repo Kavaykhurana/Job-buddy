@@ -53,6 +53,7 @@ import {
   scheduleItems,
   studentSkillMaps,
 } from "@/data/portalData";
+import { useAuth } from "@/contexts/AuthContext";
 import { api } from "@/lib/api";
 import { userLocalStorage as localStorage } from "@/lib/userStorage";
 import { loadLatestAssessmentResult } from "./AssessmentPages";
@@ -2733,21 +2734,17 @@ function sanitizeUrl(rawUrl: string): string {
 function ProfileOverview() {
   const [skillsInput, setSkillsInput] = useState(() => declaredSkillsFromStorage().join(", "));
   const [links, setLinks] = useState<ProfessionalLinks>(professionalLinksFromStorage);
+  const { user } = useAuth();
   const [phone, setPhone] = useState(() => {
     try {
       const stored = localStorage.getItem("job-buddy-profile-phone");
-      return stored ? stored.replace(/\D/g, "").slice(-10) : "9812345510";
+      return stored ? stored.replace(/\D/g, "").slice(-10) : "";
     } catch {
-      return "9812345510";
+      return "";
     }
   });
-  const [email, setEmail] = useState(() => {
-    try {
-      return localStorage.getItem("job-buddy-profile-email") || "anaya.sharma@example.edu";
-    } catch {
-      return "anaya.sharma@example.edu";
-    }
-  });
+  // Saving this changes the account's login email, so always start from the signed-in account.
+  const [email, setEmail] = useState(() => user?.email ?? "");
   const assessment = loadLatestAssessmentResult();
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -3018,17 +3015,18 @@ function ProfileDocuments() {
     event.preventDefault();
     if (!newDocTitle.trim()) return;
 
-    const newDoc = addProfileDocument({
-      title: newDocTitle.trim(),
-      category: newDocCategory,
-      fileName: uploadedFileName || `${newDocTitle.trim().replace(/\s+/g, "_")}.pdf`,
-      fileSize: uploadedFileSize,
-      fileDataUrl: uploadedFileData,
-      verified: false,
-    });
-
     try {
-      await api.profile.addDocument(newDoc.title);
+      // Register on the server first and keep its id, so a later delete matches the server record.
+      const created = await api.profile.addDocument(newDocTitle.trim());
+      const newDoc = addProfileDocument({
+        id: created.id,
+        title: created.title,
+        category: newDocCategory,
+        fileName: uploadedFileName || `${newDocTitle.trim().replace(/\s+/g, "_")}.pdf`,
+        fileSize: uploadedFileSize,
+        fileDataUrl: uploadedFileData,
+        verified: false,
+      });
       setDocs(getProfileDocuments());
       setNewDocTitle("");
       setUploadedFileName("");
@@ -3036,7 +3034,6 @@ function ProfileDocuments() {
       setShowUpload(false);
       toast.success(`Document metadata registered; verification pending: ${newDoc.title}`);
     } catch (error) {
-      deleteProfileDocument(newDoc.id);
       toast.error(error instanceof Error ? error.message : "Document could not be registered.");
     }
   };
