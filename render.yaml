@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: job-buddy-portal
+    name: job-buddy
     runtime: docker
     plan: free
     region: oregon

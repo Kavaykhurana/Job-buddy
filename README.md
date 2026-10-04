@@ -5,8 +5,8 @@
 </p>
 
 <p align="center">
-  <a href="https://sih-connect-portal.onrender.com">
-    <img src="https://img.shields.io/badge/🚀_Live_Demo-sih--connect--portal.onrender.com-brightgreen?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
+  <a href="https://job-buddy-hs1e.onrender.com">
+    <img src="https://img.shields.io/badge/🚀_Live_Demo-job--buddy--hs1e.onrender.com-brightgreen?style=for-the-badge&logo=render&logoColor=white" alt="Live Demo" />
   </a>
 </p>
 
@@ -25,7 +25,7 @@
 
 ---
 
-> 🌐 **Live Production URL**: [https://sih-connect-portal.onrender.com](https://sih-connect-portal.onrender.com)
+> 🌐 **Live Production URL**: [https://job-buddy-hs1e.onrender.com](https://job-buddy-hs1e.onrender.com)
 > 
 > Explore the live application with any of the pre-configured role workspaces below:
 
