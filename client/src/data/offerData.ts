@@ -91,7 +91,7 @@ export function getPlacementStatus(): PlacementStatusRecord {
         status: "Open for placement",
         batch: "Batch 2028",
         department: "Computer Science & Engineering",
-        institution: "SIH Partner Institution",
+        institution: "Job-buddy Partner Institution",
         academicEvidence: "Partially verified",
       };
       localStorage.setItem(PLACEMENT_STATUS_KEY, JSON.stringify(defaultRecord));
@@ -104,7 +104,7 @@ export function getPlacementStatus(): PlacementStatusRecord {
       status: "Open for placement",
       batch: "Batch 2028",
       department: "Computer Science & Engineering",
-      institution: "SIH Partner Institution",
+      institution: "Job-buddy Partner Institution",
       academicEvidence: "Partially verified",
     };
   }
@@ -186,7 +186,7 @@ export function declineJobOffer(offerId: string): { success: boolean; offer?: Jo
 
 export function downloadOfferLetter(offer: JobOffer): void {
   const content = `======================================================================
-               JOB BUDDY OFFICIAL LETTER OF INTENT & EMPLOYMENT OFFER
+               JOB-BUDDY OFFICIAL LETTER OF INTENT & EMPLOYMENT OFFER
 ======================================================================
 
 Date: ${offer.issuedDate}
@@ -212,7 +212,7 @@ We are pleased to extend an official Letter of Intent for employment with ${offe
 3. ACCEPTANCE & VERIFICATION
    Offer Status: ${offer.status.toUpperCase()}
    Valid Until: ${offer.expiryDate}
-   Institutional Verification: SIH Partner Institution Placement Cell
+   Institutional Verification: Job-buddy Partner Institution Placement Cell
 
 Authorized Signatory,
 Campus Talent Acquisition & University Relations

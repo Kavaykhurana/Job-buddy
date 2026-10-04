@@ -1,4 +1,4 @@
-# Job Buddy — Full Lifecycle UI Extension Plan
+# Job-buddy — Full Lifecycle UI Extension Plan
 
 ## Preservation contract
 

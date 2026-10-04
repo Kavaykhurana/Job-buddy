@@ -246,7 +246,7 @@ export function downloadAttachedFile(file: AttachedFile) {
       return;
     }
 
-    const content = `JOB BUDDY DOCUMENT RECEIPT\n============================\nDocument name: ${file.name}\nSize: ${file.size}\nType: ${file.type}\nRegistered at: ${file.uploadedAt}\nVerification status: Pending review\n\nThe original file bytes are not available in this browser session. This receipt is metadata only and is not the document itself.`;
+    const content = `JOB-BUDDY DOCUMENT RECEIPT\n============================\nDocument name: ${file.name}\nSize: ${file.size}\nType: ${file.type}\nRegistered at: ${file.uploadedAt}\nVerification status: Pending review\n\nThe original file bytes are not available in this browser session. This receipt is metadata only and is not the document itself.`;
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");

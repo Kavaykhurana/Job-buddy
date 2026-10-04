@@ -1,4 +1,4 @@
-# Job Buddy — Answer-Driven Skill Assessment
+# Job-buddy — Answer-Driven Skill Assessment
 
 ## Quiz design
 

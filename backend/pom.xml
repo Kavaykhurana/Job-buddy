@@ -14,8 +14,8 @@
     <groupId>in.jobbuddy</groupId>
     <artifactId>job-buddy-api</artifactId>
     <version>1.0.0</version>
-    <name>Job Buddy API</name>
-    <description>Secure Java 21 API for Job Buddy academia-industry workflows.</description>
+    <name>Job-buddy API</name>
+    <description>Secure Java 21 API for Job-buddy academia-industry workflows.</description>
 
     <properties>
         <java.version>21</java.version>

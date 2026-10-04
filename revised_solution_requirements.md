@@ -64,4 +64,4 @@ The following flow is explicitly required as an addition to the current frontend
 
 ## Preservation rule
 
-The current Job Buddy design language remains unchanged: persistent top navigation, warm off-white canvas, Olive Ink rails, evidence-led data panels, role-aware workspaces, and restrained institution-oriented interaction design. New features must follow this grammar and must not become a separate visual product.
+The current Job-buddy design language remains unchanged: persistent top navigation, warm off-white canvas, Olive Ink rails, evidence-led data panels, role-aware workspaces, and restrained institution-oriented interaction design. New features must follow this grammar and must not become a separate visual product.

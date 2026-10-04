@@ -95,7 +95,7 @@ export const internshipOpportunities: InternshipOpportunity[] = [
     stipend: "₹35,000 / month",
     mentors: [
       { name: "Neeraj Patel", role: "Principal Data Engineer", organization: "Northstar Systems", status: "Assigned" },
-      { name: "Dr. Meera Iyer", role: "Academic Mentor", organization: "SIH Partner Institution", status: "Assigned" },
+      { name: "Dr. Meera Iyer", role: "Academic Mentor", organization: "Job-buddy Partner Institution", status: "Assigned" },
     ],
     milestones: [
       { id: "m1", title: "Orientation and Data Access Provisioning", dueDate: "06 Sep", status: "Complete", completedDate: "06 Sep" },
@@ -122,7 +122,7 @@ export const internshipOpportunities: InternshipOpportunity[] = [
     stipend: "₹28,000 / month",
     mentors: [
       { name: "Dr. Alok Verma", role: "Lead Research Scientist", organization: "Mosaic Health Labs", status: "Assigned" },
-      { name: "Prof. S. Natarajan", role: "Faculty Advisor", organization: "SIH Partner Institution", status: "Assigned" },
+      { name: "Prof. S. Natarajan", role: "Faculty Advisor", organization: "Job-buddy Partner Institution", status: "Assigned" },
     ],
     milestones: [
       { id: "m1", title: "Protocol Synthesis & Baseline Review", dueDate: "08 Sep", status: "In progress" },

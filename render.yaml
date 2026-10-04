@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: sih-connect-portal
+    name: job-buddy-portal
     runtime: docker
     plan: free
     region: oregon

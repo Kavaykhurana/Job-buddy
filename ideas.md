@@ -1,4 +1,4 @@
-# Job Buddy — Design Blueprint
+# Job-buddy — Design Blueprint
 
 ## Reference orientation as ground truth
 
@@ -45,7 +45,7 @@ Motion is subtle and functional: 140–180ms opacity/transform transitions, no b
 
 ### Brand essence
 
-**Job Buddy is the role-aware workspace that helps institutions turn student skill evidence into transparent placement progress.**
+**Job-buddy is the role-aware workspace that helps institutions turn student skill evidence into transparent placement progress.**
 
 Personality: **measured, supportive, accountable**.
 
@@ -58,7 +58,7 @@ The voice is concise, factual, and action-led. Headlines name the current work; 
 
 ### Wordmark and logo
 
-The logo is an abstract, text-free **interlocking field mark**: three vertical olive segments joined by a small ochre bridge, representing institution, learner, and industry alignment. The wordmark “Job Buddy” is set in Manrope 700 with wide but controlled letter spacing. The mark is used at a clearly visible 32px scale in the header and as the favicon.
+The logo is an abstract, text-free **interlocking field mark**: three vertical olive segments joined by a small ochre bridge, representing institution, learner, and industry alignment. The wordmark “Job-buddy” is set in Manrope 700 with wide but controlled letter spacing. The mark is used at a clearly visible 32px scale in the header and as the favicon.
 
 ### Signature brand color
 

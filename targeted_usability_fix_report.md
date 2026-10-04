@@ -1,4 +1,4 @@
-# Job Buddy — Targeted Usability Fix Report
+# Job-buddy — Targeted Usability Fix Report
 
 ## Completed targeted fixes
 

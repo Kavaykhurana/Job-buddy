@@ -1881,7 +1881,7 @@ export function InstitutionApplications() {
                   </div>
                   <div>
                     <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Application Tracking</span>
-                    <span style={{ color: "var(--ink)" }}>Managed via Job Buddy Recruiter Portal</span>
+                    <span style={{ color: "var(--ink)" }}>Managed via Job-buddy Recruiter Portal</span>
                   </div>
                   <div>
                     <span style={{ color: "var(--slate)", display: "block", fontSize: "10px", fontWeight: 700, textTransform: "uppercase" }}>Recruiter Reviewer</span>
@@ -2338,7 +2338,7 @@ export function InstitutionPlacement() {
     } else {
       // "summary" format: generate detailed audit summary text report
       let summaryText = `================================================================================
-JOB BUDDY — INSTITUTIONAL PLACEMENT AUDIT SUMMARY REPORT
+JOB-BUDDY — INSTITUTIONAL PLACEMENT AUDIT SUMMARY REPORT
 Governed Institutional Placement Office · Batch 2028
 ================================================================================
 
@@ -2438,7 +2438,7 @@ ${samplePlacementShortlists.map((s, idx) => `[Shortlist ${idx + 1}] ${s.studentN
 --------------------------------------------------------------------------------
 4. GOVERNANCE & AUDIT COMPLIANCE
 --------------------------------------------------------------------------------
-- Exported under Institutional Authority for Job Buddy Placement Governance.
+- Exported under Institutional Authority for Job-buddy Placement Governance.
 - Records reflect verified candidate credentials and authorised offer details.
 - Logged in localStorage [${PLACEMENT_EXPORT_LOG_KEY}].
 - Sign-off: University Placement Cell Directorate · Batch 2028.

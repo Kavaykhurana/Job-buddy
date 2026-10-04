@@ -126,7 +126,7 @@ export function downloadProfileDocument(doc: ProfileDocumentItem): void {
     a.click();
     document.body.removeChild(a);
   } else {
-    const content = `JOB BUDDY VERIFIED PROFILE DOCUMENT\n\nTitle: ${doc.title}\nCategory: ${doc.category}\nFile: ${doc.fileName}\nUploaded: ${doc.uploadedAt}\nVerification Status: ${doc.verified ? "VERIFIED" : "PENDING REVIEW"}\nStudent: Anaya Sharma (STU-102417)`;
+    const content = `JOB-BUDDY VERIFIED PROFILE DOCUMENT\n\nTitle: ${doc.title}\nCategory: ${doc.category}\nFile: ${doc.fileName}\nUploaded: ${doc.uploadedAt}\nVerification Status: ${doc.verified ? "VERIFIED" : "PENDING REVIEW"}\nStudent: Anaya Sharma (STU-102417)`;
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -234,7 +234,7 @@ export function downloadProfileResume(resume: ProfileResumeItem): void {
     a.click();
     document.body.removeChild(a);
   } else {
-    const content = `======================================================================\n                          ANAYA SHARMA - RESUME\n======================================================================\nEmail: anaya.sharma@example.edu | Phone: +91 9812345510\nInstitution: SIH Partner Institution | Batch: 2028 | Major: Computer Science\nCGPA: 8.14 | 10th: 91.2% | 12th: 88.6%\n\nTECHNICAL SKILLS:\nPython, SQL, Data Analysis, Research Writing, Communication, Git, Machine Learning\n\nACADEMIC PROJECTS:\n1. Predictive Telemetry Data Pipeline (Python, Pandas, SQL)\n2. Healthcare Clinical Research Operations Framework (Evidence Synthesizer)\n\nCERTIFICATIONS & AWARDS:\n- Data Foundations Certificate (Industry Council)\n- SQL Evidence & Data Querying Credential\n======================================================================`;
+    const content = `======================================================================\n                          ANAYA SHARMA - RESUME\n======================================================================\nEmail: anaya.sharma@example.edu | Phone: +91 9812345510\nInstitution: Job-buddy Partner Institution | Batch: 2028 | Major: Computer Science\nCGPA: 8.14 | 10th: 91.2% | 12th: 88.6%\n\nTECHNICAL SKILLS:\nPython, SQL, Data Analysis, Research Writing, Communication, Git, Machine Learning\n\nACADEMIC PROJECTS:\n1. Predictive Telemetry Data Pipeline (Python, Pandas, SQL)\n2. Healthcare Clinical Research Operations Framework (Evidence Synthesizer)\n\nCERTIFICATIONS & AWARDS:\n- Data Foundations Certificate (Industry Council)\n- SQL Evidence & Data Querying Credential\n======================================================================`;
     const blob = new Blob([content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

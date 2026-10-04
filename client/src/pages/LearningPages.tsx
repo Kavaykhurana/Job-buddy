@@ -874,7 +874,7 @@ export function CertificationsPage() {
       document.body.removeChild(a);
     } else {
       // Generate official verification blob
-      const content = `JOB BUDDY VERIFIED CREDENTIAL CERTIFICATE\n\nTitle: ${cert.title}\nIssuer: ${cert.issuer}\nIssue Date: ${cert.issueDate}\nCredential ID: ${cert.credentialId}\nVerified Skills: ${cert.skills.join(", ")}\nVerification Hash: ${Math.random().toString(36).substring(2, 15)}\nStatus: Official Verified Record`;
+      const content = `JOB-BUDDY VERIFIED CREDENTIAL CERTIFICATE\n\nTitle: ${cert.title}\nIssuer: ${cert.issuer}\nIssue Date: ${cert.issueDate}\nCredential ID: ${cert.credentialId}\nVerified Skills: ${cert.skills.join(", ")}\nVerification Hash: ${Math.random().toString(36).substring(2, 15)}\nStatus: Official Verified Record`;
       const blob = new Blob([content], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");

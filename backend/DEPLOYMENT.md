@@ -5,7 +5,7 @@ This directory is a future Java backend scaffold. It is not the service used by 
 | Component | Runtime | Responsibility |
 |---|---|---|
 | React portal | Static files behind Nginx | User interface and short-lived in-memory access token. |
-| Job Buddy API | Java 21, Spring Boot 4.1.1, Maven | REST API, JWT issuance, authorization, validation, and workflow enforcement. |
+| Job-buddy API | Java 21, Spring Boot 4.1.1, Maven | REST API, JWT issuance, authorization, validation, and workflow enforcement. |
 | PostgreSQL | PostgreSQL 16 or later | Durable system-of-record data and Flyway migration history. |
 | Redis | Redis 7 or compatible | Distributed login/register rate limit counter in production. |
 | Nginx | Nginx with TLS termination | Static delivery, reverse proxy, security headers, and same-origin API routing. |

@@ -1,4 +1,4 @@
-# Job Buddy — Account Access and Declared Skills Update
+# Job-buddy — Account Access and Declared Skills Update
 
 ## Added user-facing capabilities
 

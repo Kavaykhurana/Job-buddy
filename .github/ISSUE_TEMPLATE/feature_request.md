@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest an idea or capability for Job Buddy
+about: Suggest an idea or capability for Job-buddy
 title: '[FEATURE] '
 labels: enhancement
 assignees: ''

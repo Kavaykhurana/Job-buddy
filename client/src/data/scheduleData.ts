@@ -313,7 +313,7 @@ export function scheduleInterviewForCandidate(params: {
 export function downloadCalendarEvent(event: ScheduleEvent): void {
   const icsContent = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//Job Buddy//Student Schedule//EN
+PRODID:-//Job-buddy//Student Schedule//EN
 BEGIN:VEVENT
 UID:${event.id}@job-buddy.edu
 SUMMARY:${event.title}

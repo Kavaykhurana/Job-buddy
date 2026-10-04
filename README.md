@@ -1,4 +1,4 @@
-# Job Buddy — Academia-Industry Skill & Placement Portal
+# Job-buddy — Academia-Industry Skill & Placement Portal
 
 <p align="center">
   <b>A unified, evidence-led ecosystem connecting Students, Industry Recruiters, Educational Institutions, and Academicians for skill alignment, career opportunities, and curriculum governance.</b>
@@ -41,7 +41,7 @@
 ---
 
 ## 📑 Table of Contents
-- [Job Buddy — Academia-Industry Skill \& Placement Portal](#job-buddy--academia-industry-skill--placement-portal)
+- [Job-buddy — Academia-Industry Skill \& Placement Portal](#job-buddy--academia-industry-skill--placement-portal)
     - [🔑 Demo Accounts for Instant Review](#-demo-accounts-for-instant-review)
   - [📑 Table of Contents](#-table-of-contents)
   - [🌟 Executive Overview](#-executive-overview)
@@ -75,7 +75,7 @@
 
 ## 🌟 Executive Overview
 
-**Job Buddy** solves the critical disconnect between academic curriculum outcomes and rapidly evolving industrial skill requirements. Rather than relying solely on self-reported resumes or unverified credentials, Job Buddy implements a **transparent, evidence-led placement and development lifecycle**.
+**Job-buddy** solves the critical disconnect between academic curriculum outcomes and rapidly evolving industrial skill requirements. Rather than relying solely on self-reported resumes or unverified credentials, Job-buddy implements a **transparent, evidence-led placement and development lifecycle**.
 
 The platform provides:
 1. **Objective Skill Scoring & Gap Mapping**: Adaptive assessments that score technical, soft, and domain-specific capabilities.
@@ -133,7 +133,7 @@ The platform provides:
 
 ## 🏗️ System Architecture
 
-Job Buddy is currently deployed as a single Node.js/Express service serving the React application and its API. The `backend/` directory is a future Java design scaffold and is not part of the active Render deployment.
+Job-buddy is currently deployed as a single Node.js/Express service serving the React application and its API. The `backend/` directory is a future Java design scaffold and is not part of the active Render deployment.
 
 ```mermaid
 graph TD
@@ -311,7 +311,7 @@ pnpm start
 
 ### 🚀 Deploying to Render
 
-You can deploy Job Buddy to [Render](https://render.com) with 1-click using the included [`render.yaml`](./render.yaml) blueprint:
+You can deploy Job-buddy to [Render](https://render.com) with 1-click using the included [`render.yaml`](./render.yaml) blueprint:
 
 1. **Via Render Dashboard**:
    - Go to [dashboard.render.com](https://dashboard.render.com) and click **New +** → **Blueprint** (or **Web Service**).

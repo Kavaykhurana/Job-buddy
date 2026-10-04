@@ -1,4 +1,4 @@
-# Job Buddy Frontend — Strict Final-Scope Audit
+# Job-buddy Frontend — Strict Final-Scope Audit
 
 ## Audit result
 

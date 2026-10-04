@@ -55,7 +55,7 @@ The current student top navigation should be preserved. To avoid disturbing the 
 3. **Third:** Add internship discovery, matching, application, engagement, mentor feedback, and completion lifecycle.
 4. **Fourth:** Extend recruiter/industry posting and recruitment controls; then add academician internships, industrial training, and FDP workflows.
 5. **Fifth:** Add collaboration, integrations, industry/policymaker analytics, and the deeper governed reporting surfaces.
-6. **Throughout:** Preserve the current Job Buddy layout, palette, brand mark, top navigation grammar, role context, cards, and responsive behavior.
+6. **Throughout:** Preserve the current Job-buddy layout, palette, brand mark, top navigation grammar, role context, cards, and responsive behavior.
 
 ## Scope decision required
 

@@ -2544,7 +2544,7 @@ export function PlacementPage() {
 ======================================================================
 Student: Anaya Sharma (STU-102417)
 Batch: 2028 · Department: Computer Science & Engineering
-Institution: SIH Partner Institution
+Institution: Job-buddy Partner Institution
 
 PLACEMENT RECORD:
 Company: ${company}
@@ -2554,7 +2554,7 @@ Placement Status: VERIFIED & CONFIRMED
 Date of Acceptance: ${placement.placedAt || "31 Aug 2026"}
 
 Placement Officer Verification:
-SIH Partner Institution University Placement Cell
+Job-buddy Partner Institution University Placement Cell
 Reference: locally generated draft (institutional verification pending)
 ======================================================================`;
 
@@ -3397,7 +3397,7 @@ function ProfileSettings() {
     const exportData = {
       student: "Anaya Sharma",
       studentId: "STU-102417",
-      institution: "SIH Partner Institution",
+      institution: "Job-buddy Partner Institution",
       batch: "Batch 2028",
       program: "Computer Science & Engineering",
       cgpa: "8.14",

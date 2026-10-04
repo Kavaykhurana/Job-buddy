@@ -1,4 +1,4 @@
-# Job Buddy — Final UI Compliance Review
+# Job-buddy — Final UI Compliance Review
 
 ## Review scope and result
 

@@ -1322,7 +1322,7 @@ export function InternshipCompletionPage({ id = "data-practice" }: { id?: string
       a.click();
       document.body.removeChild(a);
     } else {
-      const content = `JOB BUDDY INTERNSHIP REPORT RECEIPT\n\nInternship: ${item.title}\nOrganization: ${item.org}\nAuthor: Anaya Sharma\nStatus: Locally recorded; mentor verification pending\nDate: 2026-08-31`;
+      const content = `JOB-BUDDY INTERNSHIP REPORT RECEIPT\n\nInternship: ${item.title}\nOrganization: ${item.org}\nAuthor: Anaya Sharma\nStatus: Locally recorded; mentor verification pending\nDate: 2026-08-31`;
       const blob = new Blob([content], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -1338,7 +1338,7 @@ export function InternshipCompletionPage({ id = "data-practice" }: { id?: string
 
   const handleDownloadCertificate = () => {
     const certId = engagement.certificateId || "CERT-INT-NORTHSTAR-8819";
-    const certContent = `JOB BUDDY INTERNSHIP COMPLETION DRAFT\n\n=======================================================\nStudent: ANAYA SHARMA\nProgram: ${item.title.toUpperCase()}\nOrganization: ${item.org.toUpperCase()}\n\nRecorded: ${engagement.certificateDate || "31 Aug 2026"}\nReference ID: ${certId}\nIndustry Mentor: ${item.mentors[0].name} (${item.mentors[0].organization})\nStatus: Draft record — institutional and mentor verification pending\n=======================================================`;
+    const certContent = `JOB-BUDDY INTERNSHIP COMPLETION DRAFT\n\n=======================================================\nStudent: ANAYA SHARMA\nProgram: ${item.title.toUpperCase()}\nOrganization: ${item.org.toUpperCase()}\n\nRecorded: ${engagement.certificateDate || "31 Aug 2026"}\nReference ID: ${certId}\nIndustry Mentor: ${item.mentors[0].name} (${item.mentors[0].organization})\nStatus: Draft record — institutional and mentor verification pending\n=======================================================`;
 
     const blob = new Blob([certContent], { type: "text/plain" });
     const url = URL.createObjectURL(blob);

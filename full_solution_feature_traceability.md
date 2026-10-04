@@ -1,4 +1,4 @@
-# Job Buddy — Full Solution Frontend Traceability
+# Job-buddy — Full Solution Frontend Traceability
 
 ## Compliance status
 

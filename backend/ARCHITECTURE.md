@@ -1,4 +1,4 @@
-# Job Buddy API Architecture
+# Job-buddy API Architecture
 
 ## Technology baseline
 
