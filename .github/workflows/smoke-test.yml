@@ -28,7 +28,7 @@ jobs:
 
       - name: Assistant answers through Gemini
         run: |
-          reply=$(curl --fail --silent --show-error --max-time 120 -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+          reply=$(curl --fail-with-body --silent --show-error --max-time 120 -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
             -d '{"messages":[{"role":"user","text":"In one sentence: where do I track my job applications?"}],"page":"/"}' "$BASE/assistant/chat")
           echo "$reply" | jq -s -r '[.[] | select(.type == "delta") | .text] | join("")'
           echo "$reply" | jq -s -e 'any(.[]; .type == "done") and ([.[] | select(.type == "delta") | .text] | join("") | length > 0)'

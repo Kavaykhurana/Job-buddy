@@ -6,9 +6,9 @@ import path from "node:path";
 import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
 
 // A fake Gemini REST endpoint: records each request and answers in the mode the test picks.
-type Mode = "ok" | "busy" | "blocked";
+type Mode = "ok" | "busy" | "blocked" | "rejectsThinking" | "badRequest" | "hang" | "stall";
 let mode: Mode = "ok";
-const calls: { url: string; key?: string; body: { systemInstruction: { parts: { text: string }[] }; contents: { role: string; parts: { text: string }[] }[] } }[] = [];
+const calls: { url: string; key?: string; body: { systemInstruction: { parts: { text: string }[] }; contents: { role: string; parts: { text: string }[] }[]; generationConfig: { thinkingConfig?: { thinkingBudget?: number } } } }[] = [];
 const sse = (chunk: object) => `data: ${JSON.stringify(chunk)}\r\n\r\n`;
 
 let base = "";
@@ -20,6 +20,10 @@ beforeAll(async () => {
   gemini.post(/.*/, (req, res) => {
     calls.push({ url: req.originalUrl, key: req.header("x-goog-api-key"), body: req.body });
     if (mode === "busy") return res.status(429).json({ error: { message: "Resource exhausted" } });
+    if (mode === "rejectsThinking" && req.body.generationConfig?.thinkingConfig) return res.status(400).json({ error: { message: "Thinking budget is not supported by this model." } });
+    if (mode === "badRequest") return res.status(400).json({ error: { message: "API key not valid." } });
+    if (mode === "hang") return; // never answers
+    if (mode === "stall") { res.setHeader("Content-Type", "text/event-stream"); res.write(sse({ candidates: [{ content: { parts: [{ text: "Partial answer" }] } }] })); return; } // then goes quiet
     res.setHeader("Content-Type", "text/event-stream");
     if (mode === "blocked") { res.write(sse({ promptFeedback: { blockReason: "SAFETY" } })); return res.end(); }
     res.write(sse({ candidates: [{ content: { role: "model", parts: [{ text: "planning…", thought: true }] } }] }));
@@ -44,7 +48,7 @@ beforeAll(async () => {
   closeAll = () => { server.close(); fake.close(); };
 });
 afterAll(() => closeAll());
-beforeEach(() => { mode = "ok"; calls.length = 0; process.env.GEMINI_API_KEY = "test-gemini-key"; });
+beforeEach(() => { mode = "ok"; calls.length = 0; process.env.GEMINI_API_KEY = "test-gemini-key"; delete process.env.GEMINI_TIMEOUT_MS; });
 
 const authed = (token: string) => ({ "Content-Type": "application/json", Authorization: `Bearer ${token}` });
 const register = async (email: string) => (await (await fetch(`${base}/auth/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password, displayName: "Riya Verma" }) })).json()).accessToken as string;
@@ -95,6 +99,45 @@ test("the key travels in a header, the model is configurable, and the prompt is 
   // Recruiter-only data and other workspaces' guides stay out of a student's prompt.
   expect(prompt).not.toContain("\"candidates\"");
   expect(prompt).not.toContain("Recruiter workspace:");
+});
+
+test("asks Gemini for a small thinking budget so answers come back in seconds", async () => {
+  await (await chat(student, ask("hi"))).text();
+  expect(calls[0].body.generationConfig.thinkingConfig).toEqual({ thinkingBudget: 512 });
+});
+
+test("a model that rejects the thinking budget is retried once without it", async () => {
+  mode = "rejectsThinking";
+  const res = await chat(student, ask("hi"));
+  expect(res.status).toBe(200);
+  expect((await events(res)).at(-1)).toEqual({ type: "done" });
+  expect(calls.map((call) => Boolean(call.body.generationConfig.thinkingConfig))).toEqual([true, false]);
+});
+
+test("any other bad request is not retried and stays a generic 502", async () => {
+  mode = "badRequest";
+  const res = await chat(student, ask("hi"));
+  expect(res.status).toBe(502);
+  expect(JSON.stringify(await res.json())).not.toMatch(/API key/);
+  expect(calls).toHaveLength(1);
+});
+
+test("a Gemini that never answers gives a 504 after the timeout instead of hanging", async () => {
+  mode = "hang";
+  process.env.GEMINI_TIMEOUT_MS = "300";
+  const started = Date.now();
+  const res = await chat(student, ask("hi"));
+  expect(res.status).toBe(504);
+  expect((await res.json()).detail).toMatch(/took too long/);
+  expect(Date.now() - started).toBeLessThan(3_000);
+});
+
+test("a reply that goes quiet midway ends with an error event after the timeout", async () => {
+  mode = "stall";
+  process.env.GEMINI_TIMEOUT_MS = "300";
+  const stream = await events(await chat(student, ask("hi")));
+  expect(stream[0]).toEqual({ type: "delta", text: "Partial answer" });
+  expect(stream.at(-1)).toEqual({ type: "error", detail: "The assistant stopped responding. Try again." });
 });
 
 test("an upstream quota error becomes a friendly 503 without leaking provider details", async () => {
