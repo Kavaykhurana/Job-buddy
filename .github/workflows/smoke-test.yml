@@ -1,0 +1,34 @@
+name: Smoke test production
+
+# Run by hand after a deploy (Actions → Smoke test production → Run workflow).
+# Signs in as the demo student and checks that the data store, the session flow and the Gemini assistant all work.
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      BASE: https://job-buddy-hs1e.onrender.com/api/v1
+    steps:
+      - name: Service and data store are up
+        run: |
+          curl --fail --silent --show-error --retry 8 --retry-delay 20 --retry-all-errors --max-time 90 "$BASE/health"
+
+      - name: Demo student can sign in
+        run: |
+          token=$(curl --fail --silent --show-error -X POST -H 'Content-Type: application/json' -d '{"role":"STUDENT"}' "$BASE/auth/demo" | jq -r .accessToken)
+          test -n "$token" && test "$token" != null
+          echo "::add-mask::$token"
+          echo "TOKEN=$token" >> "$GITHUB_ENV"
+
+      - name: Assistant is enabled
+        run: |
+          curl --fail --silent --show-error -H "Authorization: Bearer $TOKEN" "$BASE/assistant/status" | jq -e '.enabled == true'
+
+      - name: Assistant answers through Gemini
+        run: |
+          reply=$(curl --fail --silent --show-error --max-time 120 -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+            -d '{"messages":[{"role":"user","text":"In one sentence: where do I track my job applications?"}],"page":"/"}' "$BASE/assistant/chat")
+          echo "$reply" | jq -s -r '[.[] | select(.type == "delta") | .text] | join("")'
+          echo "$reply" | jq -s -e 'any(.[]; .type == "done") and ([.[] | select(.type == "delta") | .text] | join("") | length > 0)'
