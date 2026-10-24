@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { z } from "zod";
 import { PORTAL_ROLES, type PortalRole, type RefreshSession, type StoredUser, clearRefreshCookie, createRefreshSession, hashOpaqueToken, hashPassword, isRefreshSessionActive, isValidPassword, issueAccessToken, newId, readCookie, refreshCookie, verifyAccessToken, verifyPassword } from "./auth.js";
+import { AssistantError, type AssistantFacts, assistantConfig, buildSystemPrompt, openGeminiStream, takeAssistantQuota } from "./assistant.js";
 
 export const apiRouter = Router();
 apiRouter.use(json({ limit: "100kb", strict: true }));
@@ -166,3 +167,49 @@ apiRouter.get("/curriculum/notes", requireAuth, requireRoles("INSTITUTION", "ACA
 apiRouter.post("/curriculum/notes", requireAuth, requireRoles("INSTITUTION", "ACADEMICIAN", "ADMIN"), (req: AuthedRequest, res) => { const input = parse(z.object({ program: text(2, 160), note: text(5, 2_000) }), req.body, res); if (!input) return; const note = { id: newId("curr"), ...input, createdBy: req.auth!.user.displayName, createdAt: now() }; updateDb((state) => { state.curriculumNotes.unshift(note); }); return res.status(201).json(note); });
 apiRouter.get("/initiatives", requireAuth, (_req, res) => res.json(db.initiatives));
 apiRouter.post("/initiatives", requireAuth, requireRoles("RECRUITER", "ACADEMICIAN", "INSTITUTION", "ADMIN"), (req, res) => { const input = parse(z.object({ kind: text(2, 80), title: text(2, 160), org: text(2, 160) }), req.body, res); if (!input) return; const initiative = { id: newId("init"), ...input, status: "Published", participants: 0 }; updateDb((state) => { state.initiatives.unshift(initiative); }); return res.status(201).json(initiative); });
+
+// Assistant: the model only sees what this user's own endpoints already expose, so chat cannot widen access.
+function assistantFacts(user: StoredUser): AssistantFacts {
+  const has = (role: PortalRole) => user.roles.includes("ADMIN") || user.roles.includes(role);
+  const facts: AssistantFacts = {
+    openJobs: db.jobs.filter((job) => job.status === "Open").slice(0, 20).map((job) => ({ id: job.id, title: job.title, organization: job.organization, location: job.location, closes: job.date, type: job.type, required: job.required, preferred: job.preferred })),
+    openInternships: db.internships.filter((item) => item.status === "Open").slice(0, 10).map((item) => ({ id: item.id, title: item.title, organization: item.org, mode: item.mode, closes: item.close, required: item.required })),
+    experiences: db.experiences.slice(0, 10).map((item) => ({ id: item.id, type: item.type, title: item.title, organization: item.org, duration: item.duration })),
+    initiatives: db.initiatives.slice(0, 10).map((item) => ({ kind: item.kind, title: item.title, organization: item.org })),
+  };
+  if (has("STUDENT")) {
+    const profile = db.profiles[user.id];
+    if (profile) facts.myProfile = { program: profile.program, declaredSkills: profile.declaredSkills, mobileOnFile: Boolean(profile.phone), documents: profile.documents.map((document) => ({ title: document.title, verified: document.verified })) };
+    facts.myApplications = db.applications.filter((item) => item.userId === user.id).slice(0, 20).map((item) => ({ jobId: item.jobId, jobTitle: item.jobTitle, organization: item.organization, stage: item.stage, appliedOn: item.appliedAt.slice(0, 10) }));
+  }
+  if (has("RECRUITER")) {
+    const mine = db.jobs.filter((job) => job.ownerId === user.id);
+    facts.myPostedJobs = mine.slice(0, 20).map((job) => ({ id: job.id, title: job.title, status: job.status, applicationsByStage: db.applications.filter((item) => item.jobId === job.id).reduce<Record<string, number>>((counts, item) => ({ ...counts, [item.stage]: (counts[item.stage] ?? 0) + 1 }), {}) }));
+    facts.myPostedInternships = db.internships.filter((item) => item.ownerId === user.id).slice(0, 10).map((item) => ({ id: item.id, title: item.title, status: item.status }));
+    facts.candidates = db.candidates.slice(0, 20).map((item) => ({ id: item.id, name: item.name, program: item.program, score: item.score, stage: item.stage, shortlisted: item.shortlisted, skills: item.skills }));
+  }
+  if (has("INSTITUTION") || has("ACADEMICIAN")) facts.recentCurriculumNotes = db.curriculumNotes.slice(0, 5).map((item) => ({ program: item.program, note: item.note.slice(0, 300), by: item.createdBy, on: item.createdAt.slice(0, 10) }));
+  if (user.roles.includes("ADMIN")) facts.platformTotals = { users: db.users.length, jobs: db.jobs.length, applications: db.applications.length };
+  return facts;
+}
+const assistantSchema = z.object({ messages: z.array(z.object({ role: z.enum(["user", "model"]), text: text(1, 4_000) })).min(1).max(20), page: z.string().trim().max(200).optional() })
+  .refine((input) => input.messages[input.messages.length - 1]?.role === "user", { message: "The last message must come from the user.", path: ["messages"] })
+  .refine((input) => input.messages.reduce((total, message) => total + message.text.length, 0) <= 24_000, { message: "The conversation is too long. Start a new chat.", path: ["messages"] });
+apiRouter.get("/assistant/status", requireAuth, (_req, res) => res.json({ enabled: assistantConfig().enabled }));
+apiRouter.post("/assistant/chat", requireAuth, async (req: AuthedRequest, res) => {
+  const user = req.auth!.user;
+  if (!assistantConfig().enabled) return res.status(503).json({ detail: "The assistant is not configured on this server." });
+  const input = parse(assistantSchema, req.body, res); if (!input) return;
+  if (!takeAssistantQuota(user.id)) return res.status(429).json({ detail: "You've sent a lot of messages. Try again in a few minutes." });
+  const aborter = new AbortController();
+  res.on("close", () => { if (!res.writableEnded) aborter.abort(); });
+  let stream: AsyncGenerator<string>;
+  try { stream = await openGeminiStream({ systemPrompt: buildSystemPrompt({ displayName: user.displayName, roles: user.roles, page: input.page, facts: assistantFacts(user) }), messages: input.messages, signal: aborter.signal }); }
+  catch (error) { const problem = error instanceof AssistantError ? error : new AssistantError(502, "The assistant is unavailable right now."); if (!aborter.signal.aborted) res.status(problem.status).json({ detail: problem.message }); return; }
+  // Newline-delimited JSON events: {type:"delta",text} … then {type:"done"} or {type:"error",detail}.
+  res.status(200).setHeader("Content-Type", "application/x-ndjson; charset=utf-8"); res.setHeader("X-Accel-Buffering", "no"); res.flushHeaders();
+  const send = (event: object) => { if (!res.destroyed && !res.writableEnded) res.write(`${JSON.stringify(event)}\n`); };
+  try { for await (const delta of stream) { if (aborter.signal.aborted) break; send({ type: "delta", text: delta }); } send({ type: "done" }); }
+  catch (error) { send({ type: "error", detail: error instanceof AssistantError ? error.message : "The assistant stopped unexpectedly. Try again." }); }
+  if (!res.destroyed) res.end();
+});

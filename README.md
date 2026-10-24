@@ -229,6 +229,14 @@ The active endpoints are exposed under `/api/v1` by the Node backend. Non-authen
 | `GET` | `/api/v1/requirements` | Get company skill demand matrix | — |
 | `PUT` | `/api/v1/requirements` | Update company skill requirement baseline | Matrix payload |
 
+### 💬 Job-buddy Assistant (Gemini)
+| Method | Endpoint | Description | Request Body |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/v1/assistant/status` | Whether the assistant is configured (`{ enabled }`) | — |
+| `POST` | `/api/v1/assistant/chat` | Streams a reply as newline-delimited JSON: `{type:"delta",text}` events, then `{type:"done"}` or `{type:"error",detail}` | `{ messages: [{ role: "user" \| "model", text }], page? }` |
+
+The floating **Ask Job-buddy** button appears in every workspace once `GEMINI_API_KEY` is set. Gemini is called only from the server, so the key never reaches the browser. Each reply is grounded in a platform guide for the user's workspaces and in the data that user's own endpoints already expose (open listings; plus their profile and applications for students, their postings and candidates for recruiters, recent curriculum notes for institutions and academicians). Limits: 20 messages per conversation, 4,000 characters per message, and 20 messages per user every 10 minutes.
+
 ---
 
 ## 📂 Project Directory Structure
@@ -326,6 +334,8 @@ You can deploy Job-buddy to [Render](https://render.com) with 1-click using the 
    - **Environment Variables**:
      - `NODE_ENV`: `production`
      - `PORT`: `10000` (Render default)
+     - `GEMINI_API_KEY`: key from [Google AI Studio](https://aistudio.google.com/apikey); enables the assistant (leave unset to hide it)
+     - `GEMINI_MODEL` (optional): Gemini model id, default `gemini-flash-latest`
 
 ### Java Backend scaffold
 
