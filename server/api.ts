@@ -79,6 +79,19 @@ export async function initDatabase(): Promise<void> {
   await pendingSave;
 }
 export function flushDatabase(): Promise<void> { return pendingSave; }
+// Supabase pauses free projects after a week without activity, and the server then cannot boot. A daily ping of /health
+// (see .github/workflows/keep-alive.yml) keeps it awake; the remote read is throttled so the public endpoint cannot amplify load.
+const REMOTE_PING_INTERVAL_MS = 6 * 60 * 60_000;
+let lastRemotePing = 0;
+async function pingRemote(): Promise<boolean> {
+  if (!remote || Date.now() - lastRemotePing < REMOTE_PING_INTERVAL_MS) return true;
+  try {
+    const res = await fetch(`${remote.url}?id=eq.main&select=updated_at`, { headers: remoteHeaders(remote.key), signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) { console.error(`Supabase health ping failed (${res.status}): ${await res.text()}`); return false; }
+    lastRemotePing = Date.now();
+    return true;
+  } catch (error) { console.error("Supabase health ping failed:", error); return false; }
+}
 function saveDatabase(data: Database): void {
   if (remote && remoteReady) {
     const { key, url } = remote;
@@ -104,6 +117,8 @@ function owns(ownerId: string, req: AuthedRequest, res: Response): boolean { if 
 const attempts = new Map<string, { count: number; resetAt: number }>();
 function loginRateLimit(req: Request, res: Response, next: NextFunction) { const clientId = req.ip || "unknown"; const entry = attempts.get(clientId); const timestamp = Date.now(); if (!entry || entry.resetAt <= timestamp) { attempts.set(clientId, { count: 1, resetAt: timestamp + 15 * 60_000 }); return next(); } if (entry.count >= 8) return res.status(429).json({ detail: "Too many attempts. Try again later." }); entry.count += 1; next(); }
 function issueSession(user: StoredUser, res: Response) { const { token: refreshToken, session } = createRefreshSession(user.id); updateDb((state) => { state.refreshSessions = state.refreshSessions.filter((item) => item.userId !== user.id || isRefreshSessionActive(item)); state.refreshSessions.push(session); }); const access = issueAccessToken(user, session.id); res.setHeader("Set-Cookie", refreshCookie(refreshToken)); return { accessToken: access.token, accessTokenExpiresAt: access.expiresAt, user: publicUser(user) }; }
+
+apiRouter.get("/health", async (_req, res) => (await pingRemote()) ? res.json({ status: "ok" }) : res.status(503).json({ status: "degraded", detail: "The data store is unreachable." }));
 
 const credentials = z.object({ email: z.string().trim().email().max(254).transform((email) => email.toLowerCase()), password: z.string().max(256) });
 apiRouter.post("/auth/login", loginRateLimit, (req, res) => { const input = parse(credentials, req.body, res); if (!input) return; const user = db.users.find((item) => item.email === input.email); if (!user || !verifyPassword(input.password, user.passwordHash)) return res.status(401).json({ detail: "Invalid email or password." }); return res.json(issueSession(user, res)); });
