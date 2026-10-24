@@ -6,7 +6,7 @@ import path from "node:path";
 import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
 
 // A fake Gemini REST endpoint: records each request and answers in the mode the test picks.
-type Mode = "ok" | "busy" | "blocked" | "rejectsThinking" | "badRequest" | "hang" | "stall" | "primaryOverloaded" | "primaryUnknown";
+type Mode = "ok" | "busy" | "blocked" | "rejectsThinking" | "badRequest" | "hang" | "stall" | "primaryOverloaded" | "primaryUnknown" | "primaryHangs";
 let mode: Mode = "ok";
 const calls: { url: string; key?: string; body: { systemInstruction: { parts: { text: string }[] }; contents: { role: string; parts: { text: string }[] }[]; generationConfig: { thinkingConfig?: { thinkingBudget?: number } } } }[] = [];
 const sse = (chunk: object) => `data: ${JSON.stringify(chunk)}\r\n\r\n`;
@@ -22,6 +22,7 @@ beforeAll(async () => {
     if (mode === "busy") return res.status(429).json({ error: { message: "Resource exhausted" } });
     const primary = req.originalUrl.includes("/gemini-test-model:");
     if (mode === "primaryOverloaded" && primary) return res.status(503).json({ error: { code: 503, message: "This model is currently experiencing high demand.", status: "UNAVAILABLE" } });
+    if (mode === "primaryHangs" && primary) return; // never answers
     if (mode === "primaryUnknown" && primary) return res.status(404).json({ error: { code: 404, message: "models/gemini-test-model is not found.", status: "NOT_FOUND" } });
     if (mode === "rejectsThinking" && req.body.generationConfig?.thinkingConfig) return res.status(400).json({ error: { message: "Thinking budget is not supported by this model." } });
     if (mode === "badRequest") return res.status(400).json({ error: { message: "API key not valid." } });
@@ -144,8 +145,9 @@ test("a reply that goes quiet midway ends with an error event after the timeout"
   expect(stream.at(-1)).toEqual({ type: "error", detail: "The assistant stopped responding. Try again." });
 });
 
-test("an overloaded or unknown primary model hands the request to the fallback model", async () => {
-  for (const failing of ["primaryOverloaded", "primaryUnknown"] as const) {
+test("an overloaded, unknown or silent primary model hands the request to the fallback model", async () => {
+  process.env.GEMINI_TIMEOUT_MS = "300";
+  for (const failing of ["primaryOverloaded", "primaryUnknown", "primaryHangs"] as const) {
     mode = failing;
     calls.length = 0;
     const res = await chat(student, ask("hi"));
