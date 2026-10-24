@@ -14,6 +14,9 @@ const DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 // (Gemini 3 keeps it for backwards compatibility); a model that rejects it is retried once without it.
 const THINKING_BUDGET = 512;
 const DEFAULT_TIMEOUT_MS = 30_000;
+// Tried in order when the primary model is overloaded, out of quota, failing or unknown.
+const DEFAULT_FALLBACK_MODELS = "gemini-flash-lite-latest,gemini-2.5-flash";
+const FALLBACK_DELAY_MS = 250;
 
 // Read at call time so tests and redeploys can toggle the assistant without a module reload.
 export function assistantConfig() {
@@ -25,6 +28,8 @@ export function assistantConfig() {
     baseUrl: (process.env.GEMINI_API_BASE_URL?.trim() || DEFAULT_BASE_URL).replace(/\/$/, ""),
     // Longest wait for Gemini's first byte, and then between streamed chunks.
     timeoutMs: Number(process.env.GEMINI_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS,
+    // Comma-separated; an empty value turns fallbacks off.
+    fallbackModels: (process.env.GEMINI_FALLBACK_MODELS ?? DEFAULT_FALLBACK_MODELS).split(",").map((model) => model.trim()).filter(Boolean),
   };
 }
 
@@ -118,27 +123,35 @@ type GeminiChunk = {
 const BLOCKED_REASONS = new Set(["SAFETY", "RECITATION", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII", "IMAGE_SAFETY"]);
 export const BLOCKED_REPLY = "I can't help with that one. Try rephrasing, or ask about your applications, skills or a page on Job-buddy.";
 
+/** Aborts a request when the caller goes away, or when Gemini stays silent for longer than timeoutMs after each arm(). */
+function watchdog(caller: AbortSignal, timeoutMs: number) {
+  const controller = new AbortController();
+  let fired = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const onAbort = () => controller.abort();
+  caller.addEventListener("abort", onAbort, { once: true });
+  return {
+    signal: controller.signal,
+    arm: () => { clearTimeout(timer); timer = setTimeout(() => { fired = true; controller.abort(); }, timeoutMs); },
+    timedOut: () => fired,
+    stop: () => { clearTimeout(timer); caller.removeEventListener("abort", onAbort); },
+  };
+}
+
+type Watchdog = ReturnType<typeof watchdog>;
+type Attempt = { response: Response } | { problem: AssistantError; tryNextModel: boolean };
+const NEXT_MODEL_STATUSES = new Set([404, 429, 500, 502, 503, 504]);
+
 /**
- * Opens a streaming Gemini request. Resolves once Gemini has accepted it (so callers can still send a proper HTTP error),
- * and returns an async iterator of text deltas.
+ * Opens a streaming Gemini request. Resolves once a model has accepted it (so callers can still send a proper HTTP error),
+ * and returns an async iterator of text deltas. An overloaded or failing model hands over to the next fallback model.
  */
 export async function openGeminiStream(input: { systemPrompt: string; messages: ChatMessage[]; signal: AbortSignal }): Promise<AsyncGenerator<string>> {
-  const { apiKey, model, baseUrl, timeoutMs } = assistantConfig();
+  const { apiKey, model: primary, fallbackModels, baseUrl, timeoutMs } = assistantConfig();
   if (!apiKey) throw new AssistantError(503, "The assistant is not configured on this server.");
 
-  // One controller per request, aborted when the caller goes away or when Gemini is silent for longer than timeoutMs.
-  const upstream = new AbortController();
-  let timedOut = false;
-  let watchdog: ReturnType<typeof setTimeout> | undefined;
-  const arm = () => { clearTimeout(watchdog); watchdog = setTimeout(() => { timedOut = true; upstream.abort(); }, timeoutMs); };
-  const onAbort = () => upstream.abort();
-  input.signal.addEventListener("abort", onAbort, { once: true });
-  const cleanup = () => { clearTimeout(watchdog); input.signal.removeEventListener("abort", onAbort); };
-  const started = Date.now();
-  const elapsed = () => `${Date.now() - started} ms`;
-
-  const send = (withThinkingBudget: boolean) => {
-    arm();
+  const send = (model: string, withThinkingBudget: boolean, guard: Watchdog) => {
+    guard.arm();
     return fetch(`${baseUrl}/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
       method: "POST",
       // The key goes in a header, never the URL, so it cannot leak into proxy or access logs.
@@ -148,41 +161,67 @@ export async function openGeminiStream(input: { systemPrompt: string; messages: 
         contents: input.messages.map((message) => ({ role: message.role, parts: [{ text: message.text }] })),
         generationConfig: { temperature: 0.4, maxOutputTokens: 2048, ...(withThinkingBudget ? { thinkingConfig: { thinkingBudget: THINKING_BUDGET } } : {}) },
       }),
-      signal: upstream.signal,
+      signal: guard.signal,
     });
   };
 
-  let response: Response;
-  let detail = "";
-  try {
-    response = await send(true);
-    if (response.status === 400) {
-      detail = await response.text().catch(() => "");
-      if (/thinking/i.test(detail)) {
-        console.warn(`Gemini (${model}) rejected the thinking budget; retrying without it.`);
-        detail = "";
-        response = await send(false);
+  const attempt = async (model: string, guard: Watchdog): Promise<Attempt> => {
+    const started = Date.now();
+    const elapsed = () => `${Date.now() - started} ms`;
+    try {
+      let response = await send(model, true, guard);
+      let detail = "";
+      if (response.status === 400) {
+        detail = await response.text().catch(() => "");
+        if (/thinking/i.test(detail)) {
+          console.warn(`Gemini (${model}) rejected the thinking budget; retrying without it.`);
+          detail = "";
+          response = await send(model, false, guard);
+        }
       }
+      if (response.ok && response.body) return { response };
+      detail ||= await response.text().catch(() => "");
+      console.error(`Gemini (${model}) returned ${response.status} after ${elapsed()}: ${detail.slice(0, 500)}`);
+      const busy = response.status === 429 || response.status === 503;
+      return {
+        problem: busy ? new AssistantError(503, "The assistant is busy right now. Try again in a minute.") : new AssistantError(502, "The assistant is unavailable right now. Try again later."),
+        tryNextModel: NEXT_MODEL_STATUSES.has(response.status),
+      };
+    } catch (error) {
+      if (input.signal.aborted) return { problem: new AssistantError(499, "Request cancelled."), tryNextModel: false };
+      if (guard.timedOut()) {
+        console.error(`Gemini (${model}) sent no response within ${elapsed()}.`);
+        return { problem: new AssistantError(504, "The assistant took too long to answer. Try again."), tryNextModel: true };
+      }
+      console.error(`Gemini (${model}) request failed after ${elapsed()}:`, error);
+      return { problem: new AssistantError(502, "The assistant could not be reached. Try again in a moment."), tryNextModel: true };
     }
-  } catch (error) {
-    cleanup();
-    if (input.signal.aborted) throw new AssistantError(499, "Request cancelled.");
-    if (timedOut) {
-      console.error(`Gemini (${model}) sent no response within ${elapsed()}.`);
-      throw new AssistantError(504, "The assistant took too long to answer. Try again.");
+  };
+
+  const models = Array.from(new Set([primary, ...fallbackModels]));
+  let response: Response | undefined;
+  let model = primary;
+  let guard = watchdog(input.signal, timeoutMs);
+  let problem = new AssistantError(502, "The assistant is unavailable right now. Try again later.");
+  for (let index = 0; index < models.length; index += 1) {
+    const candidate = models[index];
+    if (index > 0) {
+      await new Promise((resolve) => setTimeout(resolve, FALLBACK_DELAY_MS));
+      if (input.signal.aborted) throw new AssistantError(499, "Request cancelled.");
+      console.warn(`Falling back to Gemini model ${candidate}.`);
+      guard = watchdog(input.signal, timeoutMs);
     }
-    console.error(`Gemini (${model}) request failed after ${elapsed()}:`, error);
-    throw new AssistantError(502, "The assistant could not be reached. Try again in a moment.");
+    const outcome = await attempt(candidate, guard);
+    if ("response" in outcome) { response = outcome.response; model = candidate; break; }
+    guard.stop();
+    problem = outcome.problem;
+    if (!outcome.tryNextModel) break;
   }
+  if (!response?.body) throw problem;
 
-  if (!response.ok || !response.body) {
-    cleanup();
-    detail ||= await response.text().catch(() => "");
-    console.error(`Gemini (${model}) returned ${response.status} after ${elapsed()}: ${detail.slice(0, 500)}`);
-    if (response.status === 429) throw new AssistantError(503, "The assistant is busy right now. Try again in a minute.");
-    throw new AssistantError(502, "The assistant is unavailable right now. Try again later.");
-  }
-
+  const started = Date.now();
+  const elapsed = () => `${Date.now() - started} ms`;
+  const { arm, timedOut, stop: cleanup } = guard;
   const body = response.body;
   return (async function* () {
     const reader = body.getReader();
@@ -223,7 +262,7 @@ export async function openGeminiStream(input: { systemPrompt: string; messages: 
     } catch (error) {
       if (error instanceof AssistantError) throw error;
       if (input.signal.aborted) return;
-      if (timedOut) {
+      if (timedOut()) {
         console.error(`Gemini (${model}) went quiet mid-reply for ${timeoutMs} ms (${elapsed()} in).`);
         throw new AssistantError(504, "The assistant stopped responding. Try again.");
       }

@@ -337,6 +337,7 @@ You can deploy Job-buddy to [Render](https://render.com) with 1-click using the 
      - `GEMINI_API_KEY`: key from [Google AI Studio](https://aistudio.google.com/apikey); enables the assistant (leave unset to hide it)
      - `GEMINI_MODEL` (optional): Gemini model id, default `gemini-flash-latest`
      - `GEMINI_TIMEOUT_MS` (optional): longest wait for Gemini's first byte and between streamed chunks, default `30000`
+     - `GEMINI_FALLBACK_MODELS` (optional): comma-separated models tried in order when the main one is overloaded, out of quota, failing or unknown, default `gemini-flash-lite-latest,gemini-2.5-flash` (empty turns fallbacks off)
 
 ### Java Backend scaffold
 
