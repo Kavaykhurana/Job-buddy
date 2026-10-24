@@ -55,4 +55,20 @@ export async function logout() {
 }
 
 export async function currentUser() { return request<AuthenticatedUser>("/auth/me"); }
+
+/** Authenticated POST whose body the caller reads as a stream (same refresh-once-on-401 rule as request). */
+export async function streamRequest(path: string, body: unknown, signal: AbortSignal, retryAfterRefresh = true): Promise<Response> {
+  const headers = new Headers({ "Content-Type": "application/json", Accept: "application/x-ndjson" });
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
+  const response = await fetch(`${apiRoot}${path}`, { method: "POST", headers, body: JSON.stringify(body), credentials: "include", signal });
+  if (response.status === 401 && retryAfterRefresh) {
+    await refresh();
+    return streamRequest(path, body, signal, false);
+  }
+  if (!response.ok || !response.body) {
+    const problem = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(problem?.detail || "The request could not be completed.");
+  }
+  return response;
+}
 export { request as apiRequest };

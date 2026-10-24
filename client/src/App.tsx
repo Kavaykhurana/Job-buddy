@@ -6,6 +6,7 @@ import { Route, Switch } from "wouter";
 import { useLocation } from "wouter";
 import { useEffect, type ReactNode } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { AssistantWidget } from "./components/AssistantWidget";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Home from "./pages/Home";
 import {
@@ -65,7 +66,7 @@ function RequireAuthentication() {
   useEffect(() => { if (!loading && !user) setLocation("/sign-in"); }, [loading, setLocation, user]);
   if (loading) return <main className="auth-page"><p className="auth-muted">Restoring your secure session…</p></main>;
   if (!user) return null;
-  return <PrivateRouter />;
+  return <><PrivateRouter /><AssistantWidget /></>;
 }
 
 function Router() {
