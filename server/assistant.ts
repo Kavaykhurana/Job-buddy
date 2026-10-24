@@ -8,15 +8,18 @@ export class AssistantError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-const DEFAULT_MODEL = "gemini-flash-latest";
+// Flash-Lite answers in seconds and has the most free-tier headroom; in production Flash was repeatedly overloaded or silent.
+const DEFAULT_MODEL = "gemini-flash-lite-latest";
 const DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 // A help chat must answer in seconds, so cap the model's hidden reasoning. Every current Gemini model accepts thinkingBudget
 // (Gemini 3 keeps it for backwards compatibility); a model that rejects it is retried once without it.
 const THINKING_BUDGET = 512;
 const DEFAULT_TIMEOUT_MS = 30_000;
 // Tried in order when the primary model is overloaded, out of quota, failing or unknown.
-const DEFAULT_FALLBACK_MODELS = "gemini-flash-lite-latest,gemini-2.5-flash";
+const DEFAULT_FALLBACK_MODELS = "gemini-flash-latest,gemini-2.5-flash";
 const FALLBACK_DELAY_MS = 250;
+// A model that has not started answering by then hands over to the next one, so a stuck model costs seconds, not half a minute.
+const FIRST_RESPONSE_BEFORE_FALLBACK_MS = 12_000;
 
 // Read at call time so tests and redeploys can toggle the assistant without a module reload.
 export function assistantConfig() {
@@ -123,16 +126,18 @@ type GeminiChunk = {
 const BLOCKED_REASONS = new Set(["SAFETY", "RECITATION", "PROHIBITED_CONTENT", "BLOCKLIST", "SPII", "IMAGE_SAFETY"]);
 export const BLOCKED_REPLY = "I can't help with that one. Try rephrasing, or ask about your applications, skills or a page on Job-buddy.";
 
-/** Aborts a request when the caller goes away, or when Gemini stays silent for longer than timeoutMs after each arm(). */
-function watchdog(caller: AbortSignal, timeoutMs: number) {
+/** Aborts a request when the caller goes away, or when Gemini stays silent too long: firstResponseMs for the first byte, then timeoutMs between chunks. */
+function watchdog(caller: AbortSignal, timeoutMs: number, firstResponseMs: number) {
   const controller = new AbortController();
   let fired = false;
   let timer: ReturnType<typeof setTimeout> | undefined;
   const onAbort = () => controller.abort();
   caller.addEventListener("abort", onAbort, { once: true });
+  const armFor = (ms: number) => { clearTimeout(timer); timer = setTimeout(() => { fired = true; controller.abort(); }, ms); };
   return {
     signal: controller.signal,
-    arm: () => { clearTimeout(timer); timer = setTimeout(() => { fired = true; controller.abort(); }, timeoutMs); },
+    armFirstResponse: () => armFor(firstResponseMs),
+    arm: () => armFor(timeoutMs),
     timedOut: () => fired,
     stop: () => { clearTimeout(timer); caller.removeEventListener("abort", onAbort); },
   };
@@ -151,7 +156,7 @@ export async function openGeminiStream(input: { systemPrompt: string; messages: 
   if (!apiKey) throw new AssistantError(503, "The assistant is not configured on this server.");
 
   const send = (model: string, withThinkingBudget: boolean, guard: Watchdog) => {
-    guard.arm();
+    guard.armFirstResponse();
     return fetch(`${baseUrl}/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`, {
       method: "POST",
       // The key goes in a header, never the URL, so it cannot leak into proxy or access logs.
@@ -201,7 +206,8 @@ export async function openGeminiStream(input: { systemPrompt: string; messages: 
   const models = Array.from(new Set([primary, ...fallbackModels]));
   let response: Response | undefined;
   let model = primary;
-  let guard = watchdog(input.signal, timeoutMs);
+  const guardFor = (index: number) => watchdog(input.signal, timeoutMs, index < models.length - 1 ? Math.min(timeoutMs, FIRST_RESPONSE_BEFORE_FALLBACK_MS) : timeoutMs);
+  let guard = guardFor(0);
   let problem = new AssistantError(502, "The assistant is unavailable right now. Try again later.");
   for (let index = 0; index < models.length; index += 1) {
     const candidate = models[index];
@@ -209,7 +215,7 @@ export async function openGeminiStream(input: { systemPrompt: string; messages: 
       await new Promise((resolve) => setTimeout(resolve, FALLBACK_DELAY_MS));
       if (input.signal.aborted) throw new AssistantError(499, "Request cancelled.");
       console.warn(`Falling back to Gemini model ${candidate}.`);
-      guard = watchdog(input.signal, timeoutMs);
+      guard = guardFor(index);
     }
     const outcome = await attempt(candidate, guard);
     if ("response" in outcome) { response = outcome.response; model = candidate; break; }
