@@ -7,12 +7,12 @@ import { afterAll, beforeAll, expect, test, vi } from "vitest";
 
 // A fake Supabase REST endpoint for the app_state table: one JSON row, upserted by id.
 const rows = new Map<string, unknown>();
-const seen: { method: string; apikey?: string; authorization?: string }[] = [];
+const seen: { method: string; url: string; apikey?: string; authorization?: string }[] = [];
 let fake: ReturnType<ReturnType<typeof express>["listen"]>;
 
 beforeAll(async () => {
   const app = express().use(express.json({ limit: "5mb" }));
-  app.use((req, _res, next) => { seen.push({ method: req.method, apikey: req.header("apikey"), authorization: req.header("authorization") }); next(); });
+  app.use((req, _res, next) => { seen.push({ method: req.method, url: req.originalUrl, apikey: req.header("apikey"), authorization: req.header("authorization") }); next(); });
   app.get("/rest/v1/app_state", (req, res) => { const id = String(req.query.id).replace(/^eq\./, ""); res.json(rows.has(id) ? [{ data: rows.get(id) }] : []); });
   app.post("/rest/v1/app_state", (req, res) => { rows.set(req.body.id, req.body.data); res.status(201).end(); });
   fake = app.listen(0);
@@ -37,7 +37,7 @@ async function boot() {
   await new Promise((resolve) => server.once("listening", resolve));
   const base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
   const post = (url: string, body: object) => fetch(base + url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  return { post, flush: api.flushDatabase, close: () => server.close() };
+  return { base, post, flush: api.flushDatabase, close: () => server.close() };
 }
 
 test("an account survives a restart with a wiped disk", async () => {
@@ -54,4 +54,17 @@ test("an account survives a restart with a wiped disk", async () => {
 
   // New-style secret keys go in the apikey header only; they are not JWTs.
   expect(seen.every((request) => request.apikey === "sb_secret_test" && request.authorization === undefined)).toBe(true);
+});
+
+test("/health touches Supabase so the free project never idles into a pause, but at most every few hours", async () => {
+  const app = await boot();
+  const pings = () => seen.filter((request) => request.method === "GET" && request.url.includes("select=updated_at")).length;
+  const before = pings();
+  for (let index = 0; index < 3; index += 1) {
+    const res = await fetch(`${app.base}/health`);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ status: "ok" });
+  }
+  expect(pings() - before).toBe(1);
+  app.close();
 });
