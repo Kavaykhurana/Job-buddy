@@ -81,16 +81,27 @@ export async function initDatabase(): Promise<void> {
 export function flushDatabase(): Promise<void> { return pendingSave; }
 // Supabase pauses free projects after a week without activity, and the server then cannot boot. A daily ping of /health
 // (see .github/workflows/keep-alive.yml) keeps it awake; the remote read is throttled so the public endpoint cannot amplify load.
+// Overlapping probes share one in-flight read, and a failure is reused for a short while, so even an outage cannot fan out.
 const REMOTE_PING_INTERVAL_MS = 6 * 60 * 60_000;
+const REMOTE_RETRY_INTERVAL_MS = 30_000;
 let lastRemotePing = 0;
-async function pingRemote(): Promise<boolean> {
-  if (!remote || Date.now() - lastRemotePing < REMOTE_PING_INTERVAL_MS) return true;
-  try {
-    const res = await fetch(`${remote.url}?id=eq.main&select=updated_at`, { headers: remoteHeaders(remote.key), signal: AbortSignal.timeout(10_000) });
-    if (!res.ok) { console.error(`Supabase health ping failed (${res.status}): ${await res.text()}`); return false; }
-    lastRemotePing = Date.now();
-    return true;
-  } catch (error) { console.error("Supabase health ping failed:", error); return false; }
+let lastRemoteFailure = 0;
+let pingInFlight: Promise<boolean> | null = null;
+function pingRemote(): Promise<boolean> {
+  const at = Date.now();
+  if (!remote || at - lastRemotePing < REMOTE_PING_INTERVAL_MS) return Promise.resolve(true);
+  if (at - lastRemoteFailure < REMOTE_RETRY_INTERVAL_MS) return Promise.resolve(false);
+  const { key, url } = remote;
+  pingInFlight ??= (async () => {
+    try {
+      const res = await fetch(`${url}?id=eq.main&select=updated_at`, { headers: remoteHeaders(key), signal: AbortSignal.timeout(10_000) });
+      if (res.ok) { lastRemotePing = Date.now(); return true; }
+      console.error(`Supabase health ping failed (${res.status}): ${await res.text()}`);
+    } catch (error) { console.error("Supabase health ping failed:", error); }
+    lastRemoteFailure = Date.now();
+    return false;
+  })().finally(() => { pingInFlight = null; });
+  return pingInFlight;
 }
 function saveDatabase(data: Database): void {
   if (remote && remoteReady) {

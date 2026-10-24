@@ -8,12 +8,13 @@ import { afterAll, beforeAll, expect, test, vi } from "vitest";
 // A fake Supabase REST endpoint for the app_state table: one JSON row, upserted by id.
 const rows = new Map<string, unknown>();
 const seen: { method: string; url: string; apikey?: string; authorization?: string }[] = [];
+let failHealthReads = false;
 let fake: ReturnType<ReturnType<typeof express>["listen"]>;
 
 beforeAll(async () => {
   const app = express().use(express.json({ limit: "5mb" }));
   app.use((req, _res, next) => { seen.push({ method: req.method, url: req.originalUrl, apikey: req.header("apikey"), authorization: req.header("authorization") }); next(); });
-  app.get("/rest/v1/app_state", (req, res) => { const id = String(req.query.id).replace(/^eq\./, ""); res.json(rows.has(id) ? [{ data: rows.get(id) }] : []); });
+  app.get("/rest/v1/app_state", (req, res) => { if (failHealthReads && String(req.query.select) === "updated_at") return res.status(503).json({ message: "paused" }); const id = String(req.query.id).replace(/^eq\./, ""); res.json(rows.has(id) ? [{ data: rows.get(id) }] : []); });
   app.post("/rest/v1/app_state", (req, res) => { rows.set(req.body.id, req.body.data); res.status(201).end(); });
   fake = app.listen(0);
   await new Promise((resolve) => fake.once("listening", resolve));
@@ -26,6 +27,8 @@ beforeAll(async () => {
   process.env.SUPABASE_SECRET_KEY = "sb_secret_test";
 });
 afterAll(() => fake.close());
+
+const healthReads = () => seen.filter((request) => request.method === "GET" && request.url.includes("select=updated_at")).length;
 
 // Each call is a fresh server process, like a Render redeploy: new module state, wiped local disk.
 async function boot() {
@@ -58,13 +61,21 @@ test("an account survives a restart with a wiped disk", async () => {
 
 test("/health touches Supabase so the free project never idles into a pause, but at most every few hours", async () => {
   const app = await boot();
-  const pings = () => seen.filter((request) => request.method === "GET" && request.url.includes("select=updated_at")).length;
-  const before = pings();
-  for (let index = 0; index < 3; index += 1) {
-    const res = await fetch(`${app.base}/health`);
-    expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ status: "ok" });
-  }
-  expect(pings() - before).toBe(1);
+  const before = healthReads();
+  // Probes that overlap share the one in-flight read; later ones are inside the interval.
+  const concurrent = await Promise.all([1, 2, 3].map(() => fetch(`${app.base}/health`)));
+  expect(concurrent.map((res) => res.status)).toEqual([200, 200, 200]);
+  expect(await (await fetch(`${app.base}/health`)).json()).toEqual({ status: "ok" });
+  expect(healthReads() - before).toBe(1);
   app.close();
+});
+
+test("/health reports an unreachable store without hitting it on every request", async () => {
+  const app = await boot();
+  failHealthReads = true;
+  try {
+    const before = healthReads();
+    for (let index = 0; index < 3; index += 1) expect((await fetch(`${app.base}/health`)).status).toBe(503);
+    expect(healthReads() - before).toBe(1);
+  } finally { failHealthReads = false; app.close(); }
 });
