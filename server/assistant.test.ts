@@ -6,7 +6,7 @@ import path from "node:path";
 import { afterAll, beforeAll, beforeEach, expect, test } from "vitest";
 
 // A fake Gemini REST endpoint: records each request and answers in the mode the test picks.
-type Mode = "ok" | "busy" | "blocked" | "rejectsThinking" | "badRequest" | "hang" | "stall";
+type Mode = "ok" | "busy" | "blocked" | "rejectsThinking" | "badRequest" | "hang" | "stall" | "primaryOverloaded" | "primaryUnknown";
 let mode: Mode = "ok";
 const calls: { url: string; key?: string; body: { systemInstruction: { parts: { text: string }[] }; contents: { role: string; parts: { text: string }[] }[]; generationConfig: { thinkingConfig?: { thinkingBudget?: number } } } }[] = [];
 const sse = (chunk: object) => `data: ${JSON.stringify(chunk)}\r\n\r\n`;
@@ -20,6 +20,9 @@ beforeAll(async () => {
   gemini.post(/.*/, (req, res) => {
     calls.push({ url: req.originalUrl, key: req.header("x-goog-api-key"), body: req.body });
     if (mode === "busy") return res.status(429).json({ error: { message: "Resource exhausted" } });
+    const primary = req.originalUrl.includes("/gemini-test-model:");
+    if (mode === "primaryOverloaded" && primary) return res.status(503).json({ error: { code: 503, message: "This model is currently experiencing high demand.", status: "UNAVAILABLE" } });
+    if (mode === "primaryUnknown" && primary) return res.status(404).json({ error: { code: 404, message: "models/gemini-test-model is not found.", status: "NOT_FOUND" } });
     if (mode === "rejectsThinking" && req.body.generationConfig?.thinkingConfig) return res.status(400).json({ error: { message: "Thinking budget is not supported by this model." } });
     if (mode === "badRequest") return res.status(400).json({ error: { message: "API key not valid." } });
     if (mode === "hang") return; // never answers
@@ -41,6 +44,7 @@ beforeAll(async () => {
   process.chdir(dir);
   process.env.GEMINI_API_BASE_URL = `http://127.0.0.1:${(fake.address() as AddressInfo).port}/v1beta`;
   process.env.GEMINI_MODEL = "gemini-test-model";
+  process.env.GEMINI_FALLBACK_MODELS = "gemini-test-fallback";
   const { apiRouter } = await import("./api.js");
   const server = express().use("/api", apiRouter).listen(0);
   await new Promise((resolve) => server.once("listening", resolve));
@@ -138,6 +142,24 @@ test("a reply that goes quiet midway ends with an error event after the timeout"
   const stream = await events(await chat(student, ask("hi")));
   expect(stream[0]).toEqual({ type: "delta", text: "Partial answer" });
   expect(stream.at(-1)).toEqual({ type: "error", detail: "The assistant stopped responding. Try again." });
+});
+
+test("an overloaded or unknown primary model hands the request to the fallback model", async () => {
+  for (const failing of ["primaryOverloaded", "primaryUnknown"] as const) {
+    mode = failing;
+    calls.length = 0;
+    const res = await chat(student, ask("hi"));
+    expect(res.status).toBe(200);
+    expect((await events(res)).at(-1)).toEqual({ type: "done" });
+    expect(calls.map((call) => call.url.split("/models/")[1].split(":")[0])).toEqual(["gemini-test-model", "gemini-test-fallback"]);
+  }
+});
+
+test("when every model is busy the user gets the busy message after trying each once", async () => {
+  mode = "busy";
+  const res = await chat(student, ask("hi"));
+  expect(res.status).toBe(503);
+  expect(calls).toHaveLength(2);
 });
 
 test("an upstream quota error becomes a friendly 503 without leaking provider details", async () => {
