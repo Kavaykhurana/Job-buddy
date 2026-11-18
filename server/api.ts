@@ -66,6 +66,23 @@ function withBootstrapAdmin(database: Database): Database {
 // The data file stays the local/dev store and the seed for an empty remote table.
 const remote = process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY ? { url: `${process.env.SUPABASE_URL.replace(/\/$/, "")}/rest/v1/app_state`, key: process.env.SUPABASE_SECRET_KEY } : null;
 const remoteHeaders = (key: string) => ({ apikey: key, "Content-Type": "application/json", ...(key.startsWith("eyJ") ? { Authorization: `Bearer ${key}` } : {}) });
+// Records added to the data file after the remote row was created still reach production. Remote records always win;
+// seed records are only added by id, and never reuse a taken email or point at a missing user or job.
+// shortcut: a seed record deleted in production comes back on the next boot; keep a list of removed seed ids if deletes must stick.
+function addMissingSeedRecords(target: Database, seed: Database): boolean {
+  const before = JSON.stringify(target).length;
+  const addById = <T extends { id: string }>(into: T[], from: T[], keep: (item: T) => boolean = () => true) => { const ids = new Set(into.map((item) => item.id)); into.push(...from.filter((item) => !ids.has(item.id) && keep(item))); };
+  const emails = new Set(target.users.map((user) => user.email));
+  addById(target.users, seed.users, (user) => !emails.has(user.email));
+  for (const [id, profile] of Object.entries(seed.profiles)) if (!target.profiles[id] && target.users.some((user) => user.id === id)) target.profiles[id] = profile;
+  addById(target.jobs, seed.jobs); addById(target.internships, seed.internships); addById(target.experiences, seed.experiences);
+  addById(target.candidates, seed.candidates); addById(target.curriculumNotes, seed.curriculumNotes); addById(target.initiatives, seed.initiatives);
+  const applied = new Set(target.applications.map((item) => `${item.userId} ${item.jobId}`));
+  addById(target.applications, seed.applications, (item) => { const key = `${item.userId} ${item.jobId}`; if (applied.has(key) || !target.users.some((user) => user.id === item.userId) || !target.jobs.some((job) => job.id === item.jobId)) return false; applied.add(key); return true; });
+  const companies = new Set(target.companyRequirements.map((item) => item.company));
+  target.companyRequirements.push(...seed.companyRequirements.filter((item) => !companies.has(item.company)));
+  return JSON.stringify(target).length !== before;
+}
 let remoteReady = false;
 let pendingSave: Promise<void> = Promise.resolve();
 export async function initDatabase(): Promise<void> {
@@ -73,9 +90,10 @@ export async function initDatabase(): Promise<void> {
   const res = await fetch(`${remote.url}?id=eq.main&select=data`, { headers: remoteHeaders(remote.key) });
   if (!res.ok) throw new Error(`Could not load app state from Supabase (${res.status}): ${await res.text()}`);
   const rows = (await res.json()) as { data: unknown }[];
+  const seed = db;
   if (rows.length) db = withBootstrapAdmin(normalize(rows[0].data));
   remoteReady = true; // only now may writes go remote, so a dev run can never overwrite production with its local file
-  if (!rows.length) saveDatabase(db);
+  if (!rows.length || addMissingSeedRecords(db, seed)) saveDatabase(db);
   await pendingSave;
 }
 export function flushDatabase(): Promise<void> { return pendingSave; }

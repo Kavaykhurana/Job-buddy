@@ -31,9 +31,10 @@ afterAll(() => fake.close());
 const healthReads = () => seen.filter((request) => request.method === "GET" && request.url.includes("select=updated_at")).length;
 
 // Each call is a fresh server process, like a Render redeploy: new module state, wiped local disk.
-async function boot() {
+async function boot(seedFile?: string) {
   vi.resetModules();
-  fs.rmSync(path.join(process.cwd(), "server", "data_store.json"), { force: true });
+  const local = path.join(process.cwd(), "server", "data_store.json");
+  if (seedFile) fs.copyFileSync(seedFile, local); else fs.rmSync(local, { force: true });
   const api = await import("./api.js");
   await api.initDatabase();
   const server = express().use("/api", api.apiRouter).listen(0);
@@ -78,4 +79,19 @@ test("/health reports an unreachable store without hitting it on every request",
     for (let index = 0; index < 3; index += 1) expect((await fetch(`${app.base}/health`)).status).toBe(503);
     expect(healthReads() - before).toBe(1);
   } finally { failHealthReads = false; app.close(); }
+});
+
+test("seed records added to the data file after launch reach an existing remote store without touching its own data", async () => {
+  const seedFile = path.join(import.meta.dirname, "data_store.json");
+  const seed = JSON.parse(fs.readFileSync(seedFile, "utf8"));
+  const liveUser = { id: "usr_live", email: "live@test.dev", displayName: "Live User", roles: ["STUDENT"], passwordHash: "x" };
+  rows.set("main", { users: [...seed.users.slice(0, 4), liveUser], jobs: seed.jobs.slice(0, 2), applications: [] });
+  const app = await boot(seedFile);
+  await app.flush();
+  app.close();
+  const live = rows.get("main") as { users: { id: string }[]; jobs: { id: string }[]; applications: { userId: string; jobId: string }[] };
+  expect(live.users.map((user) => user.id)).toEqual(expect.arrayContaining(["usr_live", ...seed.users.map((user: { id: string }) => user.id)]));
+  expect(live.jobs).toHaveLength(seed.jobs.length);
+  expect(live.applications.length).toBeGreaterThan(30);
+  expect(new Set(live.applications.map((item) => `${item.userId} ${item.jobId}`)).size).toBe(live.applications.length);
 });
