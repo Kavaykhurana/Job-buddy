@@ -31,6 +31,118 @@
       "roles": [
         "ACADEMICIAN"
       ]
+    },
+    {
+      "id": "usr_syn_01",
+      "email": "kabir.mehta@example.edu",
+      "displayName": "Kabir Mehta",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_02",
+      "email": "rhea.nair@example.edu",
+      "displayName": "Rhea Nair",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_03",
+      "email": "ishaan.verma@example.edu",
+      "displayName": "Ishaan Verma",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_04",
+      "email": "meera.iyer@example.edu",
+      "displayName": "Meera Iyer",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_05",
+      "email": "arjun.gill@example.edu",
+      "displayName": "Arjun Gill",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_06",
+      "email": "zoya.khan@example.edu",
+      "displayName": "Zoya Khan",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_07",
+      "email": "rohan.desai@example.edu",
+      "displayName": "Rohan Desai",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_08",
+      "email": "saanvi.reddy@example.edu",
+      "displayName": "Saanvi Reddy",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_09",
+      "email": "dev.malhotra@example.edu",
+      "displayName": "Dev Malhotra",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_10",
+      "email": "tara.bhatia@example.edu",
+      "displayName": "Tara Bhatia",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_11",
+      "email": "nikhil.joshi@example.edu",
+      "displayName": "Nikhil Joshi",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_syn_12",
+      "email": "priya.kaur@example.edu",
+      "displayName": "Priya Kaur",
+      "roles": [
+        "STUDENT"
+      ]
+    },
+    {
+      "id": "usr_recruiter_northstar",
+      "email": "talent@northstar-systems.example",
+      "displayName": "Neeraj Patel",
+      "roles": [
+        "RECRUITER"
+      ]
+    },
+    {
+      "id": "usr_recruiter_mosaic",
+      "email": "careers@mosaic-health.example",
+      "displayName": "Farah Siddiqui",
+      "roles": [
+        "RECRUITER"
+      ]
     }
   ],
   "jobs": [
@@ -157,6 +269,174 @@
       ],
       "type": "Full-time placement",
       "summary": "Develop analytical query models, optimize ETL transformations across relational and distributed warehouses, and build automated verification checks for high-throughput metrics."
+    },
+    {
+      "id": "job-syn-01",
+      "ownerId": "usr_recruiter_northstar",
+      "title": "Backend Engineer (Graduate)",
+      "organization": "Northstar Systems",
+      "location": "Hybrid · Bengaluru",
+      "date": "Closes 13 Sep 2026",
+      "match": 73,
+      "status": "Open",
+      "required": [
+        "Python",
+        "SQL",
+        "Git"
+      ],
+      "preferred": [
+        "Docker",
+        "Linux"
+      ],
+      "type": "Full-time placement",
+      "summary": "Build and test REST services that back internal analytics tools."
+    },
+    {
+      "id": "job-syn-02",
+      "ownerId": "usr_recruiter_mosaic",
+      "title": "Frontend Developer Trainee",
+      "organization": "Mosaic Health Labs",
+      "location": "On campus · Chandigarh",
+      "date": "Closes 28 Sep 2026",
+      "match": 89,
+      "status": "Open",
+      "required": [
+        "JavaScript",
+        "React",
+        "Git"
+      ],
+      "preferred": [
+        "Figma",
+        "Writing"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Ship accessible React screens for a student-facing product."
+    },
+    {
+      "id": "job-syn-03",
+      "ownerId": "usr_recruiter",
+      "title": "Business Data Analyst",
+      "organization": "Quantum Systems",
+      "location": "Onsite · Gurugram",
+      "date": "Closes 27 Sep 2026",
+      "match": 88,
+      "status": "Open",
+      "required": [
+        "SQL",
+        "Excel",
+        "Data Analysis"
+      ],
+      "preferred": [
+        "Statistics",
+        "Presentation"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Turn operational data into weekly decision reports."
+    },
+    {
+      "id": "job-syn-04",
+      "ownerId": "usr_recruiter",
+      "title": "ML Engineering Associate",
+      "organization": "Tern & Co.",
+      "location": "Remote",
+      "date": "Closes 21 Sep 2026",
+      "match": 77,
+      "status": "Open",
+      "required": [
+        "Python",
+        "Machine Learning",
+        "Statistics"
+      ],
+      "preferred": [
+        "Docker",
+        "SQL"
+      ],
+      "type": "Full-time placement",
+      "summary": "Prepare datasets, train baseline models, and document evaluation results."
+    },
+    {
+      "id": "job-syn-05",
+      "ownerId": "usr_recruiter",
+      "title": "Clinical Research Coordinator",
+      "organization": "Apex Cloud Technologies",
+      "location": "Hybrid · Hyderabad",
+      "date": "Closes 13 Sep 2026",
+      "match": 89,
+      "status": "Open",
+      "required": [
+        "Research",
+        "Documentation",
+        "Teamwork"
+      ],
+      "preferred": [
+        "Excel",
+        "Communication"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Coordinate study records and keep audit-ready documentation."
+    },
+    {
+      "id": "job-syn-06",
+      "ownerId": "usr_recruiter_northstar",
+      "title": "UX Research Associate",
+      "organization": "Northstar Systems",
+      "location": "Hybrid · Bengaluru",
+      "date": "Closes 29 Sep 2026",
+      "match": 86,
+      "status": "Open",
+      "required": [
+        "User Research",
+        "Writing",
+        "Communication"
+      ],
+      "preferred": [
+        "Figma",
+        "Data Analysis"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Plan interviews, synthesise findings, and brief the product team."
+    },
+    {
+      "id": "job-syn-07",
+      "ownerId": "usr_recruiter_mosaic",
+      "title": "Cloud Support Engineer",
+      "organization": "Mosaic Health Labs",
+      "location": "On campus · Chandigarh",
+      "date": "Closes 21 Sep 2026",
+      "match": 91,
+      "status": "Open",
+      "required": [
+        "Linux",
+        "Docker",
+        "Communication"
+      ],
+      "preferred": [
+        "System Design",
+        "Python"
+      ],
+      "type": "Full-time placement",
+      "summary": "Triage customer incidents and automate recurring fixes."
+    },
+    {
+      "id": "job-syn-08",
+      "ownerId": "usr_recruiter",
+      "title": "Quality Assurance Analyst",
+      "organization": "Quantum Systems",
+      "location": "Onsite · Gurugram",
+      "date": "Closes 27 Sep 2026",
+      "match": 80,
+      "status": "Closed",
+      "required": [
+        "Documentation",
+        "SQL",
+        "Teamwork"
+      ],
+      "preferred": [
+        "Python",
+        "Git"
+      ],
+      "type": "Structured opportunity",
+      "summary": "Write test plans and verify release quality across web services."
     }
   ],
   "internships": [
@@ -217,6 +497,66 @@
         "Analytics"
       ],
       "summary": "Observe product workflows, summarise user needs, and prepare a concise evidence-backed review."
+    },
+    {
+      "id": "int-syn-01",
+      "ownerId": "usr_recruiter_northstar",
+      "title": "Platform Engineering Internship",
+      "org": "Northstar Systems",
+      "mode": "Hybrid · Bengaluru",
+      "match": 78,
+      "status": "Recommended",
+      "close": "Closes 15 Sep",
+      "interest": "Applied systems",
+      "required": [
+        "Python",
+        "Git",
+        "Linux"
+      ],
+      "preferred": [
+        "Docker"
+      ],
+      "summary": "Pair with platform engineers to automate build and deploy checks."
+    },
+    {
+      "id": "int-syn-02",
+      "ownerId": "usr_recruiter_mosaic",
+      "title": "Health Data Quality Internship",
+      "org": "Mosaic Health Labs",
+      "mode": "On campus · Chandigarh",
+      "match": 69,
+      "status": "Eligible",
+      "close": "Closes 18 Sep",
+      "interest": "Research operations",
+      "required": [
+        "Excel",
+        "Documentation"
+      ],
+      "preferred": [
+        "SQL",
+        "Statistics"
+      ],
+      "summary": "Audit study datasets for completeness and log corrections."
+    },
+    {
+      "id": "int-syn-03",
+      "ownerId": "usr_recruiter",
+      "title": "Frontend Craft Internship",
+      "org": "Quantum Systems",
+      "mode": "Onsite · Gurugram",
+      "match": 66,
+      "status": "Build evidence",
+      "close": "Closes 22 Sep",
+      "interest": "Digital product",
+      "required": [
+        "JavaScript",
+        "React"
+      ],
+      "preferred": [
+        "Figma",
+        "Writing"
+      ],
+      "summary": "Build small UI features end to end with design review."
     }
   ],
   "experiences": [
@@ -249,6 +589,38 @@
         "User research"
       ],
       "summary": "Work with an industry brief, team deliverables, review milestones, and a verified project outcome."
+    },
+    {
+      "id": "exp-syn-01",
+      "ownerId": "usr_recruiter_northstar",
+      "type": "Apprenticeship",
+      "title": "Cloud Operations Apprenticeship",
+      "org": "Northstar Systems",
+      "mode": "Hybrid · Bengaluru",
+      "match": 74,
+      "duration": "16 weeks",
+      "required": [
+        "Linux",
+        "Docker",
+        "Communication"
+      ],
+      "summary": "Rotate through on-call shadowing, runbook writing, and automation tasks."
+    },
+    {
+      "id": "exp-syn-02",
+      "ownerId": "usr_recruiter",
+      "type": "Industry project",
+      "title": "Campus Hiring Dashboard Project",
+      "org": "Quantum Systems",
+      "mode": "Remote · Team project",
+      "match": 70,
+      "duration": "8 weeks",
+      "required": [
+        "SQL",
+        "Data Analysis",
+        "Presentation"
+      ],
+      "summary": "Build a hiring-funnel dashboard with a recruiter as the client."
     }
   ],
   "applications": [
@@ -306,6 +678,378 @@
       "stage": "Submitted",
       "appliedAt": "21 Aug · 14:15",
       "statement": "Demonstrated coursework in research methodology and documentation."
+    },
+    {
+      "id": "app-syn-1-1",
+      "userId": "usr_syn_01",
+      "jobId": "job-syn-04",
+      "jobTitle": "ML Engineering Associate",
+      "organization": "Tern & Co.",
+      "studentName": "Kabir Mehta",
+      "studentEmail": "kabir.mehta@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-11T18:29:00.000Z",
+      "statement": "My coursework in Information Technology and hands-on work with Git and Excel match this role."
+    },
+    {
+      "id": "app-syn-1-2",
+      "userId": "usr_syn_01",
+      "jobId": "job-syn-05",
+      "jobTitle": "Clinical Research Coordinator",
+      "organization": "Apex Cloud Technologies",
+      "studentName": "Kabir Mehta",
+      "studentEmail": "kabir.mehta@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-08T08:12:00.000Z",
+      "statement": "My coursework in Information Technology and hands-on work with Git and Excel match this role."
+    },
+    {
+      "id": "app-syn-1-3",
+      "userId": "usr_syn_01",
+      "jobId": "job-syn-01",
+      "jobTitle": "Backend Engineer (Graduate)",
+      "organization": "Northstar Systems",
+      "studentName": "Kabir Mehta",
+      "studentEmail": "kabir.mehta@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-07T13:09:00.000Z",
+      "statement": "My coursework in Information Technology and hands-on work with Git and Excel match this role."
+    },
+    {
+      "id": "app-syn-2-1",
+      "userId": "usr_syn_02",
+      "jobId": "job-syn-02",
+      "jobTitle": "Frontend Developer Trainee",
+      "organization": "Mosaic Health Labs",
+      "studentName": "Rhea Nair",
+      "studentEmail": "rhea.nair@example.edu",
+      "stage": "Rejected",
+      "appliedAt": "2026-08-26T11:10:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Data Analysis and Research match this role."
+    },
+    {
+      "id": "app-syn-2-2",
+      "userId": "usr_syn_02",
+      "jobId": "product-review",
+      "jobTitle": "Digital Product Review Cohort",
+      "organization": "Tern & Co.",
+      "studentName": "Rhea Nair",
+      "studentEmail": "rhea.nair@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-09T10:05:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Data Analysis and Research match this role."
+    },
+    {
+      "id": "app-syn-2-3",
+      "userId": "usr_syn_02",
+      "jobId": "software-systems-eng",
+      "jobTitle": "Software Systems & Cloud Engineer",
+      "organization": "Apex Cloud Technologies",
+      "studentName": "Rhea Nair",
+      "studentEmail": "rhea.nair@example.edu",
+      "stage": "Offer",
+      "appliedAt": "2026-08-16T10:42:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Data Analysis and Research match this role."
+    },
+    {
+      "id": "app-syn-3-1",
+      "userId": "usr_syn_03",
+      "jobId": "job-syn-05",
+      "jobTitle": "Clinical Research Coordinator",
+      "organization": "Apex Cloud Technologies",
+      "studentName": "Ishaan Verma",
+      "studentEmail": "ishaan.verma@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-17T10:13:00.000Z",
+      "statement": "My coursework in Electronics & Communication and hands-on work with Research and Figma match this role."
+    },
+    {
+      "id": "app-syn-3-2",
+      "userId": "usr_syn_03",
+      "jobId": "posted-research-ops",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Company Partner",
+      "studentName": "Ishaan Verma",
+      "studentEmail": "ishaan.verma@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-28T14:16:00.000Z",
+      "statement": "My coursework in Electronics & Communication and hands-on work with Research and Figma match this role."
+    },
+    {
+      "id": "app-syn-4-1",
+      "userId": "usr_syn_04",
+      "jobId": "product-review",
+      "jobTitle": "Digital Product Review Cohort",
+      "organization": "Tern & Co.",
+      "studentName": "Meera Iyer",
+      "studentEmail": "meera.iyer@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-06T12:11:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Presentation and React match this role."
+    },
+    {
+      "id": "app-syn-4-2",
+      "userId": "usr_syn_04",
+      "jobId": "job-syn-04",
+      "jobTitle": "ML Engineering Associate",
+      "organization": "Tern & Co.",
+      "studentName": "Meera Iyer",
+      "studentEmail": "meera.iyer@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-18T09:50:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Presentation and React match this role."
+    },
+    {
+      "id": "app-syn-5-1",
+      "userId": "usr_syn_05",
+      "jobId": "data-infrastructure-assoc",
+      "jobTitle": "Data Infrastructure & Analytics Engineer",
+      "organization": "Quant Data Labs",
+      "studentName": "Arjun Gill",
+      "studentEmail": "arjun.gill@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-20T17:08:00.000Z",
+      "statement": "My coursework in Mechanical Engineering and hands-on work with Writing and Python match this role."
+    },
+    {
+      "id": "app-syn-5-2",
+      "userId": "usr_syn_05",
+      "jobId": "research-analyst",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Mosaic Health Labs",
+      "studentName": "Arjun Gill",
+      "studentEmail": "arjun.gill@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-19T15:01:00.000Z",
+      "statement": "My coursework in Mechanical Engineering and hands-on work with Writing and Python match this role."
+    },
+    {
+      "id": "app-syn-5-3",
+      "userId": "usr_syn_05",
+      "jobId": "job-syn-01",
+      "jobTitle": "Backend Engineer (Graduate)",
+      "organization": "Northstar Systems",
+      "studentName": "Arjun Gill",
+      "studentEmail": "arjun.gill@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-13T15:06:00.000Z",
+      "statement": "My coursework in Mechanical Engineering and hands-on work with Writing and Python match this role."
+    },
+    {
+      "id": "app-syn-6-1",
+      "userId": "usr_syn_06",
+      "jobId": "posted-research-ops",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Company Partner",
+      "studentName": "Zoya Khan",
+      "studentEmail": "zoya.khan@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-12T13:48:00.000Z",
+      "statement": "My coursework in Data Science and hands-on work with Documentation and User Research match this role."
+    },
+    {
+      "id": "app-syn-6-2",
+      "userId": "usr_syn_06",
+      "jobId": "data-infrastructure-assoc",
+      "jobTitle": "Data Infrastructure & Analytics Engineer",
+      "organization": "Quant Data Labs",
+      "studentName": "Zoya Khan",
+      "studentEmail": "zoya.khan@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-27T10:12:00.000Z",
+      "statement": "My coursework in Data Science and hands-on work with Documentation and User Research match this role."
+    },
+    {
+      "id": "app-syn-6-3",
+      "userId": "usr_syn_06",
+      "jobId": "ai-studio",
+      "jobTitle": "Applied AI Capability Studio",
+      "organization": "Northstar Systems",
+      "studentName": "Zoya Khan",
+      "studentEmail": "zoya.khan@example.edu",
+      "stage": "Interview",
+      "appliedAt": "2026-08-06T11:19:00.000Z",
+      "statement": "My coursework in Data Science and hands-on work with Documentation and User Research match this role."
+    },
+    {
+      "id": "app-syn-7-1",
+      "userId": "usr_syn_07",
+      "jobId": "job-syn-03",
+      "jobTitle": "Business Data Analyst",
+      "organization": "Quantum Systems",
+      "studentName": "Rohan Desai",
+      "studentEmail": "rohan.desai@example.edu",
+      "stage": "Offer",
+      "appliedAt": "2026-08-27T17:10:00.000Z",
+      "statement": "My coursework in Information Technology and hands-on work with Figma and Writing match this role."
+    },
+    {
+      "id": "app-syn-7-2",
+      "userId": "usr_syn_07",
+      "jobId": "posted-research-ops",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Company Partner",
+      "studentName": "Rohan Desai",
+      "studentEmail": "rohan.desai@example.edu",
+      "stage": "Offer",
+      "appliedAt": "2026-08-06T10:49:00.000Z",
+      "statement": "My coursework in Information Technology and hands-on work with Figma and Writing match this role."
+    },
+    {
+      "id": "app-syn-8-1",
+      "userId": "usr_syn_08",
+      "jobId": "job-syn-04",
+      "jobTitle": "ML Engineering Associate",
+      "organization": "Tern & Co.",
+      "studentName": "Saanvi Reddy",
+      "studentEmail": "saanvi.reddy@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-20T11:03:00.000Z",
+      "statement": "My coursework in Biotechnology and hands-on work with Python and Presentation match this role."
+    },
+    {
+      "id": "app-syn-8-2",
+      "userId": "usr_syn_08",
+      "jobId": "research-analyst",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Mosaic Health Labs",
+      "studentName": "Saanvi Reddy",
+      "studentEmail": "saanvi.reddy@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-11T13:22:00.000Z",
+      "statement": "My coursework in Biotechnology and hands-on work with Python and Presentation match this role."
+    },
+    {
+      "id": "app-syn-8-3",
+      "userId": "usr_syn_08",
+      "jobId": "posted-research-ops",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Company Partner",
+      "studentName": "Saanvi Reddy",
+      "studentEmail": "saanvi.reddy@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-12T12:58:00.000Z",
+      "statement": "My coursework in Biotechnology and hands-on work with Python and Presentation match this role."
+    },
+    {
+      "id": "app-syn-9-1",
+      "userId": "usr_syn_09",
+      "jobId": "job-syn-03",
+      "jobTitle": "Business Data Analyst",
+      "organization": "Quantum Systems",
+      "studentName": "Dev Malhotra",
+      "studentEmail": "dev.malhotra@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-12T12:01:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Statistics and Communication match this role."
+    },
+    {
+      "id": "app-syn-9-2",
+      "userId": "usr_syn_09",
+      "jobId": "job-syn-01",
+      "jobTitle": "Backend Engineer (Graduate)",
+      "organization": "Northstar Systems",
+      "studentName": "Dev Malhotra",
+      "studentEmail": "dev.malhotra@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-05T14:38:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Statistics and Communication match this role."
+    },
+    {
+      "id": "app-syn-9-3",
+      "userId": "usr_syn_09",
+      "jobId": "job-syn-04",
+      "jobTitle": "ML Engineering Associate",
+      "organization": "Tern & Co.",
+      "studentName": "Dev Malhotra",
+      "studentEmail": "dev.malhotra@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-28T18:50:00.000Z",
+      "statement": "My coursework in Computer Science and hands-on work with Statistics and Communication match this role."
+    },
+    {
+      "id": "app-syn-10-1",
+      "userId": "usr_syn_10",
+      "jobId": "posted-research-ops",
+      "jobTitle": "Research Operations Associate",
+      "organization": "Company Partner",
+      "studentName": "Tara Bhatia",
+      "studentEmail": "tara.bhatia@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-22T09:13:00.000Z",
+      "statement": "My coursework in Business Analytics and hands-on work with Python and Documentation match this role."
+    },
+    {
+      "id": "app-syn-10-2",
+      "userId": "usr_syn_10",
+      "jobId": "job-syn-05",
+      "jobTitle": "Clinical Research Coordinator",
+      "organization": "Apex Cloud Technologies",
+      "studentName": "Tara Bhatia",
+      "studentEmail": "tara.bhatia@example.edu",
+      "stage": "Screening",
+      "appliedAt": "2026-08-21T10:07:00.000Z",
+      "statement": "My coursework in Business Analytics and hands-on work with Python and Documentation match this role."
+    },
+    {
+      "id": "app-syn-10-3",
+      "userId": "usr_syn_10",
+      "jobId": "job-syn-06",
+      "jobTitle": "UX Research Associate",
+      "organization": "Northstar Systems",
+      "studentName": "Tara Bhatia",
+      "studentEmail": "tara.bhatia@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-08T08:49:00.000Z",
+      "statement": "My coursework in Business Analytics and hands-on work with Python and Documentation match this role."
+    },
+    {
+      "id": "app-syn-11-1",
+      "userId": "usr_syn_11",
+      "jobId": "job-syn-02",
+      "jobTitle": "Frontend Developer Trainee",
+      "organization": "Mosaic Health Labs",
+      "studentName": "Nikhil Joshi",
+      "studentEmail": "nikhil.joshi@example.edu",
+      "stage": "Interview",
+      "appliedAt": "2026-08-23T17:35:00.000Z",
+      "statement": "My coursework in Electrical Engineering and hands-on work with Presentation and Excel match this role."
+    },
+    {
+      "id": "app-syn-11-2",
+      "userId": "usr_syn_11",
+      "jobId": "job-syn-04",
+      "jobTitle": "ML Engineering Associate",
+      "organization": "Tern & Co.",
+      "studentName": "Nikhil Joshi",
+      "studentEmail": "nikhil.joshi@example.edu",
+      "stage": "Interview",
+      "appliedAt": "2026-08-09T08:58:00.000Z",
+      "statement": "My coursework in Electrical Engineering and hands-on work with Presentation and Excel match this role."
+    },
+    {
+      "id": "app-syn-11-3",
+      "userId": "usr_syn_11",
+      "jobId": "product-review",
+      "jobTitle": "Digital Product Review Cohort",
+      "organization": "Tern & Co.",
+      "studentName": "Nikhil Joshi",
+      "studentEmail": "nikhil.joshi@example.edu",
+      "stage": "Submitted",
+      "appliedAt": "2026-08-17T17:22:00.000Z",
+      "statement": "My coursework in Electrical Engineering and hands-on work with Presentation and Excel match this role."
+    },
+    {
+      "id": "app-syn-12-1",
+      "userId": "usr_syn_12",
+      "jobId": "job-syn-06",
+      "jobTitle": "UX Research Associate",
+      "organization": "Northstar Systems",
+      "studentName": "Priya Kaur",
+      "studentEmail": "priya.kaur@example.edu",
+      "stage": "Rejected",
+      "appliedAt": "2026-08-17T17:20:00.000Z",
+      "statement": "My coursework in Data Science and hands-on work with SQL and Communication match this role."
     }
   ],
   "candidates": [
@@ -350,6 +1094,146 @@
         "Teamwork"
       ],
       "shortlisted": true
+    },
+    {
+      "id": "cand-syn-1",
+      "name": "Ishaan Verma",
+      "program": "Electronics & Communication · Batch 2028",
+      "score": 83,
+      "eligibility": "Eligible",
+      "stage": "Screening",
+      "skills": [
+        "Research",
+        "Figma",
+        "Docker"
+      ],
+      "shortlisted": true
+    },
+    {
+      "id": "cand-syn-2",
+      "name": "Meera Iyer",
+      "program": "Computer Science · Batch 2028",
+      "score": 69,
+      "eligibility": "Review",
+      "stage": "Assessment",
+      "skills": [
+        "Presentation",
+        "React",
+        "Docker"
+      ],
+      "shortlisted": false
+    },
+    {
+      "id": "cand-syn-3",
+      "name": "Arjun Gill",
+      "program": "Mechanical Engineering · Batch 2027",
+      "score": 82,
+      "eligibility": "Eligible",
+      "stage": "Screening",
+      "skills": [
+        "Writing",
+        "Python",
+        "Figma"
+      ],
+      "shortlisted": true
+    },
+    {
+      "id": "cand-syn-4",
+      "name": "Zoya Khan",
+      "program": "Data Science · Batch 2028",
+      "score": 72,
+      "eligibility": "Eligible",
+      "stage": "Assessment",
+      "skills": [
+        "Documentation",
+        "User Research",
+        "SQL"
+      ],
+      "shortlisted": false
+    },
+    {
+      "id": "cand-syn-5",
+      "name": "Rohan Desai",
+      "program": "Information Technology · Batch 2027",
+      "score": 91,
+      "eligibility": "Eligible",
+      "stage": "Assessment",
+      "skills": [
+        "Figma",
+        "Writing",
+        "System Design"
+      ],
+      "shortlisted": true
+    },
+    {
+      "id": "cand-syn-6",
+      "name": "Saanvi Reddy",
+      "program": "Biotechnology · Batch 2028",
+      "score": 80,
+      "eligibility": "Eligible",
+      "stage": "Screening",
+      "skills": [
+        "Python",
+        "Presentation",
+        "Documentation"
+      ],
+      "shortlisted": false
+    },
+    {
+      "id": "cand-syn-7",
+      "name": "Dev Malhotra",
+      "program": "Computer Science · Batch 2029",
+      "score": 67,
+      "eligibility": "Review",
+      "stage": "Interview",
+      "skills": [
+        "Statistics",
+        "Communication",
+        "Docker"
+      ],
+      "shortlisted": false
+    },
+    {
+      "id": "cand-syn-8",
+      "name": "Tara Bhatia",
+      "program": "Business Analytics · Batch 2028",
+      "score": 84,
+      "eligibility": "Eligible",
+      "stage": "Screening",
+      "skills": [
+        "Python",
+        "Documentation",
+        "Machine Learning"
+      ],
+      "shortlisted": true
+    },
+    {
+      "id": "cand-syn-9",
+      "name": "Nikhil Joshi",
+      "program": "Electrical Engineering · Batch 2028",
+      "score": 75,
+      "eligibility": "Eligible",
+      "stage": "Assessment",
+      "skills": [
+        "Presentation",
+        "Excel",
+        "Writing"
+      ],
+      "shortlisted": false
+    },
+    {
+      "id": "cand-syn-10",
+      "name": "Priya Kaur",
+      "program": "Data Science · Batch 2027",
+      "score": 54,
+      "eligibility": "Review",
+      "stage": "Interview",
+      "skills": [
+        "SQL",
+        "Communication",
+        "Teamwork"
+      ],
+      "shortlisted": false
     }
   ],
   "companyRequirements": [
@@ -506,6 +1390,69 @@
           ]
         }
       ]
+    },
+    {
+      "company": "Quantum Systems",
+      "industry": "Enterprise software",
+      "roles": [
+        {
+          "title": "Backend Engineer (Graduate)",
+          "demand": "High",
+          "updated": "26 Aug 2026",
+          "eligible": "14",
+          "requirements": [
+            {
+              "skill": "Python",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "SQL",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Git",
+              "level": "Developing",
+              "importance": "Required"
+            },
+            {
+              "skill": "Docker",
+              "level": "Developing",
+              "importance": "Preferred"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "company": "Tern & Co.",
+      "industry": "Digital product consulting",
+      "roles": [
+        {
+          "title": "UX Research Associate",
+          "demand": "Medium",
+          "updated": "27 Aug 2026",
+          "eligible": "07",
+          "requirements": [
+            {
+              "skill": "User Research",
+              "level": "Intermediate",
+              "importance": "Required"
+            },
+            {
+              "skill": "Writing",
+              "level": "Advanced",
+              "importance": "Required"
+            },
+            {
+              "skill": "Figma",
+              "level": "Developing",
+              "importance": "Preferred"
+            }
+          ]
+        }
+      ]
     }
   ],
   "profile": {
@@ -581,6 +1528,27 @@
       "note": "Add applied SQL evidence workshops to close current high-demand industry requirement gap.",
       "createdBy": "Dean Office",
       "createdAt": "24 Aug 2026"
+    },
+    {
+      "id": "curr-syn-1",
+      "program": "Information Technology",
+      "note": "Introduce a containerisation lab (Docker basics) in semester 5.",
+      "createdBy": "Prof. Arvind Mehta",
+      "createdAt": "28 Aug 2026"
+    },
+    {
+      "id": "curr-syn-2",
+      "program": "Data Science",
+      "note": "Add a statistics-for-ML refresher before the capstone.",
+      "createdBy": "Dean Office",
+      "createdAt": "29 Aug 2026"
+    },
+    {
+      "id": "curr-syn-3",
+      "program": "Business Analytics",
+      "note": "Run SQL reporting workshops ahead of placement season.",
+      "createdBy": "Dean Office",
+      "createdAt": "30 Aug 2026"
     }
   ],
   "initiatives": [
@@ -607,6 +1575,341 @@
       "org": "Industry Council",
       "status": "Open",
       "participants": 18
+    },
+    {
+      "id": "init-syn-1",
+      "kind": "guest",
+      "title": "What graduate backend teams look for",
+      "org": "Quantum Systems",
+      "speaker": "Vikram Malhotra",
+      "date": "12 Sep",
+      "participants": 64
+    },
+    {
+      "id": "init-syn-2",
+      "kind": "mentorship",
+      "title": "Health research careers circle",
+      "org": "Mosaic Health Labs",
+      "mentor": "Farah Siddiqui",
+      "participants": 12
+    },
+    {
+      "id": "init-syn-3",
+      "kind": "challenge",
+      "title": "Campus data quality hackathon",
+      "org": "Industry Council",
+      "status": "Open",
+      "participants": 40
     }
-  ]
+  ],
+  "profiles": {
+    "usr_syn_01": {
+      "displayName": "Kabir Mehta",
+      "email": "kabir.mehta@example.edu",
+      "phone": "+91 9862407683",
+      "program": "Information Technology · Batch 2028",
+      "declaredSkills": [
+        "Git",
+        "Excel",
+        "Python",
+        "SQL",
+        "Documentation"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-1-1",
+          "title": "Semester 3 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-06T10:04:00.000Z"
+        },
+        {
+          "id": "doc-syn-1-2",
+          "title": "Semester 4 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-20T10:14:00.000Z"
+        },
+        {
+          "id": "doc-syn-1-3",
+          "title": "Identity proof",
+          "verified": true,
+          "uploadedAt": "2026-08-05T10:25:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_02": {
+      "displayName": "Rhea Nair",
+      "email": "rhea.nair@example.edu",
+      "phone": "+91 9816462128",
+      "program": "Computer Science · Batch 2027",
+      "declaredSkills": [
+        "Data Analysis",
+        "Research",
+        "Linux"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-2-1",
+          "title": "Semester 3 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-07T10:59:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_03": {
+      "displayName": "Ishaan Verma",
+      "email": "ishaan.verma@example.edu",
+      "phone": "+91 9867096033",
+      "program": "Electronics & Communication · Batch 2028",
+      "declaredSkills": [
+        "Research",
+        "Figma",
+        "Docker",
+        "Presentation"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-3-1",
+          "title": "Semester 3 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-12T10:18:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_04": {
+      "displayName": "Meera Iyer",
+      "email": "meera.iyer@example.edu",
+      "phone": "+91 9824648530",
+      "program": "Computer Science · Batch 2028",
+      "declaredSkills": [
+        "Presentation",
+        "React",
+        "Docker"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-4-1",
+          "title": "Semester 3 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-13T10:43:00.000Z"
+        },
+        {
+          "id": "doc-syn-4-2",
+          "title": "Semester 4 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-02T10:51:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_05": {
+      "displayName": "Arjun Gill",
+      "email": "arjun.gill@example.edu",
+      "phone": "+91 9887881747",
+      "program": "Mechanical Engineering · Batch 2027",
+      "declaredSkills": [
+        "Writing",
+        "Python",
+        "Figma",
+        "Data Analysis",
+        "Excel",
+        "Research"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-5-1",
+          "title": "Semester 3 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-04T10:15:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_06": {
+      "displayName": "Zoya Khan",
+      "email": "zoya.khan@example.edu",
+      "phone": "+91 9897050235",
+      "program": "Data Science · Batch 2028",
+      "declaredSkills": [
+        "Documentation",
+        "User Research",
+        "SQL",
+        "Presentation"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-6-1",
+          "title": "Semester 3 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-01T10:38:00.000Z"
+        },
+        {
+          "id": "doc-syn-6-2",
+          "title": "Semester 4 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-08T10:40:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_07": {
+      "displayName": "Rohan Desai",
+      "email": "rohan.desai@example.edu",
+      "phone": "+91 9878799744",
+      "program": "Information Technology · Batch 2027",
+      "declaredSkills": [
+        "Figma",
+        "Writing",
+        "System Design",
+        "Data Analysis",
+        "Research",
+        "SQL",
+        "JavaScript"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-7-1",
+          "title": "Semester 3 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-19T10:25:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_08": {
+      "displayName": "Saanvi Reddy",
+      "email": "saanvi.reddy@example.edu",
+      "phone": "+91 9885380566",
+      "program": "Biotechnology · Batch 2028",
+      "declaredSkills": [
+        "Python",
+        "Presentation",
+        "Documentation",
+        "Excel",
+        "SQL"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-8-1",
+          "title": "Semester 3 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-08T10:56:00.000Z"
+        },
+        {
+          "id": "doc-syn-8-2",
+          "title": "Semester 4 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-13T10:01:00.000Z"
+        },
+        {
+          "id": "doc-syn-8-3",
+          "title": "Identity proof",
+          "verified": false,
+          "uploadedAt": "2026-08-18T10:24:00.000Z"
+        },
+        {
+          "id": "doc-syn-8-4",
+          "title": "Skill evidence note",
+          "verified": true,
+          "uploadedAt": "2026-08-13T10:13:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_09": {
+      "displayName": "Dev Malhotra",
+      "email": "dev.malhotra@example.edu",
+      "phone": "+91 9850453840",
+      "program": "Computer Science · Batch 2029",
+      "declaredSkills": [
+        "Statistics",
+        "Communication",
+        "Docker",
+        "System Design"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-9-1",
+          "title": "Semester 3 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-17T10:40:00.000Z"
+        },
+        {
+          "id": "doc-syn-9-2",
+          "title": "Semester 4 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-08T10:07:00.000Z"
+        },
+        {
+          "id": "doc-syn-9-3",
+          "title": "Identity proof",
+          "verified": true,
+          "uploadedAt": "2026-08-11T10:53:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_10": {
+      "displayName": "Tara Bhatia",
+      "email": "tara.bhatia@example.edu",
+      "phone": "+91 9851150439",
+      "program": "Business Analytics · Batch 2028",
+      "declaredSkills": [
+        "Python",
+        "Documentation",
+        "Machine Learning",
+        "Statistics"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-10-1",
+          "title": "Semester 3 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-05T10:54:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_11": {
+      "displayName": "Nikhil Joshi",
+      "email": "nikhil.joshi@example.edu",
+      "phone": "+91 9897322350",
+      "program": "Electrical Engineering · Batch 2028",
+      "declaredSkills": [
+        "Presentation",
+        "Excel",
+        "Writing",
+        "User Research"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-11-1",
+          "title": "Semester 3 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-02T10:41:00.000Z"
+        }
+      ]
+    },
+    "usr_syn_12": {
+      "displayName": "Priya Kaur",
+      "email": "priya.kaur@example.edu",
+      "phone": "+91 9882215044",
+      "program": "Data Science · Batch 2027",
+      "declaredSkills": [
+        "SQL",
+        "Communication",
+        "Teamwork",
+        "React",
+        "Presentation",
+        "Git",
+        "Research"
+      ],
+      "documents": [
+        {
+          "id": "doc-syn-12-1",
+          "title": "Semester 3 academic record",
+          "verified": false,
+          "uploadedAt": "2026-08-16T10:36:00.000Z"
+        },
+        {
+          "id": "doc-syn-12-2",
+          "title": "Semester 4 academic record",
+          "verified": true,
+          "uploadedAt": "2026-08-02T10:25:00.000Z"
+        }
+      ]
+    }
+  }
 }
